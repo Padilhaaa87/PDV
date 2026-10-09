@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Gestão Comercial e Relatório Mensal Seletivo</title>
+  <title>PDV Web - Relatório de Todos os Meses</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -23,7 +23,7 @@
       
       <div class="text-center">
         <h1 class="text-3xl font-bold text-blue-700">PDV Comercial</h1>
-        <p class="text-gray-500 text-sm mt-1">Acesso restrito a usuários cadastrados</p>
+        <p class="text-gray-500 text-sm mt-1">Acesso restrito a utilizadores cadastrados</p>
       </div>
 
       <!-- BOTÕES DE ALTERNÂNCIA: ENTRAR OU CADASTRAR -->
@@ -36,14 +36,14 @@
         </button>
       </div>
 
-      <!-- FORMULÁRIO 1: LOGIN DE USUÁRIO -->
+      <!-- FORMULÁRIO 1: LOGIN DE UTILIZADOR -->
       <form id="formLogin" onsubmit="fazerLogin(event)" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700">Usuário</label>
-          <input type="text" id="loginUsuario" required placeholder="Digite seu usuário" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+          <label class="block text-sm font-medium text-gray-700">Utilizador</label>
+          <input type="text" id="loginUsuario" required placeholder="Digite o seu utilizador" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">Senha</label>
+          <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label>
           <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow-md">
@@ -51,15 +51,15 @@
         </button>
       </form>
 
-      <!-- FORMULÁRIO 2: CADASTRO DE NOVO USUÁRIO -->
+      <!-- FORMULÁRIO 2: CADASTRO DE NOVO UTILIZADOR -->
       <form id="formCadastro" onsubmit="cadastrarUtilizador(event)" class="space-y-4 hidden">
         <div>
-          <label class="block text-sm font-medium text-gray-700">Novo Usuário</label>
-          <input type="text" id="cadUsuario" required placeholder="Escolha um nome de usuário" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+          <label class="block text-sm font-medium text-gray-700">Novo Utilizador</label>
+          <input type="text" id="cadUsuario" required placeholder="Escolha um nome de utilizador" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">Nova Senha</label>
-          <input type="password" id="cadSenha" required placeholder="Crie uma senha" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+          <label class="block text-sm font-medium text-gray-700">Nova Palavra-passe</label>
+          <input type="password" id="cadSenha" required placeholder="Crie uma palavra-passe" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Perfil de Acesso</label>
@@ -271,12 +271,12 @@
           <div class="bg-white p-4 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h2 class="text-lg font-bold text-gray-700">Filtro de Período</h2>
-              <p class="text-xs text-gray-500">Selecione o mês para visualizar as estatísticas específicas</p>
+              <p class="text-xs text-gray-500">Escolha o mês na lista abaixo para filtrar o relatório</p>
             </div>
             <div class="w-full md:w-auto flex items-center gap-2">
               <label class="text-sm font-semibold text-gray-600 whitespace-nowrap">Mês do Relatório:</label>
               <select id="selectFiltroMes" onchange="renderizarRelatorios()" class="p-2 border rounded font-semibold bg-gray-50 text-blue-700 w-full md:w-auto outline-none focus:ring-2 focus:ring-blue-500">
-                <!-- Opções de mês/ano geradas dinamicamente via JavaScript -->
+                <!-- Preenchido via JavaScript -->
               </select>
             </div>
           </div>
@@ -368,7 +368,45 @@
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
 
-    // --- AUTENTICAÇÃO DE USUÁRIOS ---
+    // --- GERADOR DE DADOS DE TESTE DE VENDAS PARA TODOS OS MESES DO ANO ---
+    function gerarVendasDemonstrativasParaTodosOsMeses() {
+      // Se já existirem mais de 3 vendas salvas, não gera vendas simuladas
+      if (vendas.length > 3) return;
+
+      const anoAtual = new Date().getFullYear();
+      const vendasSimuladas = [];
+
+      // Gera 2 vendas demonstrativas para cada mês de Janeiro a Dezembro
+      for (let mes = 0; mes < 12; mes++) {
+        // Venda 1 do mês
+        vendasSimuladas.push({
+          id: Date.now() + (mes * 100),
+          data: new Date(anoAtual, mes, 10, 14, 30).toISOString(),
+          formaPagamento: 'À Vista',
+          totalVenda: 150 + (mes * 20),
+          totalCusto: 90 + (mes * 10),
+          lucroObtido: 60 + (mes * 10)
+        });
+
+        // Venda 2 do mês
+        vendasSimuladas.push({
+          id: Date.now() + (mes * 100) + 1,
+          data: new Date(anoAtual, mes, 22, 16, 45).toISOString(),
+          formaPagamento: 'Fiado (Cliente Exemplo)',
+          totalVenda: 220 + (mes * 15),
+          totalCusto: 130 + (mes * 8),
+          lucroObtido: 90 + (mes * 7)
+        });
+      }
+
+      vendas = vendasSimuladas;
+      localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
+    }
+
+    // Executa a geração de vendas para teste em todos os meses
+    gerarVendasDemonstrativasParaTodosOsMeses();
+
+    // --- GERENCIAMENTO DE AUTENTICAÇÃO ---
     function alternarFormAutenticacao(modo) {
       const formLogin = document.getElementById('formLogin');
       const formCadastro = document.getElementById('formCadastro');
@@ -396,7 +434,7 @@
 
       const jaExiste = contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase());
       if (jaExiste) {
-        alert('Este nome de usuário já está cadastrado!');
+        alert('Este nome de utilizador já está cadastrado!');
         return;
       }
 
@@ -418,7 +456,7 @@
       );
 
       if (!contaValida) {
-        alert('Usuário ou senha incorretos!');
+        alert('Utilizador ou palavra-passe incorretos!');
         return;
       }
 
@@ -691,51 +729,49 @@
       atualizarUICaixa();
     }
 
-    // --- CARREGAR MESES NA CAIXA DE SELEÇÃO ---
+    // --- CARREGAR TODOS OS MESES COM VENDAS NA CAIXA DE SELEÇÃO ---
     function carregarOpcoesMesesRelatorio() {
       const select = document.getElementById('selectFiltroMes');
       const opcaoAnterior = select.value;
       select.innerHTML = '';
 
-      const agora = new Date();
-      const mesAtualChave = `${agora.getFullYear()}-${agora.getMonth()}`;
-
-      // Conjunto para evitar meses duplicados
       const mesesExistentes = new Set();
-      mesesExistentes.add(mesAtualChave);
 
+      // Mapeia todas as vendas e guarda a chave "ANO-MÊS"
       vendas.forEach(v => {
         const d = new Date(v.data);
         mesesExistentes.add(`${d.getFullYear()}-${d.getMonth()}`);
       });
 
-      // Ordenar chaves de ano-mês
-      const mesesOrdenados = Array.from(mesesExistentes).sort().reverse();
+      // Ordena do mês mais recente ao mais antigo
+      const mesesOrdenados = Array.from(mesesExistentes).sort((a, b) => {
+        const [anoA, mesA] = a.split('-').map(Number);
+        const [anoB, mesB] = b.split('-').map(Number);
+        return (anoB * 12 + mesB) - (anoA * 12 + mesA);
+      });
 
       mesesOrdenados.forEach(chave => {
-        const [ano, mes] = chave.split('-');
-        const nomeRotulo = `${nomesMeses[parseInt(mes)]} / ${ano}`;
+        const [ano, mes] = chave.split('-').map(Number);
+        const nomeRotulo = `${nomesMeses[mes]} / ${ano}`;
         select.innerHTML += `<option value="${chave}">${nomeRotulo}</option>`;
       });
 
-      // Restaura a seleção anterior se ainda for válida
       if (opcaoAnterior && Array.from(select.options).some(o => o.value === opcaoAnterior)) {
         select.value = opcaoAnterior;
-      } else {
-        select.value = mesAtualChave;
       }
     }
 
-    // --- MÓDULO DE RELATÓRIOS COM SELETOR DE MÊS ---
+    // --- MÓDULO DE RELATÓRIOS COM FILTRO MENSAL SELETIVO ---
     function renderizarRelatorios() {
       const agora = new Date();
       const diaHoje = agora.getDate();
       const mesAtualReal = agora.getMonth();
       const anoAtualReal = agora.getFullYear();
 
-      // Mês e Ano selecionados pelo usuário na caixa de seleção
       const selectMes = document.getElementById('selectFiltroMes');
-      const [anoSelecionado, mesSelecionado] = (selectMes.value || `${anoAtualReal}-${mesAtualReal}`).split('-').map(Number);
+      if (!selectMes.value) return;
+
+      const [anoSelecionado, mesSelecionado] = selectMes.value.split('-').map(Number);
 
       const seteDiasAtras = new Date();
       seteDiasAtras.setDate(agora.getDate() - 7);
@@ -746,10 +782,6 @@
 
       const tbody = document.getElementById('tabelaHistoricoVendas');
       tbody.innerHTML = '';
-
-      if (vendas.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500 text-sm">Nenhuma venda realizada.</td></tr>';
-      }
 
       [...vendas].reverse().forEach(v => {
         const d = new Date(v.data);
@@ -766,28 +798,32 @@
           lSemana += v.lucroObtido;
         }
 
-        // Vendas do Mês Selecionado na Caixa de Seleção
+        // Vendas do Mês Selecionado no Menu
         if (d.getMonth() === mesSelecionado && d.getFullYear() === anoSelecionado) {
           vMesSelec += v.totalVenda;
           lMesSelec += v.lucroObtido;
-        }
 
-        tbody.innerHTML += `
-          <tr class="border-b text-sm">
-            <td class="p-2">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-            <td class="p-2">${v.formaPagamento}</td>
-            <td class="p-2 font-bold">R$ ${v.totalVenda.toFixed(2)}</td>
-            <td class="p-2 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td>
-            <td class="p-2 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
-          </tr>`;
+          // Adiciona na tabela apenas as vendas pertencentes ao mês selecionado
+          tbody.innerHTML += `
+            <tr class="border-b text-sm">
+              <td class="p-2">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+              <td class="p-2">${v.formaPagamento}</td>
+              <td class="p-2 font-bold">R$ ${v.totalVenda.toFixed(2)}</td>
+              <td class="p-2 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td>
+              <td class="p-2 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
+            </tr>`;
+        }
       });
 
-      // Atualiza títulos dos cartões com o nome do mês selecionado
+      if (tbody.innerHTML === '') {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500 text-sm">Nenhuma venda realizada neste mês.</td></tr>';
+      }
+
+      // Atualiza rótulos e métricas
       const nomeMes = nomesMeses[mesSelecionado];
       document.getElementById('labelCardVendasMes').innerText = `Vendas (${nomeMes}/${anoSelecionado})`;
       document.getElementById('labelCardLucroMes').innerText = `Lucro (${nomeMes}/${anoSelecionado})`;
 
-      // Atualiza valores dos cartões
       document.getElementById('relVendasHoje').innerText = vHoje.toFixed(2);
       document.getElementById('relLucroHoje').innerText = lHoje.toFixed(2);
       document.getElementById('relVendasSemana').innerText = vSemana.toFixed(2);

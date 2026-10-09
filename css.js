@@ -48,3 +48,13 @@ class Venda {
     public String formaPagamento;
     public String data;
 }
+
+for (let mes = 0; mes < 12; mes++) {
+  vendasSimuladas.push({
+    id: Date.now() + (mes * 100),
+    data: new Date(2026, mes, 10, 14, 30).toISOString(),
+    totalVenda: 150 + (mes * 20),
+    totalCusto: 90 + (mes * 10),
+    lucroObtido: 60 + (mes * 10)
+  });
+}
