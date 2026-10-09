@@ -82,3 +82,25 @@ document.getElementById('relTotalAReceber').innerText = totalAReceber.toFixed(2)
 let rotuloForma = 'À Vista (Dinheiro)';
 if (formaSelec === 'vista_pix') rotuloForma = 'À Vista (PIX)';
 if (formaSelec === 'vista_cartao') rotuloForma = 'À Vista (Cartão)';
+
+function renderizarTabelaUsuarios() {
+  const tbody = document.getElementById('tabelaAbaUsuarios');
+  // Atualiza a quantidade de contas registradas
+  document.getElementById('qtdTotalUsuarios').innerText = contasRegistradas.length;
+  tbody.innerHTML = '';
+
+  contasRegistradas.forEach(conta => {
+    const eAdmin = conta.perfil === 'admin';
+    // Cria um visual diferenciado para Administrador e Vendedor
+    const badgePerfil = eAdmin 
+      ? `<span class="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded">👑 Administrador</span>`
+      : `<span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">👤 Vendedor</span>`;
+
+    tbody.innerHTML += `
+      <tr class="border-b text-sm hover:bg-gray-50">
+        <td class="p-3 font-semibold text-gray-800">${conta.usuario}</td>
+        <td class="p-3">${badgePerfil}</td>
+        <td class="p-3 text-center"><span class="text-xs text-green-600 font-bold bg-green-50 px-2 py-1 rounded-full">Ativo</span></td>
+      </tr>`;
+  });
+}

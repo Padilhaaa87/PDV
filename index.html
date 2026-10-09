@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Vendas Detalhadas (Dinheiro, PIX, Cartão)</title>
+  <title>PDV Web - Gestão de Utilizadores e PDV Completo</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -83,6 +83,8 @@
         <button onclick="alternarAba('produtos')" id="btn-produtos" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Produtos & Estoque</button>
         <button onclick="alternarAba('clientes')" id="btn-clientes" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Clientes & Fiado</button>
         <button onclick="alternarAba('relatorios')" id="btn-relatorios" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base admin-only">Relatórios & Lucros</button>
+        <!-- NOVA ABA EXCLUSIVA DO ADMINISTRADOR: UTILIZADORES -->
+        <button onclick="alternarAba('usuarios')" id="btn-usuarios" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base admin-only">👥 Utilizadores</button>
       </div>
     </nav>
 
@@ -105,7 +107,6 @@
             </div>
 
             <div class="mt-6 border-t pt-4 space-y-3">
-              <!-- SELEÇÃO DETALHADA DE FORMA DE PAGAMENTO -->
               <div>
                 <label class="block text-sm font-medium mb-1">Forma de Pagamento</label>
                 <select id="formaPagamento" class="w-full p-2 border rounded" onchange="tratarTrocaPagamento()">
@@ -309,6 +310,35 @@
           </div>
         </div>
       </section>
+
+      <!-- ABA 7: GESTÃO DE UTILIZADORES (APENAS ADMINISTRADOR) -->
+      <section id="usuarios" class="aba-conteudo admin-only">
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-4">
+            <div>
+              <h2 class="text-xl font-bold text-gray-700">Contas e Utilizadores Cadastrados</h2>
+              <p class="text-xs text-gray-500">Acesso exclusivo para administradores da plataforma</p>
+            </div>
+            <span class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full">
+              Total de Contas: <span id="qtdTotalUsuarios">0</span>
+            </span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-100 border-b text-sm">
+                  <th class="p-3">Nome de Utilizador</th>
+                  <th class="p-3">Perfil de Acesso</th>
+                  <th class="p-3 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaAbaUsuarios"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -367,10 +397,14 @@
       document.getElementById('telaAutenticacao').classList.add('hidden');
       document.getElementById('appPrincipal').classList.remove('oculto-autenticacao');
       document.getElementById('labelUsuarioLogado').innerText = `Sessão: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil})`;
+      
+      // EXIBE OU OCULTA RECURSOS EXCLUSIVOS DO ADMINISTRADOR
       document.querySelectorAll('.admin-only').forEach(btn => sessaoAtiva.perfil !== 'admin' ? btn.classList.add('hidden') : btn.classList.remove('hidden'));
+      
       atualizarUICaixa();
       renderizarGridProdutos();
       carregarOpcoesClientesVenda();
+      if (sessaoAtiva.perfil === 'admin') renderizarTabelaUsuarios();
     }
 
     function fazerLogout() {
@@ -391,6 +425,30 @@
       if (idAba === 'clientes') renderizarClientes();
       if (idAba === 'controleCaixa') atualizarUICaixa();
       if (idAba === 'relatorios') { carregarOpcoesMesesRelatorio(); renderizarRelatorios(); }
+      if (idAba === 'usuarios') renderizarTabelaUsuarios();
+    }
+
+    // --- MÓDULO EXCLUSIVO: GESTÃO DE UTILIZADORES ---
+    function renderizarTabelaUsuarios() {
+      const tbody = document.getElementById('tabelaAbaUsuarios');
+      document.getElementById('qtdTotalUsuarios').innerText = contasRegistradas.length;
+      tbody.innerHTML = '';
+
+      contasRegistradas.forEach(conta => {
+        const eAdmin = conta.perfil === 'admin';
+        const badgePerfil = eAdmin 
+          ? `<span class="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded">👑 Administrador</span>`
+          : `<span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">👤 Vendedor</span>`;
+
+        tbody.innerHTML += `
+          <tr class="border-b text-sm hover:bg-gray-50">
+            <td class="p-3 font-semibold text-gray-800">${conta.usuario}</td>
+            <td class="p-3">${badgePerfil}</td>
+            <td class="p-3 text-center">
+              <span class="text-xs text-green-600 font-bold bg-green-50 px-2 py-1 rounded-full">Ativo</span>
+            </td>
+          </tr>`;
+      });
     }
 
     // --- MÓDULO DE PRODUTOS, ESTOQUE E EDIÇÃO ---
@@ -676,7 +734,6 @@
       else { label.innerText = "(Opcional para À Vista)"; label.className = "text-xs text-gray-400"; }
     }
 
-    // PROCESSAMENTO DE VENDAS COM FORMAS À VISTA DETALHADAS
     function finalizarVenda() {
       if (carrinho.length === 0) return alert('Carrinho vazio!');
       if (!caixa.aberto) return alert('Caixa fechado!');
@@ -694,7 +751,6 @@
 
       let detalhe = `${rotuloForma} (Avulsa)`;
 
-      // 1. PROCESSAMENTO À VISTA (DINHEIRO, PIX OU CARTÃO)
       if (formaSelec.startsWith('vista')) {
         caixa.entradas += totalVenda;
         localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
@@ -704,9 +760,7 @@
           cli.historicoTransacoes.push({ data: new Date().toISOString(), tipo: 'compra_vista', valor: totalVenda });
           localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
         }
-      } 
-      // 2. PROCESSAMENTO FIADO
-      else {
+      } else {
         if (!cli) return alert('Para vendas Fiadas, é obrigatório selecionar um cliente!');
         if (!cli.limiteIlimitado && ((cli.saldoDevedor + totalVenda) > cli.limite)) {
           return alert(`Venda Recusada! Ultrapassa o limite de crédito (${cli.nome}).`);
@@ -718,7 +772,6 @@
         detalhe = `Fiado (${cli.nome})`;
       }
 
-      // ABATIMENTO DE ESTOQUE
       carrinho.forEach(item => {
         const prod = produtos.find(p => p.id === item.id);
         if (prod) prod.estoque = Math.max(0, prod.estoque - item.qtd);
@@ -797,7 +850,6 @@
       if (opAnt && Array.from(select.options).some(o => o.value === opAnt)) select.value = opAnt;
     }
 
-    // --- MÓDULO DE RELATÓRIOS E LUCROS ---
     function renderizarRelatorios() {
       const agora = new Date();
       const selectMes = document.getElementById('selectFiltroMes');
