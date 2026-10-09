@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Baixa de Fiados e Gestão Completa</title>
+  <title>PDV Web - Edição de Produtos e Reposição de Estoque</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -187,19 +187,24 @@
         </div>
       </section>
 
-      <!-- ABA 4: PRODUTOS, ESTOQUE E UPLOAD DE PLANILHA -->
+      <!-- ABA 4: PRODUTOS, ESTOQUE, EDIÇÃO E UPLOAD DE PLANILHA -->
       <section id="produtos" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md space-y-6">
             <div>
-              <h2 class="text-xl font-bold mb-4 text-gray-700">Cadastrar Produto</h2>
+              <h2 id="tituloFormProduto" class="text-xl font-bold mb-4 text-gray-700">Cadastrar Produto</h2>
               <form id="formProduto" onsubmit="salvarProduto(event)" class="space-y-3">
+                <input type="hidden" id="prodIdEdicao" value="">
                 <div><label class="block text-sm font-medium">Nome do Produto</label><input type="text" id="prodNome" required class="w-full p-2 border rounded"></div>
                 <div><label class="block text-sm font-medium">Preço Custo (R$)</label><input type="number" id="prodCusto" step="0.01" required oninput="calcularMargemLucro()" class="w-full p-2 border rounded"></div>
                 <div><label class="block text-sm font-medium">Preço Venda (R$)</label><input type="number" id="prodVenda" step="0.01" required oninput="calcularMargemLucro()" class="w-full p-2 border rounded"></div>
-                <div><label class="block text-sm font-medium">Estoque Inicial (Qtd)</label><input type="number" id="prodEstoque" required min="0" placeholder="0" class="w-full p-2 border rounded"></div>
+                <div><label class="block text-sm font-medium">Estoque (Qtd)</label><input type="number" id="prodEstoque" required min="0" placeholder="0" class="w-full p-2 border rounded"></div>
                 <div class="bg-gray-50 p-3 rounded text-sm">Margem de Lucro: <span id="prodLucroPercentual" class="font-bold text-green-600">0.00%</span></div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold">Salvar Produto</button>
+                
+                <div class="flex gap-2">
+                  <button type="submit" id="btnSalvarProduto" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold shadow">Salvar Produto</button>
+                  <button type="button" id="btnCancelarEdicao" onclick="cancelarEdicaoProduto()" class="hidden w-1/3 bg-gray-400 hover:bg-gray-500 text-white py-2 rounded font-semibold shadow">Cancelar</button>
+                </div>
               </form>
             </div>
 
@@ -225,6 +230,7 @@
                     <th class="p-2">Venda</th>
                     <th class="p-2">Estoque</th>
                     <th class="p-2">Lucro (%)</th>
+                    <th class="p-2 text-center">Ações</th>
                   </tr>
                 </thead>
                 <tbody id="tabelaProdutos"></tbody>
@@ -383,26 +389,90 @@
       if (idAba === 'relatorios') { carregarOpcoesMesesRelatorio(); renderizarRelatorios(); }
     }
 
+    // --- MÓDULO DE PRODUTOS, ESTOQUE E EDIÇÃO ---
     function calcularMargemLucro() {
       const c = parseFloat(document.getElementById('prodCusto').value) || 0;
       const v = parseFloat(document.getElementById('prodVenda').value) || 0;
       document.getElementById('prodLucroPercentual').innerText = `${(c > 0 ? ((v - c) / c) * 100 : 0).toFixed(2)}%`;
     }
 
+    // FUNÇÃO PARA SALVAR OU ATUALIZAR PRODUTO (NOVO OU EDIÇÃO)
     function salvarProduto(e) {
       e.preventDefault();
-      const nome = document.getElementById('prodNome').value;
+      const idEdicao = document.getElementById('prodIdEdicao').value;
+      const nome = document.getElementById('prodNome').value.trim();
       const custo = parseFloat(document.getElementById('prodCusto').value);
       const venda = parseFloat(document.getElementById('prodVenda').value);
       const estoque = parseInt(document.getElementById('prodEstoque').value) || 0;
 
-      produtos.push({ id: Date.now(), nome, custo, venda, estoque });
-      localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
+      if (idEdicao) {
+        // MODO EDIÇÃO: Atualiza o produto existente
+        const idNum = parseInt(idEdicao);
+        const index = produtos.findIndex(p => p.id === idNum);
+        if (index !== -1) {
+          produtos[index].nome = nome;
+          produtos[index].custo = custo;
+          produtos[index].venda = venda;
+          produtos[index].estoque = estoque;
+          alert('Produto atualizado com sucesso!');
+        }
+      } else {
+        // MODO CADASTRO: Cria um novo produto
+        produtos.push({ id: Date.now(), nome, custo, venda, estoque });
+        alert('Produto cadastrado com sucesso!');
+      }
 
+      localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
+      cancelarEdicaoProduto();
+      renderizarTabelaProdutos();
+    }
+
+    // PREPARA O FORMULÁRIO COM OS DADOS DO PRODUTO A SER EDITADO
+    function prepararEdicaoProduto(idProduto) {
+      const prod = produtos.find(p => p.id === idProduto);
+      if (!prod) return;
+
+      document.getElementById('prodIdEdicao').value = prod.id;
+      document.getElementById('prodNome').value = prod.nome;
+      document.getElementById('prodCusto').value = prod.custo;
+      document.getElementById('prodVenda').value = prod.venda;
+      document.getElementById('prodEstoque').value = prod.estoque;
+
+      document.getElementById('tituloFormProduto').innerText = "Editar Produto";
+      document.getElementById('btnSalvarProduto').innerText = "Salvar Alterações";
+      document.getElementById('btnCancelarEdicao').classList.remove('hidden');
+
+      calcularMargemLucro();
+    }
+
+    // CANCELA O MODO DE EDIÇÃO E LIMPA O FORMULÁRIO
+    function cancelarEdicaoProduto() {
+      document.getElementById('prodIdEdicao').value = "";
       document.getElementById('formProduto').reset();
       document.getElementById('prodLucroPercentual').innerText = '0.00%';
+      document.getElementById('tituloFormProduto').innerText = "Cadastrar Produto";
+      document.getElementById('btnSalvarProduto').innerText = "Salvar Produto";
+      document.getElementById('btnCancelarEdicao').classList.add('hidden');
+    }
+
+    // FUNÇÃO PARA LANÇAR/ADICIONAR MAIS UNIDADES AO ESTOQUE EXISTENTE
+    function adicionarEstoqueProduto(idProduto) {
+      const prod = produtos.find(p => p.id === idProduto);
+      if (!prod) return;
+
+      const qtdEntradaText = prompt(`Lançar Entrada de Estoque para: "${prod.nome}"\nEstoque Atual: ${prod.estoque} un.\n\nDigite quantas unidades deseja ADICIONAR ao estoque:`);
+      
+      if (qtdEntradaText === null) return; // Cancelou
+      const qtdEntrada = parseInt(qtdEntradaText);
+
+      if (isNaN(qtdEntrada) || qtdEntrada <= 0) {
+        return alert('Digite um número inteiro válido e maior que zero para adicionar ao estoque!');
+      }
+
+      prod.estoque += qtdEntrada;
+      localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
       renderizarTabelaProdutos();
-      alert('Produto cadastrado com sucesso!');
+      alert(`Sucesso! Foram adicionadas ${qtdEntrada} unidades ao estoque de "${prod.nome}".\nNovo Estoque: ${prod.estoque} un.`);
     }
 
     function importarPlanilhaCSV() {
@@ -445,6 +515,7 @@
       produtos.forEach(prod => {
         const margem = prod.custo > 0 ? (((prod.venda - prod.custo) / prod.custo) * 100).toFixed(2) : '0.00';
         const corEstoque = prod.estoque <= 2 ? 'text-red-600 font-bold' : 'text-gray-800 font-semibold';
+        
         tbody.innerHTML += `
           <tr class="border-b text-sm">
             <td class="p-2 font-medium">${prod.nome}</td>
@@ -452,6 +523,14 @@
             <td class="p-2">R$ ${prod.venda.toFixed(2)}</td>
             <td class="p-2 ${corEstoque}">${prod.estoque} un.</td>
             <td class="p-2 font-bold ${margem >= 0 ? 'text-green-600' : 'text-red-600'}">${margem}%</td>
+            <td class="p-2 text-center space-x-1 whitespace-nowrap">
+              <button onclick="prepararEdicaoProduto(${prod.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded text-xs font-bold transition">
+                ✏️ Editar
+              </button>
+              <button onclick="adicionarEstoqueProduto(${prod.id})" class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs font-bold transition">
+                ➕ Repor Estoque
+              </button>
+            </td>
           </tr>`;
       });
     }
@@ -497,7 +576,6 @@
               <div><span class="text-gray-500 block">Status:</span><span class="font-bold ${cli.saldoDevedor > 0 ? 'text-amber-600' : 'text-blue-600'}">${cli.saldoDevedor > 0 ? 'Com Débito' : 'Em Dia'}</span></div>
             </div>
 
-            <!-- ÁREA PARA DAR BAIXA NO FIADO -->
             <div class="pt-2 border-t flex items-center gap-2">
               <input type="number" id="inputAbater_${cli.id}" step="0.01" placeholder="Valor a abater (R$)" class="p-2 border rounded text-sm w-full">
               <button onclick="receberPagamentoCliente(${cli.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-4 py-2 rounded shadow transition whitespace-nowrap">
@@ -508,7 +586,6 @@
       });
     }
 
-    // FUNÇÃO QUE PROCESSA A BAIXA NO FIADO E ATUALIZA O CAIXA
     function receberPagamentoCliente(idCliente) {
       if (!caixa.aberto) return alert('Por favor, abra o Caixa antes de receber pagamentos!');
 
@@ -524,7 +601,6 @@
         return alert(`O cliente ${cliente.nome} não possui saldo devedor pendente!`);
       }
 
-      // 1. Abate o valor da dívida
       const valorAbatido = Math.min(cliente.saldoDevedor, valor);
       cliente.saldoDevedor = Math.max(0, cliente.saldoDevedor - valorAbatido);
 
@@ -535,7 +611,6 @@
         valor: valorAbatido
       });
 
-      // 2. Entra o dinheiro no caixa do dia
       caixa.entradas += valorAbatido;
 
       localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
