@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Relatório Diário e Gestão Completa</title>
-  <!-- Tailwind CSS para estilização responsiva -->
+  <title>PDV Web - Gestão Comercial Completa</title>
+  <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* Estilos para controle de exibições de abas e segurança */
@@ -36,7 +36,7 @@
         </button>
       </div>
 
-      <!-- FORMULÁRIO 1: LOGIN -->
+      <!-- FORMULÁRIO 1: LOGIN DE USUÁRIO (TEXTO COM SENHA REMOVIDO) -->
       <form id="formLogin" onsubmit="fazerLogin(event)" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700">Usuário</label>
@@ -49,12 +49,9 @@
         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow-md">
           Acessar Sistema
         </button>
-        <p class="text-xs text-center text-gray-400 mt-2">
-          Conta padrão inicial: <b>admin</b> | Senha: <b>123</b>
-        </p>
       </form>
 
-      <!-- FORMULÁRIO 2: CADASTRO -->
+      <!-- FORMULÁRIO 2: CADASTRO DE NOVO USUÁRIO -->
       <form id="formCadastro" onsubmit="cadastrarUtilizador(event)" class="space-y-4 hidden">
         <div>
           <label class="block text-sm font-medium text-gray-700">Novo Usuário</label>
@@ -67,8 +64,8 @@
         <div>
           <label class="block text-sm font-medium text-gray-700">Perfil de Acesso</label>
           <select id="cadPerfil" class="w-full p-3 border rounded">
-            <option value="admin">Administrador (Acesso Total)</option>
             <option value="vendedor">Vendedor / Atendente</option>
+            <option value="admin">Administrador (Acesso Total)</option>
           </select>
         </div>
         <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded transition shadow-md">
@@ -270,40 +267,33 @@
       <section id="relatorios" class="aba-conteudo">
         <div class="space-y-6">
           
-          <!-- INDICADORES FINANCEIROS DE VENDAS E LUCROS -->
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
             
-            <!-- VENDAS DE HOJE (NOVO) -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-amber-500">
               <span class="text-xs text-gray-500 font-bold block uppercase">Vendas Hoje</span>
               <span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasHoje">0,00</span></span>
             </div>
 
-            <!-- LUCRO DE HOJE (NOVO) -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-lime-500">
               <span class="text-xs text-gray-500 font-bold block uppercase">Lucro Hoje</span>
               <span class="text-base md:text-xl font-bold text-lime-600">R$ <span id="relLucroHoje">0,00</span></span>
             </div>
 
-            <!-- VENDAS SEMANA -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500">
               <span class="text-xs text-gray-500 font-bold block uppercase">Vendas Semana</span>
               <span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasSemana">0,00</span></span>
             </div>
 
-            <!-- LUCRO SEMANA -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-emerald-500">
               <span class="text-xs text-gray-500 font-bold block uppercase">Lucro Semana</span>
               <span class="text-base md:text-xl font-bold text-emerald-600">R$ <span id="relLucroSemana">0,00</span></span>
             </div>
 
-            <!-- VENDAS MÊS -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
               <span class="text-xs text-gray-500 font-bold block uppercase">Vendas Mês</span>
               <span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasMes">0,00</span></span>
             </div>
 
-            <!-- LUCRO MÊS -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
               <span class="text-xs text-gray-500 font-bold block uppercase">Lucro Mês</span>
               <span class="text-base md:text-xl font-bold text-green-600">R$ <span id="relLucroMes">0,00</span></span>
@@ -311,7 +301,6 @@
 
           </div>
 
-          <!-- HISTÓRICO DE VENDAS -->
           <div class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-bold mb-4 text-gray-700">Histórico de Vendas Realizadas</h2>
             <div class="overflow-x-auto">
@@ -340,7 +329,7 @@
   <!-- LÓGICA EM JAVASCRIPT                                              -->
   <!-- ================================================================= -->
   <script>
-    // --- ESTADO DA APLICAÇÃO ---
+    // ESTADO DA APLICAÇÃO (CONTA ADMIN PADRÃO INICIALIZADA SILENCIOSAMENTE)
     let contasRegistradas = JSON.parse(localStorage.getItem('pdv_contas')) || [
       { usuario: 'admin', senha: '123', perfil: 'admin' }
     ];
@@ -352,7 +341,7 @@
     let vendas = JSON.parse(localStorage.getItem('pdv_vendas')) || [];
     let carrinho = [];
 
-    // --- AUTENTICAÇÃO DE USUÁRIOS ---
+    // --- GERENCIAMENTO DE AUTENTICAÇÃO ---
     function alternarFormAutenticacao(modo) {
       const formLogin = document.getElementById('formLogin');
       const formCadastro = document.getElementById('formCadastro');
@@ -441,7 +430,7 @@
       document.getElementById('formCadastro').reset();
     }
 
-    // --- NAVEGAÇÃO DE ABAS ---
+    // --- CONTROLE DE NAVEGAÇÃO DE ABAS ---
     function alternarAba(idAba) {
       document.querySelectorAll('.aba-conteudo').forEach(el => el.classList.remove('ativa'));
       document.querySelectorAll('nav button').forEach(el => el.classList.remove('border-b-2', 'border-white'));
@@ -696,25 +685,21 @@
       [...vendas].reverse().forEach(v => {
         const d = new Date(v.data);
 
-        // 1. FILTRO DIÁRIO (Mesmo dia, mês e ano)
         if (d.getDate() === diaHoje && d.getMonth() === mesAtual && d.getFullYear() === anoAtual) {
           vHoje += v.totalVenda;
           lHoje += v.lucroObtido;
         }
 
-        // 2. FILTRO MENSAL (Mesmo mês e ano)
         if (d.getMonth() === mesAtual && d.getFullYear() === anoAtual) {
           vMes += v.totalVenda;
           lMes += v.lucroObtido;
         }
 
-        // 3. FILTRO SEMANAL (Últimos 7 dias)
         if (d >= seteDiasAtras) {
           vSemana += v.totalVenda;
           lSemana += v.lucroObtido;
         }
 
-        // Renderização da Tabela de Histórico
         tbody.innerHTML += `
           <tr class="border-b text-sm">
             <td class="p-2">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
@@ -725,7 +710,6 @@
           </tr>`;
       });
 
-      // Atualização dos cartões visuais
       document.getElementById('relVendasHoje').innerText = vHoje.toFixed(2);
       document.getElementById('relLucroHoje').innerText = lHoje.toFixed(2);
       document.getElementById('relVendasSemana').innerText = vSemana.toFixed(2);
@@ -768,7 +752,7 @@
       document.getElementById('resumoTotal').innerText = (caixa.inicial + caixa.entradas).toFixed(2);
     }
 
-    // --- VERIFICAÇÃO INICIAL DA SESSÃO ---
+    // VERIFICAÇÃO INICIAL DE SESSÃO
     if (sessaoAtiva) {
       iniciarSessao(sessaoAtiva);
     }
