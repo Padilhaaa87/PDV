@@ -58,3 +58,8 @@ for (let mes = 0; mes < 12; mes++) {
     lucroObtido: 60 + (mes * 10)
   });
 }
+
+// Se o cliente NÃO for ilimitado, verifica se ultrapassou
+if (!cli.limiteIlimitado && ((cli.saldoDevedor + totalVenda) > cli.limite)) {
+  return alert('Venda Recusada! A compra ultrapassa o limite de crédito do cliente.');
+}
