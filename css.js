@@ -63,3 +63,6 @@ for (let mes = 0; mes < 12; mes++) {
 if (!cli.limiteIlimitado && ((cli.saldoDevedor + totalVenda) > cli.limite)) {
   return alert('Venda Recusada! A compra ultrapassa o limite de crédito do cliente.');
 }
+
+vendas = vendas.filter(v => v.id !== idVenda);
+localStorage.setItem('pdv_vendas', JSON.stringify(vendas));

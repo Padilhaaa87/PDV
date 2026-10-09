@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Limite de Crédito Definido e Ilimitado</title>
+  <title>PDV Web - Gestão Completa e Exclusão de Vendas</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -234,7 +234,7 @@
         </div>
       </section>
 
-      <!-- ABA 4: CLIENTES, GASTO MENSAL E FIADO (COM OPÇÃO DE LIMITE ILIMITADO) -->
+      <!-- ABA 4: CLIENTES, GASTO MENSAL E FIADO -->
       <section id="clientes" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -253,7 +253,6 @@
                 <input type="number" id="cliLimite" step="0.01" class="w-full p-2 border rounded" placeholder="0.00">
               </div>
               
-              <!-- CAIXA DE VERIFICAÇÃO DE LIMITE ILIMITADO -->
               <div class="flex items-center gap-2 pt-1">
                 <input type="checkbox" id="cliIlimitado" onchange="alternarCampoLimite(this)" class="w-4 h-4 text-blue-600 rounded">
                 <label for="cliIlimitado" class="text-sm font-semibold text-gray-700 cursor-pointer">Limite de Crédito Ilimitado</label>
@@ -270,21 +269,31 @@
         </div>
       </section>
 
-      <!-- ABA 5: RELATÓRIOS COM SELEÇÃO DE MÊS -->
+      <!-- ABA 5: RELATÓRIOS COM SELEÇÃO E GESTÃO DE EXCLUSÃO DE VENDAS -->
       <section id="relatorios" class="aba-conteudo">
         <div class="space-y-6">
           
+          <!-- BARRA DE FERRAMENTAS DO RELATÓRIO -->
           <div class="bg-white p-4 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h2 class="text-lg font-bold text-gray-700">Filtro de Período</h2>
-              <p class="text-xs text-gray-500">Escolha o mês na lista abaixo para filtrar o relatório</p>
+              <h2 class="text-lg font-bold text-gray-700">Filtro e Gestão de Período</h2>
+              <p class="text-xs text-gray-500">Selecione o mês desejado ou limpe todo o histórico do sistema</p>
             </div>
-            <div class="w-full md:w-auto flex items-center gap-2">
-              <label class="text-sm font-semibold text-gray-600 whitespace-nowrap">Mês do Relatório:</label>
-              <select id="selectFiltroMes" onchange="renderizarRelatorios()" class="p-2 border rounded font-semibold bg-gray-50 text-blue-700 w-full md:w-auto outline-none focus:ring-2 focus:ring-blue-500"></select>
+            
+            <div class="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div class="flex items-center gap-2">
+                <label class="text-sm font-semibold text-gray-600 whitespace-nowrap">Mês:</label>
+                <select id="selectFiltroMes" onchange="renderizarRelatorios()" class="p-2 border rounded font-semibold bg-gray-50 text-blue-700 outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"></select>
+              </div>
+
+              <!-- BOTÃO PARA ZERAR TODO O HISTÓRICO -->
+              <button onclick="limparTodoHistoricoVendas()" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2.5 rounded shadow transition whitespace-nowrap">
+                🗑️ Zerar Todo o Histórico
+              </button>
             </div>
           </div>
 
+          <!-- INDICADORES FINANCEIROS -->
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-amber-500">
               <span class="text-xs text-gray-500 font-bold block uppercase">Vendas Hoje</span>
@@ -312,6 +321,7 @@
             </div>
           </div>
 
+          <!-- HISTÓRICO DE VENDAS COM AÇÕES DE EXCLUSÃO -->
           <div class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-bold mb-4 text-gray-700">Histórico de Vendas Realizadas</h2>
             <div class="overflow-x-auto">
@@ -323,6 +333,7 @@
                     <th class="p-2">Total Venda</th>
                     <th class="p-2">Total Custo</th>
                     <th class="p-2">Lucro Obtido</th>
+                    <th class="p-2 text-center">Ações</th>
                   </tr>
                 </thead>
                 <tbody id="tabelaHistoricoVendas"></tbody>
@@ -356,6 +367,33 @@
       'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
+
+    // --- GERADOR DE DADOS DEMONSTRATIVOS ---
+    // Apenas gera se a flag 'pdv_gerou_exemplos' ainda não existir no localStorage
+    function gerarVendasDemonstrativasParaTodosOsMeses() {
+      const jaGerouExemplos = localStorage.getItem('pdv_gerou_exemplos');
+      if (jaGerouExemplos) return;
+
+      const anoAtual = new Date().getFullYear();
+      const vendasSimuladas = [];
+
+      for (let mes = 0; mes < 12; mes++) {
+        vendasSimuladas.push({
+          id: Date.now() + (mes * 100),
+          data: new Date(anoAtual, mes, 10, 14, 30).toISOString(),
+          formaPagamento: 'À Vista',
+          totalVenda: 150 + (mes * 20),
+          totalCusto: 90 + (mes * 10),
+          lucroObtido: 60 + (mes * 10)
+        });
+      }
+
+      vendas = vendasSimuladas;
+      localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
+      localStorage.setItem('pdv_gerou_exemplos', 'true');
+    }
+
+    gerarVendasDemonstrativasParaTodosOsMeses();
 
     // --- GERENCIAMENTO DE AUTENTICAÇÃO ---
     function alternarFormAutenticacao(modo) {
@@ -502,7 +540,7 @@
       });
     }
 
-    // --- MÓDULO CLIENTES & FIADO (COM LIMITE E LIMITE ILIMITADO) ---
+    // --- MÓDULO CLIENTES & FIADO ---
     function alternarCampoLimite(checkbox) {
       const inputLimite = document.getElementById('cliLimite');
       if (checkbox.checked) {
@@ -695,7 +733,6 @@
         const cli = clientes.find(c => c.id === idCli);
         if (!cli) return alert('Cliente inválido!');
 
-        // VALIDAÇÃO DE LIMITE: Se NÃO for ilimitado, testa se ultrapassou
         if (!cli.limiteIlimitado && ((cli.saldoDevedor + totalVenda) > cli.limite)) {
           return alert(`Venda Recusada! A compra ultrapassa o limite de crédito do cliente (${cli.nome}).`);
         }
@@ -716,11 +753,43 @@
       atualizarUICaixa();
     }
 
+    // --- NOVAS FUNÇÕES: EXCLUIR VENDAS E ZERAR HISTÓRICO ---
+
+    // 1. Excluir uma única venda selecionada
+    function excluirVendaIndividual(idVenda) {
+      if (!confirm('Tem a certeza de que deseja excluir esta venda do histórico?')) return;
+
+      vendas = vendas.filter(v => v.id !== idVenda);
+      localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
+
+      alert('Venda excluída com sucesso!');
+      carregarOpcoesMesesRelatorio();
+      renderizarRelatorios();
+    }
+
+    // 2. Limpar todo o histórico de vendas para iniciar com novo cliente
+    function limparTodoHistoricoVendas() {
+      if (!confirm('⚠️ ATENÇÃO: Deseja apagar TODO o histórico de vendas do sistema?\n\nEsta ação não pode ser desfeita!')) return;
+
+      vendas = [];
+      localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
+      localStorage.setItem('pdv_gerou_exemplos', 'true'); // Impede que os dados de teste voltem
+
+      alert('Todo o histórico de vendas foi apagado com sucesso! O sistema está limpo.');
+      carregarOpcoesMesesRelatorio();
+      renderizarRelatorios();
+    }
+
     // --- CARREGAR TODOS OS MESES COM VENDAS NA CAIXA DE SELEÇÃO ---
     function carregarOpcoesMesesRelatorio() {
       const select = document.getElementById('selectFiltroMes');
       const opcaoAnterior = select.value;
       select.innerHTML = '';
+
+      if (vendas.length === 0) {
+        select.innerHTML = `<option value="">Nenhum histórico</option>`;
+        return;
+      }
 
       const mesesExistentes = new Set();
       vendas.forEach(v => {
@@ -753,9 +822,14 @@
       const anoAtualReal = agora.getFullYear();
 
       const selectMes = document.getElementById('selectFiltroMes');
-      if (!selectMes.value) return;
+      const temVendas = vendas.length > 0 && selectMes.value;
 
-      const [anoSelecionado, mesSelecionado] = selectMes.value.split('-').map(Number);
+      let anoSelecionado = anoAtualReal;
+      let mesSelecionado = mesAtualReal;
+
+      if (temVendas) {
+        [anoSelecionado, mesSelecionado] = selectMes.value.split('-').map(Number);
+      }
 
       const seteDiasAtras = new Date();
       seteDiasAtras.setDate(agora.getDate() - 7);
@@ -767,36 +841,41 @@
       const tbody = document.getElementById('tabelaHistoricoVendas');
       tbody.innerHTML = '';
 
-      [...vendas].reverse().forEach(v => {
-        const d = new Date(v.data);
+      if (!temVendas) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500 text-sm">Nenhuma venda registrada no histórico.</td></tr>';
+      } else {
+        [...vendas].reverse().forEach(v => {
+          const d = new Date(v.data);
 
-        if (d.getDate() === diaHoje && d.getMonth() === mesAtualReal && d.getFullYear() === anoAtualReal) {
-          vHoje += v.totalVenda;
-          lHoje += v.lucroObtido;
-        }
+          if (d.getDate() === diaHoje && d.getMonth() === mesAtualReal && d.getFullYear() === anoAtualReal) {
+            vHoje += v.totalVenda;
+            lHoje += v.lucroObtido;
+          }
 
-        if (d >= seteDiasAtras) {
-          vSemana += v.totalVenda;
-          lSemana += v.lucroObtido;
-        }
+          if (d >= seteDiasAtras) {
+            vSemana += v.totalVenda;
+            lSemana += v.lucroObtido;
+          }
 
-        if (d.getMonth() === mesSelecionado && d.getFullYear() === anoSelecionado) {
-          vMesSelec += v.totalVenda;
-          lMesSelec += v.lucroObtido;
+          if (d.getMonth() === mesSelecionado && d.getFullYear() === anoSelecionado) {
+            vMesSelec += v.totalVenda;
+            lMesSelec += v.lucroObtido;
 
-          tbody.innerHTML += `
-            <tr class="border-b text-sm">
-              <td class="p-2">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-              <td class="p-2">${v.formaPagamento}</td>
-              <td class="p-2 font-bold">R$ ${v.totalVenda.toFixed(2)}</td>
-              <td class="p-2 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td>
-              <td class="p-2 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
-            </tr>`;
-        }
-      });
-
-      if (tbody.innerHTML === '') {
-        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500 text-sm">Nenhuma venda realizada neste mês.</td></tr>';
+            tbody.innerHTML += `
+              <tr class="border-b text-sm">
+                <td class="p-2">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                <td class="p-2">${v.formaPagamento}</td>
+                <td class="p-2 font-bold">R$ ${v.totalVenda.toFixed(2)}</td>
+                <td class="p-2 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td>
+                <td class="p-2 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
+                <td class="p-2 text-center">
+                  <button onclick="excluirVendaIndividual(${v.id})" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded text-xs font-bold transition">
+                    Excluir
+                  </button>
+                </td>
+              </tr>`;
+          }
+        });
       }
 
       const nomeMes = nomesMeses[mesSelecionado];
