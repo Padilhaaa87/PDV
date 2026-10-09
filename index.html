@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Edição de Produtos e Reposição de Estoque</title>
+  <title>PDV Web - Relatório de Valores a Receber e Gestão Completa</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -281,13 +281,17 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
+          <!-- CARDS INDICADORES (INCLUINDO A RECEBER / FIADO) -->
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 md:gap-4">
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-amber-500"><span class="text-xs text-gray-500 font-bold block uppercase">Vendas Hoje</span><span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasHoje">0,00</span></span></div>
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-lime-500"><span class="text-xs text-gray-500 font-bold block uppercase">Lucro Hoje</span><span class="text-base md:text-xl font-bold text-lime-600">R$ <span id="relLucroHoje">0,00</span></span></div>
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500"><span class="text-xs text-gray-500 font-bold block uppercase">Vendas Semana</span><span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasSemana">0,00</span></span></div>
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-emerald-500"><span class="text-xs text-gray-500 font-bold block uppercase">Lucro Semana</span><span class="text-base md:text-xl font-bold text-emerald-600">R$ <span id="relLucroSemana">0,00</span></span></div>
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500"><span class="text-xs text-gray-500 font-bold block uppercase" id="labelCardVendasMes">Vendas Mês</span><span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasMes">0,00</span></span></div>
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500"><span class="text-xs text-gray-500 font-bold block uppercase" id="labelCardLucroMes">Lucro Mês</span><span class="text-base md:text-xl font-bold text-green-600">R$ <span id="relLucroMes">0,00</span></span></div>
+            
+            <!-- NOVO CARD: TOTAL A RECEBER (FIADO PENDENTE) -->
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-rose-500"><span class="text-xs text-gray-500 font-bold block uppercase">Total a Receber</span><span class="text-base md:text-xl font-bold text-rose-600">R$ <span id="relTotalAReceber">0,00</span></span></div>
           </div>
 
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -396,7 +400,6 @@
       document.getElementById('prodLucroPercentual').innerText = `${(c > 0 ? ((v - c) / c) * 100 : 0).toFixed(2)}%`;
     }
 
-    // FUNÇÃO PARA SALVAR OU ATUALIZAR PRODUTO (NOVO OU EDIÇÃO)
     function salvarProduto(e) {
       e.preventDefault();
       const idEdicao = document.getElementById('prodIdEdicao').value;
@@ -406,7 +409,6 @@
       const estoque = parseInt(document.getElementById('prodEstoque').value) || 0;
 
       if (idEdicao) {
-        // MODO EDIÇÃO: Atualiza o produto existente
         const idNum = parseInt(idEdicao);
         const index = produtos.findIndex(p => p.id === idNum);
         if (index !== -1) {
@@ -417,7 +419,6 @@
           alert('Produto atualizado com sucesso!');
         }
       } else {
-        // MODO CADASTRO: Cria um novo produto
         produtos.push({ id: Date.now(), nome, custo, venda, estoque });
         alert('Produto cadastrado com sucesso!');
       }
@@ -427,7 +428,6 @@
       renderizarTabelaProdutos();
     }
 
-    // PREPARA O FORMULÁRIO COM OS DADOS DO PRODUTO A SER EDITADO
     function prepararEdicaoProduto(idProduto) {
       const prod = produtos.find(p => p.id === idProduto);
       if (!prod) return;
@@ -445,7 +445,6 @@
       calcularMargemLucro();
     }
 
-    // CANCELA O MODO DE EDIÇÃO E LIMPA O FORMULÁRIO
     function cancelarEdicaoProduto() {
       document.getElementById('prodIdEdicao').value = "";
       document.getElementById('formProduto').reset();
@@ -455,14 +454,12 @@
       document.getElementById('btnCancelarEdicao').classList.add('hidden');
     }
 
-    // FUNÇÃO PARA LANÇAR/ADICIONAR MAIS UNIDADES AO ESTOQUE EXISTENTE
     function adicionarEstoqueProduto(idProduto) {
       const prod = produtos.find(p => p.id === idProduto);
       if (!prod) return;
 
       const qtdEntradaText = prompt(`Lançar Entrada de Estoque para: "${prod.nome}"\nEstoque Atual: ${prod.estoque} un.\n\nDigite quantas unidades deseja ADICIONAR ao estoque:`);
-      
-      if (qtdEntradaText === null) return; // Cancelou
+      if (qtdEntradaText === null) return;
       const qtdEntrada = parseInt(qtdEntradaText);
 
       if (isNaN(qtdEntrada) || qtdEntrada <= 0) {
@@ -790,6 +787,7 @@
       if (opAnt && Array.from(select.options).some(o => o.value === opAnt)) select.value = opAnt;
     }
 
+    // --- MÓDULO DE RELATÓRIOS E LUCROS ---
     function renderizarRelatorios() {
       const agora = new Date();
       const selectMes = document.getElementById('selectFiltroMes');
@@ -815,6 +813,11 @@
           }
         });
       }
+
+      // CÁLCULO DO TOTAL A RECEBER (SOMA DE TODOS OS SALDOS DEVEDORES DE CLIENTES)
+      const totalAReceber = clientes.reduce((acc, cli) => acc + (cli.saldoDevedor || 0), 0);
+      document.getElementById('relTotalAReceber').innerText = totalAReceber.toFixed(2);
+
       document.getElementById('labelCardVendasMes').innerText = `Vendas (${nomesMeses[mSel]}/${aSel})`;
       document.getElementById('labelCardLucroMes').innerText = `Lucro (${nomesMeses[mSel]}/${aSel})`;
       document.getElementById('relVendasHoje').innerText = vHoje.toFixed(2); document.getElementById('relLucroHoje').innerText = lHoje.toFixed(2);
@@ -853,6 +856,8 @@
   </script>
 </body>
 </html>
+<span class="text-xs text-gray-500 font-bold block uppercase">Total a Receber</span>
+<span class="text-base md:text-xl font-bold text-rose-600">R$ <span id="relTotalAReceber">0,00</span></span>
 
 <input type="text" id="cliTelefone" placeholder="(00) 00000-0000" class="w-full p-2 border rounded">
 <input type="number" id="cliLimite" step="0.01" class="w-full p-2 border rounded" placeholder="0.00">

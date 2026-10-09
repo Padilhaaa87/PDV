@@ -76,3 +76,5 @@ const limite = ilimitado ? 0 : (limiteInput !== "" ? parseFloat(limiteInput) : 0
 function renderizarTabelaAbaVendas() {
   // Percorre e desenha cada venda com o botão Excluir associado ao seu ID único
 }
+const totalAReceber = clientes.reduce((acc, cli) => acc + (cli.saldoDevedor || 0), 0);
+document.getElementById('relTotalAReceber').innerText = totalAReceber.toFixed(2);
