@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Aba Dedicada de Vendas e Exclusão</title>
+  <title>PDV Web - Venda À Vista Opcional com Cliente</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -134,16 +134,23 @@
               </div>
             </div>
 
-            <div class="mt-6 border-t pt-4">
-              <label class="block text-sm font-medium mb-1">Forma de Pagamento</label>
-              <select id="formaPagamento" class="w-full p-2 border rounded mb-3" onchange="tratarTrocaPagamento()">
-                <option value="vista">À Vista (Dinheiro/PIX/Cartão)</option>
-                <option value="fiado">Fiado (Conta de Cliente)</option>
-              </select>
+            <div class="mt-6 border-t pt-4 space-y-3">
+              <div>
+                <label class="block text-sm font-medium mb-1">Forma de Pagamento</label>
+                <select id="formaPagamento" class="w-full p-2 border rounded" onchange="tratarTrocaPagamento()">
+                  <option value="vista">À Vista (Dinheiro/PIX/Cartão)</option>
+                  <option value="fiado">Fiado (Conta de Cliente)</option>
+                </select>
+              </div>
 
-              <div id="containerClienteFiado" class="hidden mb-3">
-                <label class="block text-sm font-medium mb-1">Cliente</label>
-                <select id="selectClienteFiado" class="w-full p-2 border rounded"></select>
+              <!-- SELEÇÃO OPCIONAL DE CLIENTE PARA CONTROLE DE COMPRAS -->
+              <div>
+                <label class="block text-sm font-medium mb-1">
+                  Cliente <span id="labelClienteOpcional" class="text-xs text-gray-400">(Opcional para À Vista)</span>
+                </label>
+                <select id="selectClienteVenda" class="w-full p-2 border rounded">
+                  <option value="">-- Nenhum cliente (Venda Avulsa) --</option>
+                </select>
               </div>
 
               <button onclick="finalizarVenda()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded shadow">
@@ -154,7 +161,7 @@
         </div>
       </section>
 
-      <!-- ABA 2: NOVA ABA DEDICADA DE VENDAS -->
+      <!-- ABA 2: REGISTRO DEDICADO DE VENDAS -->
       <section id="vendas" class="aba-conteudo">
         <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-4">
@@ -408,7 +415,7 @@
         vendasSimuladas.push({
           id: Date.now() + (mes * 100),
           data: new Date(anoAtual, mes, 10, 14, 30).toISOString(),
-          formaPagamento: 'À Vista',
+          formaPagamento: 'À Vista (Avulsa)',
           totalVenda: 150 + (mes * 20),
           totalCusto: 90 + (mes * 10),
           lucroObtido: 60 + (mes * 10)
@@ -499,6 +506,7 @@
 
       atualizarUICaixa();
       renderizarGridProdutos();
+      carregarOpcoesClientesVenda();
     }
 
     function fazerLogout() {
@@ -519,7 +527,10 @@
       document.getElementById(idAba).classList.add('ativa');
       document.getElementById(`btn-${idAba}`).classList.add('border-b-2', 'border-white');
 
-      if (idAba === 'frenteCaixa') renderizarGridProdutos();
+      if (idAba === 'frenteCaixa') {
+        renderizarGridProdutos();
+        carregarOpcoesClientesVenda();
+      }
       if (idAba === 'vendas') renderizarTabelaAbaVendas();
       if (idAba === 'produtos') renderizarTabelaProdutos();
       if (idAba === 'clientes') renderizarClientes();
@@ -568,7 +579,7 @@
       });
     }
 
-    // --- MÓDULO CLIENTES & FIADO (TELEFONE E LIMITE OPCIONAIS) ---
+    // --- MÓDULO CLIENTES & FIADO ---
     function alternarCampoLimite(checkbox) {
       const inputLimite = document.getElementById('cliLimite');
       if (checkbox.checked) {
@@ -608,6 +619,7 @@
       document.getElementById('cliLimite').classList.remove('bg-gray-100');
       
       renderizarClientes();
+      carregarOpcoesClientesVenda();
       alert('Cliente cadastrado com sucesso!');
     }
 
@@ -617,7 +629,7 @@
       if (cliente.historicoTransacoes) {
         cliente.historicoTransacoes.forEach(t => {
           const d = new Date(t.data);
-          if (t.tipo === 'compra' && d.getMonth() === agora.getMonth() && d.getFullYear() === agora.getFullYear()) {
+          if ((t.tipo === 'compra' || t.tipo === 'compra_vista') && d.getMonth() === agora.getMonth() && d.getFullYear() === agora.getFullYear()) {
             totalGastoMes += t.valor;
           }
         });
@@ -647,16 +659,16 @@
                 <p class="text-xs text-gray-500">Contato: ${cli.telefone}</p>
               </div>
               <div class="text-right">
-                <span class="text-xs text-gray-500 block">Dívida</span>
+                <span class="text-xs text-gray-500 block">Dívida (Fiado)</span>
                 <span class="text-lg font-bold text-red-600">R$ ${cli.saldoDevedor.toFixed(2)}</span>
               </div>
             </div>
             <div class="grid grid-cols-2 gap-2 text-xs bg-white p-2 rounded border">
-              <div><span class="text-gray-500 block">Gasto Mês:</span><span class="font-bold text-blue-600">R$ ${gastoMes.toFixed(2)}</span></div>
+              <div><span class="text-gray-500 block">Gasto Total Mês:</span><span class="font-bold text-blue-600">R$ ${gastoMes.toFixed(2)}</span></div>
               <div><span class="text-gray-500 block">Crédito Disp.:</span><span class="font-bold text-green-600">${disponivelTexto}</span></div>
             </div>
             <div class="pt-2 border-t flex gap-2">
-              <input type="number" id="inputPagamento_${cli.id}" step="0.01" placeholder="Abater (R$)" class="p-1 text-sm border rounded w-full">
+              <input type="number" id="inputPagamento_${cli.id}" step="0.01" placeholder="Abater Fiado (R$)" class="p-1 text-sm border rounded w-full">
               <button onclick="receberPagamentoCliente(${cli.id})" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded">Pagar</button>
             </div>
           </div>`;
@@ -686,6 +698,19 @@
     }
 
     // --- MÓDULO FRENTE DE CAIXA ---
+    function carregarOpcoesClientesVenda() {
+      const select = document.getElementById('selectClienteVenda');
+      const valorAtual = select.value;
+      select.innerHTML = '<option value="">-- Nenhum cliente (Venda Avulsa) --</option>';
+
+      clientes.forEach(cli => {
+        const disp = cli.limiteIlimitado ? "Ilimitado" : `R$ ${(cli.limite - cli.saldoDevedor).toFixed(2)}`;
+        select.innerHTML += `<option value="${cli.id}">${cli.nome} (Disp. Fiado: ${disp})</option>`;
+      });
+
+      select.value = valorAtual;
+    }
+
     function renderizarGridProdutos() {
       const container = document.getElementById('gridProdutosVenda');
       container.innerHTML = '';
@@ -734,16 +759,15 @@
 
     function tratarTrocaPagamento() {
       const forma = document.getElementById('formaPagamento').value;
-      const containerFiado = document.getElementById('containerClienteFiado');
+      const labelOpcional = document.getElementById('labelClienteOpcional');
+
       if (forma === 'fiado') {
-        containerFiado.classList.remove('hidden');
-        const select = document.getElementById('selectClienteFiado');
-        select.innerHTML = '';
-        clientes.forEach(cli => {
-          const disp = cli.limiteIlimitado ? "Ilimitado" : `R$ ${(cli.limite - cli.saldoDevedor).toFixed(2)}`;
-          select.innerHTML += `<option value="${cli.id}">${cli.nome} (Disp: ${disp})</option>`;
-        });
-      } else containerFiado.classList.add('hidden');
+        labelOpcional.innerText = "(Obrigatório no Fiado)";
+        labelOpcional.className = "text-xs text-red-500 font-bold";
+      } else {
+        labelOpcional.innerText = "(Opcional para À Vista)";
+        labelOpcional.className = "text-xs text-gray-400";
+      }
     }
 
     function finalizarVenda() {
@@ -753,33 +777,68 @@
       let totalVenda = 0, totalCusto = 0;
       carrinho.forEach(i => { totalVenda += i.venda * i.qtd; totalCusto += i.custo * i.qtd; });
       const lucro = totalVenda - totalCusto;
-      const forma = document.getElementById('formaPagamento').value;
-      let detalhe = 'À Vista';
 
+      const forma = document.getElementById('formaPagamento').value;
+      const idClienteSelecionado = document.getElementById('selectClienteVenda').value;
+      const clienteEncontrado = clientes.find(c => c.id === parseInt(idClienteSelecionado));
+
+      let detalheFormaPagamento = 'À Vista (Avulsa)';
+
+      // 1. PROCESSAMENTO DE VENDA À VISTA
       if (forma === 'vista') {
         caixa.entradas += totalVenda;
         localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
-      } else {
-        const idCli = parseInt(document.getElementById('selectClienteFiado').value);
-        const cli = clientes.find(c => c.id === idCli);
-        if (!cli) return alert('Cliente inválido!');
 
-        if (!cli.limiteIlimitado && ((cli.saldoDevedor + totalVenda) > cli.limite)) {
-          return alert(`Venda Recusada! A compra ultrapassa o limite de crédito do cliente (${cli.nome}).`);
+        if (clienteEncontrado) {
+          detalheFormaPagamento = `À Vista (${clienteEncontrado.nome})`;
+          if (!clienteEncontrado.historicoTransacoes) clienteEncontrado.historicoTransacoes = [];
+          
+          // Registra a compra no histórico do cliente para estatísticas sem gerar dívida
+          clienteEncontrado.historicoTransacoes.push({
+            data: new Date().toISOString(),
+            tipo: 'compra_vista',
+            valor: totalVenda
+          });
+          localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
+        }
+      } 
+      // 2. PROCESSAMENTO DE VENDA A PRAZO (FIADO)
+      else {
+        if (!clienteEncontrado) {
+          return alert('Para vendas Fiadas, é obrigatório selecionar um cliente!');
         }
 
-        cli.saldoDevedor += totalVenda;
-        if (!cli.historicoTransacoes) cli.historicoTransacoes = [];
-        cli.historicoTransacoes.push({ data: new Date().toISOString(), tipo: 'compra', valor: totalVenda });
+        if (!clienteEncontrado.limiteIlimitado && ((clienteEncontrado.saldoDevedor + totalVenda) > clienteEncontrado.limite)) {
+          return alert(`Venda Recusada! A compra ultrapassa o limite de crédito do cliente (${clienteEncontrado.nome}).`);
+        }
+
+        clienteEncontrado.saldoDevedor += totalVenda;
+        if (!clienteEncontrado.historicoTransacoes) clienteEncontrado.historicoTransacoes = [];
+        clienteEncontrado.historicoTransacoes.push({
+          data: new Date().toISOString(),
+          tipo: 'compra',
+          valor: totalVenda
+        });
+
         localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
-        detalhe = `Fiado (${cli.nome})`;
+        detalheFormaPagamento = `Fiado (${clienteEncontrado.nome})`;
       }
 
-      vendas.push({ id: Date.now(), data: new Date().toISOString(), formaPagamento: detalhe, totalVenda, totalCusto, lucroObtido: lucro });
+      // Registra a venda no histórico global
+      vendas.push({ 
+        id: Date.now(), 
+        data: new Date().toISOString(), 
+        formaPagamento: detalheFormaPagamento, 
+        totalVenda, 
+        totalCusto, 
+        lucroObtido: lucro 
+      });
+
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
       alert('Venda realizada com sucesso!');
       carrinho = [];
+      document.getElementById('selectClienteVenda').value = "";
       renderizarCarrinho();
       atualizarUICaixa();
     }
@@ -802,7 +861,7 @@
         tbody.innerHTML += `
           <tr class="border-b text-sm hover:bg-gray-50">
             <td class="p-3">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-            <td class="p-3"><span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium">${v.formaPagamento}</span></td>
+            <td class="p-3"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-semibold">${v.formaPagamento}</span></td>
             <td class="p-3 font-bold text-gray-800">R$ ${v.totalVenda.toFixed(2)}</td>
             <td class="p-3 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td>
             <td class="p-3 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
@@ -824,7 +883,6 @@
 
       alert('Venda excluída com sucesso!');
       
-      // Atualiza ambas as abas envolvidas
       renderizarTabelaAbaVendas();
       carregarOpcoesMesesRelatorio();
       renderizarRelatorios();
