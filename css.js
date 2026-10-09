@@ -73,3 +73,6 @@ const limiteInput = document.getElementById('cliLimite').value;
 // Se estiver vazio, define texto "Não informado" ou valor R$ 0.00
 const telefone = telefoneInput !== "" ? telefoneInput : "Não informado";
 const limite = ilimitado ? 0 : (limiteInput !== "" ? parseFloat(limiteInput) : 0);
+function renderizarTabelaAbaVendas() {
+  // Percorre e desenha cada venda com o botão Excluir associado ao seu ID único
+}

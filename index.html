@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Gestão Completa e Cadastro Flexível de Clientes</title>
+  <title>PDV Web - Aba Dedicada de Vendas e Exclusão</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -104,6 +104,7 @@
     <nav class="bg-blue-800 text-white shadow-inner overflow-x-auto">
       <div class="max-w-6xl mx-auto flex border-b border-blue-600 min-w-max">
         <button onclick="alternarAba('frenteCaixa')" id="btn-frenteCaixa" class="py-3 px-5 hover:bg-blue-700 font-semibold border-b-2 border-white text-sm md:text-base">Frente de Caixa</button>
+        <button onclick="alternarAba('vendas')" id="btn-vendas" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Vendas</button>
         <button onclick="alternarAba('controleCaixa')" id="btn-controleCaixa" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Caixa</button>
         <button onclick="alternarAba('produtos')" id="btn-produtos" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Produtos</button>
         <button onclick="alternarAba('clientes')" id="btn-clientes" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Clientes & Fiado</button>
@@ -153,7 +154,38 @@
         </div>
       </section>
 
-      <!-- ABA 2: CONTROLE DE CAIXA -->
+      <!-- ABA 2: NOVA ABA DEDICADA DE VENDAS -->
+      <section id="vendas" class="aba-conteudo">
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-4">
+            <div>
+              <h2 class="text-xl font-bold text-gray-700">Registro Geral de Vendas</h2>
+              <p class="text-xs text-gray-500">Consulte todas as vendas realizadas e exclua registos individuais se necessário</p>
+            </div>
+            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
+              Total Registrado: <span id="qtdTotalVendas">0</span> vendas
+            </span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-100 border-b text-sm">
+                  <th class="p-3">Data / Hora</th>
+                  <th class="p-3">Forma de Pagamento</th>
+                  <th class="p-3">Valor Total</th>
+                  <th class="p-3">Custo Total</th>
+                  <th class="p-3">Lucro Obtido</th>
+                  <th class="p-3 text-center">Ação</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaAbaVendas"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 3: CONTROLE DE CAIXA -->
       <section id="controleCaixa" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -190,7 +222,7 @@
         </div>
       </section>
 
-      <!-- ABA 3: CADASTRO DE PRODUTOS -->
+      <!-- ABA 4: CADASTRO DE PRODUTOS -->
       <section id="produtos" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -234,7 +266,7 @@
         </div>
       </section>
 
-      <!-- ABA 4: CLIENTES (TELEFONE E LIMITE OPCIONAIS) -->
+      <!-- ABA 5: CLIENTES (TELEFONE E LIMITE OPCIONAIS) -->
       <section id="clientes" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -269,7 +301,7 @@
         </div>
       </section>
 
-      <!-- ABA 5: RELATÓRIOS E GESTÃO DE HISTÓRICO -->
+      <!-- ABA 6: RELATÓRIOS E GESTÃO DE HISTÓRICO -->
       <section id="relatorios" class="aba-conteudo">
         <div class="space-y-6">
           
@@ -488,6 +520,7 @@
       document.getElementById(`btn-${idAba}`).classList.add('border-b-2', 'border-white');
 
       if (idAba === 'frenteCaixa') renderizarGridProdutos();
+      if (idAba === 'vendas') renderizarTabelaAbaVendas();
       if (idAba === 'produtos') renderizarTabelaProdutos();
       if (idAba === 'clientes') renderizarClientes();
       if (idAba === 'controleCaixa') atualizarUICaixa();
@@ -555,7 +588,6 @@
       const ilimitado = document.getElementById('cliIlimitado').checked;
       const limiteInput = document.getElementById('cliLimite').value;
 
-      // Tratamento dos campos opcionais
       const telefone = telefoneInput !== "" ? telefoneInput : "Não informado";
       const limite = ilimitado ? 0 : (limiteInput !== "" ? parseFloat(limiteInput) : 0);
 
@@ -752,14 +784,48 @@
       atualizarUICaixa();
     }
 
-    // --- FUNÇÕES DE GESTÃO DE VENDAS ---
+    // --- LÓGICA DA ABA DEDICADA DE VENDAS ---
+    function renderizarTabelaAbaVendas() {
+      const tbody = document.getElementById('tabelaAbaVendas');
+      const labelQtd = document.getElementById('qtdTotalVendas');
+      tbody.innerHTML = '';
+
+      labelQtd.innerText = vendas.length;
+
+      if (vendas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500 text-sm">Nenhuma venda registrada até o momento.</td></tr>';
+        return;
+      }
+
+      [...vendas].reverse().forEach(v => {
+        const d = new Date(v.data);
+        tbody.innerHTML += `
+          <tr class="border-b text-sm hover:bg-gray-50">
+            <td class="p-3">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+            <td class="p-3"><span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium">${v.formaPagamento}</span></td>
+            <td class="p-3 font-bold text-gray-800">R$ ${v.totalVenda.toFixed(2)}</td>
+            <td class="p-3 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td>
+            <td class="p-3 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
+            <td class="p-3 text-center">
+              <button onclick="excluirVendaIndividual(${v.id})" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-xs font-bold transition">
+                Excluir
+              </button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    // --- FUNÇÕES DE EXCLUSÃO DE VENDAS ---
     function excluirVendaIndividual(idVenda) {
-      if (!confirm('Tem a certeza de que deseja excluir esta venda do histórico?')) return;
+      if (!confirm('Tem a certeza de que deseja excluir esta venda do registro?')) return;
 
       vendas = vendas.filter(v => v.id !== idVenda);
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
       alert('Venda excluída com sucesso!');
+      
+      // Atualiza ambas as abas envolvidas
+      renderizarTabelaAbaVendas();
       carregarOpcoesMesesRelatorio();
       renderizarRelatorios();
     }
@@ -771,12 +837,13 @@
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
       localStorage.setItem('pdv_gerou_exemplos', 'true');
 
-      alert('Todo o histórico de vendas foi apagado com sucesso! O sistema está limpo.');
+      alert('Todo o histórico de vendas foi apagado com sucesso!');
+      renderizarTabelaAbaVendas();
       carregarOpcoesMesesRelatorio();
       renderizarRelatorios();
     }
 
-    // --- CARREGAR MESES NA CAIXA DE SELEÇÃO ---
+    // --- CARREGAR MESES NA CAIXA DE SELEÇÃO DO RELATÓRIO ---
     function carregarOpcoesMesesRelatorio() {
       const select = document.getElementById('selectFiltroMes');
       const opcaoAnterior = select.value;
@@ -930,3 +997,4 @@
 
 <input type="text" id="cliTelefone" placeholder="(00) 00000-0000" class="w-full p-2 border rounded">
 <input type="number" id="cliLimite" step="0.01" class="w-full p-2 border rounded" placeholder="0.00">
+<button onclick="alternarAba('vendas')" id="btn-vendas" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Vendas</button>
