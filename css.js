@@ -78,3 +78,7 @@ function renderizarTabelaAbaVendas() {
 }
 const totalAReceber = clientes.reduce((acc, cli) => acc + (cli.saldoDevedor || 0), 0);
 document.getElementById('relTotalAReceber').innerText = totalAReceber.toFixed(2);
+
+let rotuloForma = 'À Vista (Dinheiro)';
+if (formaSelec === 'vista_pix') rotuloForma = 'À Vista (PIX)';
+if (formaSelec === 'vista_cartao') rotuloForma = 'À Vista (Cartão)';

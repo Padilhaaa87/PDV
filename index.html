@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Relatório de Valores a Receber e Gestão Completa</title>
+  <title>PDV Web - Vendas Detalhadas (Dinheiro, PIX, Cartão)</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -105,11 +105,14 @@
             </div>
 
             <div class="mt-6 border-t pt-4 space-y-3">
+              <!-- SELEÇÃO DETALHADA DE FORMA DE PAGAMENTO -->
               <div>
                 <label class="block text-sm font-medium mb-1">Forma de Pagamento</label>
                 <select id="formaPagamento" class="w-full p-2 border rounded" onchange="tratarTrocaPagamento()">
-                  <option value="vista">À Vista (Dinheiro/PIX/Cartão)</option>
-                  <option value="fiado">Fiado (Conta de Cliente)</option>
+                  <option value="vista_dinheiro">💵 À Vista (Dinheiro)</option>
+                  <option value="vista_pix">📱 À Vista (PIX)</option>
+                  <option value="vista_cartao">💳 À Vista (Cartão)</option>
+                  <option value="fiado">📋 Fiado (Conta de Cliente)</option>
                 </select>
               </div>
 
@@ -281,7 +284,6 @@
             </div>
           </div>
 
-          <!-- CARDS INDICADORES (INCLUINDO A RECEBER / FIADO) -->
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 md:gap-4">
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-amber-500"><span class="text-xs text-gray-500 font-bold block uppercase">Vendas Hoje</span><span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasHoje">0,00</span></span></div>
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-lime-500"><span class="text-xs text-gray-500 font-bold block uppercase">Lucro Hoje</span><span class="text-base md:text-xl font-bold text-lime-600">R$ <span id="relLucroHoje">0,00</span></span></div>
@@ -289,8 +291,6 @@
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-emerald-500"><span class="text-xs text-gray-500 font-bold block uppercase">Lucro Semana</span><span class="text-base md:text-xl font-bold text-emerald-600">R$ <span id="relLucroSemana">0,00</span></span></div>
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500"><span class="text-xs text-gray-500 font-bold block uppercase" id="labelCardVendasMes">Vendas Mês</span><span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasMes">0,00</span></span></div>
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500"><span class="text-xs text-gray-500 font-bold block uppercase" id="labelCardLucroMes">Lucro Mês</span><span class="text-base md:text-xl font-bold text-green-600">R$ <span id="relLucroMes">0,00</span></span></div>
-            
-            <!-- NOVO CARD: TOTAL A RECEBER (FIADO PENDENTE) -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-rose-500"><span class="text-xs text-gray-500 font-bold block uppercase">Total a Receber</span><span class="text-base md:text-xl font-bold text-rose-600">R$ <span id="relTotalAReceber">0,00</span></span></div>
           </div>
 
@@ -676,6 +676,7 @@
       else { label.innerText = "(Opcional para À Vista)"; label.className = "text-xs text-gray-400"; }
     }
 
+    // PROCESSAMENTO DE VENDAS COM FORMAS À VISTA DETALHADAS
     function finalizarVenda() {
       if (carrinho.length === 0) return alert('Carrinho vazio!');
       if (!caixa.aberto) return alert('Caixa fechado!');
@@ -683,21 +684,29 @@
       let totalVenda = 0, totalCusto = 0;
       carrinho.forEach(i => { totalVenda += i.venda * i.qtd; totalCusto += i.custo * i.qtd; });
       const lucro = totalVenda - totalCusto;
-      const forma = document.getElementById('formaPagamento').value;
+      const formaSelec = document.getElementById('formaPagamento').value;
       const idCli = document.getElementById('selectClienteVenda').value;
       const cli = clientes.find(c => c.id === parseInt(idCli));
-      let detalhe = 'À Vista (Avulsa)';
+      
+      let rotuloForma = 'À Vista (Dinheiro)';
+      if (formaSelec === 'vista_pix') rotuloForma = 'À Vista (PIX)';
+      if (formaSelec === 'vista_cartao') rotuloForma = 'À Vista (Cartão)';
 
-      if (forma === 'vista') {
+      let detalhe = `${rotuloForma} (Avulsa)`;
+
+      // 1. PROCESSAMENTO À VISTA (DINHEIRO, PIX OU CARTÃO)
+      if (formaSelec.startsWith('vista')) {
         caixa.entradas += totalVenda;
         localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
         if (cli) {
-          detalhe = `À Vista (${cli.nome})`;
+          detalhe = `${rotuloForma} (${cli.nome})`;
           if (!cli.historicoTransacoes) cli.historicoTransacoes = [];
           cli.historicoTransacoes.push({ data: new Date().toISOString(), tipo: 'compra_vista', valor: totalVenda });
           localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
         }
-      } else {
+      } 
+      // 2. PROCESSAMENTO FIADO
+      else {
         if (!cli) return alert('Para vendas Fiadas, é obrigatório selecionar um cliente!');
         if (!cli.limiteIlimitado && ((cli.saldoDevedor + totalVenda) > cli.limite)) {
           return alert(`Venda Recusada! Ultrapassa o limite de crédito (${cli.nome}).`);
@@ -709,6 +718,7 @@
         detalhe = `Fiado (${cli.nome})`;
       }
 
+      // ABATIMENTO DE ESTOQUE
       carrinho.forEach(item => {
         const prod = produtos.find(p => p.id === item.id);
         if (prod) prod.estoque = Math.max(0, prod.estoque - item.qtd);
@@ -814,7 +824,6 @@
         });
       }
 
-      // CÁLCULO DO TOTAL A RECEBER (SOMA DE TODOS OS SALDOS DEVEDORES DE CLIENTES)
       const totalAReceber = clientes.reduce((acc, cli) => acc + (cli.saldoDevedor || 0), 0);
       document.getElementById('relTotalAReceber').innerText = totalAReceber.toFixed(2);
 
