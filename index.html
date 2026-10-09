@@ -3,867 +3,631 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema PDV Completo</title>
-  <!-- Tailwind CSS CDN para estilização rápida e moderna -->
+  <title>PDV Web - Multi-Usuário e Responsivo</title>
+  <!-- Tailwind CSS para estilização responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome para ícones -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Fonte Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; }
+    .aba-conteudo { display: none; }
+    .aba-conteudo.ativa { display: block; }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 h-screen flex flex-col overflow-hidden">
+<body class="bg-gray-100 font-sans text-gray-800">
 
-  <!-- Top Navigation Bar -->
-  <header class="bg-indigo-900 text-white shadow-md flex-shrink-0">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center space-x-3">
-        <i class="fa-solid me-2 fa-cash-register text-2xl text-amber-400"></i>
-        <h1 class="text-xl font-bold tracking-wide">PDV Web Pro</h1>
+  <!-- TELA DE LOGIN (Exibida por padrão se não houver usuário logado) -->
+  <div id="telaLogin" class="min-h-screen flex items-center justify-center bg-blue-900 p-4">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md space-y-6">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold text-blue-700">PDV Comercial</h1>
+        <p class="text-gray-500 text-sm mt-1">Acesse com sua conta para continuar</p>
       </div>
-      <div id="cashier-status-badge" class="px-3 py-1 rounded-full text-xs font-semibold bg-red-500 text-white flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-        Caixa Fechado
-      </div>
+
+      <form onsubmit="fazerLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Usuário / E-mail</label>
+          <input type="text" id="loginUsuario" required placeholder="admin ou vendedor" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Senha</label>
+          <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Perfil de Acesso</label>
+          <select id="loginPerfil" class="w-full p-3 border rounded">
+            <option value="admin">Administrador (Acesso Total)</option>
+            <option value="vendedor">Vendedor / Atendente</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow-md">
+          Entrar no Sistema
+        </button>
+      </form>
+
+      <p class="text-xs text-center text-gray-400">
+        Para testes rápidos: use qualquer usuário e senha.
+      </p>
     </div>
-    <!-- Menu Tabs -->
-    <nav class="flex bg-indigo-950/50 px-4 text-sm font-medium border-t border-indigo-800/50">
-      <button onclick="switchTab('pos')" id="tab-pos" class="tab-btn px-4 py-2.5 text-amber-400 border-b-2 border-amber-400 font-semibold flex items-center gap-2 transition">
-        <i class="fa-solid fa-cart-shopping"></i> Frente de Caixa
-      </button>
-      <button onclick="switchTab('cashier')" id="tab-cashier" class="tab-btn px-4 py-2.5 text-indigo-300 hover:text-white border-b-2 border-transparent flex items-center gap-2 transition">
-        <i class="fa-solid fa-wallet"></i> Controle de Caixa
-      </button>
-      <button onclick="switchTab('products')" id="tab-products" class="tab-btn px-4 py-2.5 text-indigo-300 hover:text-white border-b-2 border-transparent flex items-center gap-2 transition">
-        <i class="fa-solid fa-boxes-stacked"></i> Produtos
-      </button>
-      <button onclick="switchTab('clients')" id="tab-clients" class="tab-btn px-4 py-2.5 text-indigo-300 hover:text-white border-b-2 border-transparent flex items-center gap-2 transition">
-        <i class="fa-solid fa-users"></i> Clientes / Fiado
-      </button>
-    </nav>
-  </header>
+  </div>
 
-  <!-- Main Content Area -->
-  <main class="flex-1 overflow-y-auto p-4 md:p-6">
+  <!-- APLICAÇÃO PRINCIPAL (Escondida até fazer login) -->
+  <div id="appPrincipal" class="hidden min-h-screen flex flex-col">
 
-    <!-- 1. FRENTE DE CAIXA (POS) -->
-    <section id="view-pos" class="tab-view h-full flex flex-col lg:flex-row gap-6">
-      <!-- Left: Products List & Selection -->
-      <div class="lg:w-7/12 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="p-4 border-b border-slate-100 bg-slate-50 flex gap-2">
-          <div class="relative flex-1">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
-            <input type="text" id="pos-search" oninput="renderPosProducts()" placeholder="Buscar por código de barras ou nome..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          </div>
+    <!-- CABEÇALHO DA APLICAÇÃO -->
+    <header class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50">
+      <div class="max-w-6xl mx-auto flex justify-between items-center">
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold">PDV Web</h1>
+          <span id="labelUsuarioLogado" class="text-xs text-blue-200">Usuário: Admin</span>
         </div>
-        <div id="pos-products-grid" class="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto flex-1 max-h-[calc(100vh-280px)]">
-          <!-- Produtos renderizados via JS -->
-        </div>
-      </div>
-
-      <!-- Right: Cart & Checkout -->
-      <div class="lg:w-5/12 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="p-4 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
-          <h2 class="font-bold text-indigo-900 flex items-center gap-2"><i class="fa-solid fa-receipt"></i> Carrinho de Compras</h2>
-          <button onclick="clearCart()" class="text-xs text-red-600 hover:text-red-800 font-semibold">Esvaziar</button>
-        </div>
-        
-        <!-- Cart Items List -->
-        <div id="cart-items" class="p-4 flex-1 overflow-y-auto max-h-[300px] space-y-3 divide-y divide-slate-100">
-          <!-- Itens do carrinho renderizados via JS -->
-        </div>
-
-        <!-- Totals & Payment Section -->
-        <div class="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
-          <div class="flex justify-between items-center text-slate-600 text-sm">
-            <span>Subtotal:</span>
-            <span id="cart-subtotal" class="font-medium">R$ 0,00</span>
+        <div class="flex items-center gap-3">
+          <div id="statusCaixaTopo" class="bg-blue-800 px-3 py-1 rounded-full text-xs md:text-sm font-bold">
+            Caixa: Fechado
           </div>
-          <div class="flex justify-between items-center text-lg font-bold text-slate-900 border-t border-slate-200 pt-2">
-            <span>Total:</span>
-            <span id="cart-total" class="text-indigo-600 text-xl">R$ 0,00</span>
-          </div>
-
-          <!-- Payment Mode Selection -->
-          <div class="pt-2">
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Forma de Pagamento:</label>
-            <select id="pos-payment-type" onchange="toggleClientSelectForFiado()" class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500">
-              <option value="avista_dinheiro">À Vista - Dinheiro</option>
-              <option value="avista_pix">À Vista - PIX</option>
-              <option value="avista_cartao">À Vista - Cartão</option>
-              <option value="fiado">Fiado (Conta de Cliente)</option>
-            </select>
-          </div>
-
-          <!-- Client Select (Hidden unless 'fiado' is picked) -->
-          <div id="pos-client-select-box" class="hidden">
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Selecione o Cliente:</label>
-            <select id="pos-client-select" class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500">
-              <!-- Clientes inseridos por JS -->
-            </select>
-          </div>
-
-          <button onclick="finishSale()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-md transition flex justify-center items-center gap-2">
-            <i class="fa-solid fa-check"></i> Finalizar Venda
+          <button onclick="fazerLogout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded font-semibold">
+            Sair
           </button>
         </div>
       </div>
-    </section>
+    </header>
 
-    <!-- 2. CONTROLE DE CAIXA -->
-    <section id="view-cashier" class="tab-view hidden max-w-4xl mx-auto space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Status Card -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <div class="text-xs text-slate-500 uppercase font-semibold">Status do Caixa</div>
-          <div id="cashier-status-text" class="text-2xl font-bold text-red-600 mt-1">Fechado</div>
-          <div class="mt-4 flex gap-2">
-            <button onclick="openCashierModal()" id="btn-open-cashier" class="flex-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg">Abrir Caixa</button>
-            <button onclick="closeCashier()" id="btn-close-cashier" class="flex-1 py-1.5 px-3 bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg disabled:opacity-50" disabled>Fechar Caixa</button>
+    <!-- NAVEGAÇÃO DE ABAS RESPONSIVA -->
+    <nav class="bg-blue-800 text-white shadow-inner overflow-x-auto">
+      <div class="max-w-6xl mx-auto flex border-b border-blue-600 min-w-max">
+        <button onclick="alternarAba('frenteCaixa')" id="btn-frenteCaixa" class="py-3 px-5 hover:bg-blue-700 font-semibold border-b-2 border-white text-sm md:text-base">Frente de Caixa</button>
+        <button onclick="alternarAba('controleCaixa')" id="btn-controleCaixa" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Caixa</button>
+        <button onclick="alternarAba('produtos')" id="btn-produtos" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Produtos</button>
+        <button onclick="alternarAba('clientes')" id="btn-clientes" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Clientes & Fiado</button>
+        <button onclick="alternarAba('relatorios')" id="btn-relatorios" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base admin-only">Relatórios & Lucros</button>
+      </div>
+    </nav>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="max-w-6xl mx-auto p-4 flex-grow w-full">
+
+      <!-- ABA 1: FRENTE DE CAIXA -->
+      <section id="frenteCaixa" class="aba-conteudo ativa">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="md:col-span-2 bg-white p-4 md:p-6 rounded-lg shadow-md">
+            <h2 class="text-lg md:text-xl font-bold mb-4 text-gray-700">Selecione os Produtos</h2>
+            <div id="gridProdutosVenda" class="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4"></div>
           </div>
-        </div>
 
-        <!-- Balance Card -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <div class="text-xs text-slate-500 uppercase font-semibold">Saldo Atual em Caixa</div>
-          <div id="cashier-balance" class="text-2xl font-bold text-slate-900 mt-1">R$ 0,00</div>
-          <div class="text-xs text-slate-400 mt-1">Inicial: <span id="cashier-initial">R$ 0,00</span></div>
-        </div>
-
-        <!-- Actions Card -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-          <div class="text-xs text-slate-500 uppercase font-semibold">Lançamento Avulso</div>
-          <div class="flex gap-2 mt-2">
-            <button onclick="openTransactionModal('entrada')" class="flex-1 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold">
-              <i class="fa-solid fa-plus text-xs"></i> Suprimento
-            </button>
-            <button onclick="openTransactionModal('saida')" class="flex-1 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold">
-              <i class="fa-solid fa-minus text-xs"></i> Sangria/Saída
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- History Table -->
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 text-sm">
-          Histórico de Movimentações do Caixa
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-600">
-            <thead class="bg-slate-100 text-xs text-slate-500 uppercase">
-              <tr>
-                <th class="p-3">Horário</th>
-                <th class="p-3">Tipo</th>
-                <th class="p-3">Descrição</th>
-                <th class="p-3 text-right">Valor</th>
-              </tr>
-            </thead>
-            <tbody id="cashier-history-table" class="divide-y divide-slate-100">
-              <!-- Registros inseridos por JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3. GESTÃO DE PRODUTOS -->
-    <section id="view-products" class="tab-view hidden max-w-5xl mx-auto space-y-6">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 class="text-xl font-bold text-slate-800">Cadastro de Produtos</h2>
-        <button onclick="openProductModal()" class="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2">
-          <i class="fa-solid fa-plus"></i> Novo Produto
-        </button>
-      </div>
-
-      <!-- Products Table -->
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="p-3 border-b border-slate-100">
-          <input type="text" id="product-search" oninput="renderProductsTable()" placeholder="Buscar produtos..." class="w-full max-w-sm px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-600">
-            <thead class="bg-slate-50 text-xs text-slate-500 uppercase border-b border-slate-200">
-              <tr>
-                <th class="p-3">Código</th>
-                <th class="p-3">Nome</th>
-                <th class="p-3">Custo (R$)</th>
-                <th class="p-3">Venda (R$)</th>
-                <th class="p-3">Lucro (%)</th>
-                <th class="p-3 text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="products-table-body" class="divide-y divide-slate-100">
-              <!-- Linhas de produtos inseridas via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 4. GESTÃO DE CLIENTES & FIADO -->
-    <section id="view-clients" class="tab-view hidden max-w-5xl mx-auto space-y-6">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 class="text-xl font-bold text-slate-800">Clientes & Controle de Fiado</h2>
-        <button onclick="openClientModal()" class="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2">
-          <i class="fa-solid fa-user-plus"></i> Novo Cliente
-        </button>
-      </div>
-
-      <!-- Clients Table -->
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="p-3 border-b border-slate-100">
-          <input type="text" id="client-search" oninput="renderClientsTable()" placeholder="Buscar cliente por nome ou telefone..." class="w-full max-w-sm px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-600">
-            <thead class="bg-slate-50 text-xs text-slate-500 uppercase border-b border-slate-200">
-              <tr>
-                <th class="p-3">Nome</th>
-                <th class="p-3">Telefone</th>
-                <th class="p-3">Limite de Fiado</th>
-                <th class="p-3">Saldo Devedor</th>
-                <th class="p-3 text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="clients-table-body" class="divide-y divide-slate-100">
-              <!-- Clientes inseridos via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- MODALS SECTION -->
-
-  <!-- 1. Modal Abertura de Caixa -->
-  <div id="modal-cashier-open" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-      <h3 class="text-lg font-bold text-slate-800 border-b pb-2">Abertura de Caixa</h3>
-      <div>
-        <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Inicial de Fundo de Troco (R$):</label>
-        <input type="number" step="0.01" id="cashier-initial-input" value="0.00" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeModal('modal-cashier-open')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg">Cancelar</button>
-        <button onclick="confirmOpenCashier()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg">Confirmar Abertura</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2. Modal Suprimento/Sangria -->
-  <div id="modal-transaction" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-      <h3 id="modal-tx-title" class="text-lg font-bold text-slate-800 border-b pb-2">Lançamento de Caixa</h3>
-      <input type="hidden" id="modal-tx-type">
-      <div>
-        <label class="block text-xs font-semibold text-slate-600 mb-1">Descrição / Motivo:</label>
-        <input type="text" id="modal-tx-desc" placeholder="Ex: Pagamento de fornecedor ou reforço de troco" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-600 mb-1">Valor (R$):</label>
-        <input type="number" step="0.01" id="modal-tx-value" placeholder="0.00" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeModal('modal-transaction')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg">Cancelar</button>
-        <button onclick="saveTransaction()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg">Salvar Lançamento</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 3. Modal Novo/Editar Produto -->
-  <div id="modal-product" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-      <h3 id="modal-product-title" class="text-lg font-bold text-slate-800 border-b pb-2">Cadastrar Produto</h3>
-      <input type="hidden" id="prod-id">
-      <div>
-        <label class="block text-xs font-semibold text-slate-600 mb-1">Código de Barras / SKU:</label>
-        <input type="text" id="prod-sku" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Produto:</label>
-        <input type="text" id="prod-name" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Preço Custo (R$):</label>
-          <input type="number" step="0.01" id="prod-cost" oninput="calculateProfitMargin()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Preço Venda (R$):</label>
-          <input type="number" step="0.01" id="prod-price" oninput="calculateProfitMargin()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
-        </div>
-      </div>
-      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
-        <span class="text-xs font-semibold text-slate-500">Margem de Lucro:</span>
-        <span id="prod-profit-display" class="text-sm font-bold text-emerald-600 ml-2">0.00%</span>
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeModal('modal-product')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg">Cancelar</button>
-        <button onclick="saveProduct()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg">Salvar Produto</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4. Modal Novo/Editar Cliente -->
-  <div id="modal-client" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-      <h3 id="modal-client-title" class="text-lg font-bold text-slate-800 border-b pb-2">Cadastrar Cliente</h3>
-      <input type="hidden" id="cli-id">
-      <div>
-        <label class="block text-xs font-semibold text-slate-600 mb-1">Nome Completo:</label>
-        <input type="text" id="cli-name" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-600 mb-1">Telefone / WhatsApp:</label>
-        <input type="text" id="cli-phone" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-600 mb-1">Limite de Crédito / Fiado (R$):</label>
-        <input type="number" step="0.01" id="cli-limit" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeModal('modal-client')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg">Cancelar</button>
-        <button onclick="saveClient()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg">Salvar Cliente</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 5. Modal Quitar Fiado -->
-  <div id="modal-pay-fiado" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-      <h3 class="text-lg font-bold text-slate-800 border-b pb-2">Receber Pagamento de Fiado</h3>
-      <input type="hidden" id="pay-cli-id">
-      <div>
-        <p class="text-xs text-slate-500">Cliente: <span id="pay-cli-name" class="font-bold text-slate-800"></span></p>
-        <p class="text-xs text-slate-500">Débito Atual: <span id="pay-cli-debt" class="font-bold text-rose-600"></span></p>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-600 mb-1">Valor do Pagamento (R$):</label>
-        <input type="number" step="0.01" id="pay-amount" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeModal('modal-pay-fiado')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg">Cancelar</button>
-        <button onclick="confirmPayFiado()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg">Receber & Entrar no Caixa</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // ESTADO DA APLICAÇÃO (Salvo no localStorage)
-    let products = JSON.parse(localStorage.getItem('pdv_products')) || [
-      { id: '1', sku: '78910001', name: 'Refrigerante 2L', cost: 4.50, price: 8.50 },
-      { id: '2', sku: '78910002', name: 'Biscoito Recheado', cost: 1.80, price: 3.50 },
-      { id: '3', sku: '78910003', name: 'Arroz 5kg', cost: 18.00, price: 26.90 }
-    ];
-
-    let clients = JSON.parse(localStorage.getItem('pdv_clients')) || [
-      { id: '1', name: 'João Silva', phone: '(11) 98888-7777', limit: 200.00, debt: 0.00 }
-    ];
-
-    let cashier = JSON.parse(localStorage.getItem('pdv_cashier')) || {
-      isOpen: false,
-      initialAmount: 0,
-      balance: 0,
-      history: []
-    };
-
-    let cart = [];
-
-    // INICIALIZAÇÃO DA PÁGINA
-    window.onload = () => {
-      saveState();
-      renderProductsTable();
-      renderClientsTable();
-      renderPosProducts();
-      updateCashierUI();
-    };
-
-    function saveState() {
-      localStorage.setItem('pdv_products', JSON.stringify(products));
-      localStorage.setItem('pdv_clients', JSON.stringify(clients));
-      localStorage.setItem('pdv_cashier', JSON.stringify(cashier));
-    }
-
-    // NAVEGAÇÃO ENTRE ABAS
-    function switchTab(tabName) {
-      document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.tab-btn').forEach(el => {
-        el.classList.remove('text-amber-400', 'border-amber-400', 'font-semibold');
-        el.classList.add('text-indigo-300', 'border-transparent');
-      });
-
-      document.getElementById(`view-${tabName}`).classList.remove('hidden');
-      const activeBtn = document.getElementById(`tab-${tabName}`);
-      activeBtn.classList.add('text-amber-400', 'border-amber-400', 'font-semibold');
-      activeBtn.classList.remove('text-indigo-300', 'border-transparent');
-
-      if(tabName === 'pos') renderPosProducts();
-      if(tabName === 'products') renderProductsTable();
-      if(tabName === 'clients') renderClientsTable();
-      if(tabName === 'cashier') updateCashierUI();
-    }
-
-    // MODAL CONTROL
-    function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
-    }
-
-    // --- MÓDULO DE PRODUTOS ---
-    function renderProductsTable() {
-      const search = document.getElementById('product-search').value.toLowerCase();
-      const tbody = document.getElementById('products-table-body');
-      tbody.innerHTML = '';
-
-      products
-        .filter(p => p.name.toLowerCase().includes(search) || p.sku.toLowerCase().includes(search))
-        .forEach(p => {
-          const margin = p.cost > 0 ? (((p.price - p.cost) / p.cost) * 100).toFixed(1) : '100.0';
-          tbody.innerHTML += `
-            <tr class="hover:bg-slate-50 transition">
-              <td class="p-3 font-mono text-xs">${p.sku}</td>
-              <td class="p-3 font-medium text-slate-800">${p.name}</td>
-              <td class="p-3">R$ ${parseFloat(p.cost).toFixed(2)}</td>
-              <td class="p-3 font-bold text-slate-800">R$ ${parseFloat(p.price).toFixed(2)}</td>
-              <td class="p-3"><span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">+${margin}%</span></td>
-              <td class="p-3 text-center space-x-2">
-                <button onclick="editProduct('${p.id}')" class="text-indigo-600 hover:text-indigo-900"><i class="fa-solid fa-pen"></i></button>
-                <button onclick="deleteProduct('${p.id}')" class="text-rose-600 hover:text-rose-900"><i class="fa-solid fa-trash"></i></button>
-              </td>
-            </tr>
-          `;
-        });
-    }
-
-    function openProductModal(id = null) {
-      document.getElementById('modal-product').classList.remove('hidden');
-      if (id) {
-        const prod = products.find(p => p.id === id);
-        document.getElementById('modal-product-title').innerText = 'Editar Produto';
-        document.getElementById('prod-id').value = prod.id;
-        document.getElementById('prod-sku').value = prod.sku;
-        document.getElementById('prod-name').value = prod.name;
-        document.getElementById('prod-cost').value = prod.cost;
-        document.getElementById('prod-price').value = prod.price;
-      } else {
-        document.getElementById('modal-product-title').innerText = 'Cadastrar Produto';
-        document.getElementById('prod-id').value = '';
-        document.getElementById('prod-sku').value = '';
-        document.getElementById('prod-name').value = '';
-        document.getElementById('prod-cost').value = '';
-        document.getElementById('prod-price').value = '';
-      }
-      calculateProfitMargin();
-    }
-
-    function calculateProfitMargin() {
-      const cost = parseFloat(document.getElementById('prod-cost').value) || 0;
-      const price = parseFloat(document.getElementById('prod-price').value) || 0;
-      const display = document.getElementById('prod-profit-display');
-
-      if (cost > 0 && price >= 0) {
-        const margin = (((price - cost) / cost) * 100).toFixed(2);
-        display.innerText = `${margin}%`;
-        display.className = margin >= 0 ? "text-sm font-bold text-emerald-600 ml-2" : "text-sm font-bold text-rose-600 ml-2";
-      } else {
-        display.innerText = "0.00%";
-      }
-    }
-
-    function saveProduct() {
-      const id = document.getElementById('prod-id').value;
-      const sku = document.getElementById('prod-sku').value.trim();
-      const name = document.getElementById('prod-name').value.trim();
-      const cost = parseFloat(document.getElementById('prod-cost').value) || 0;
-      const price = parseFloat(document.getElementById('prod-price').value) || 0;
-
-      if (!sku || !name || price <= 0) {
-        alert('Por favor, preencha o código, nome e preço de venda válido.');
-        return;
-      }
-
-      if (id) {
-        const idx = products.findIndex(p => p.id === id);
-        products[idx] = { id, sku, name, cost, price };
-      } else {
-        products.push({ id: Date.now().toString(), sku, name, cost, price });
-      }
-
-      saveState();
-      renderProductsTable();
-      closeModal('modal-product');
-    }
-
-    function editProduct(id) { openProductModal(id); }
-
-    function deleteProduct(id) {
-      if (confirm('Tem certeza que deseja excluir este produto?')) {
-        products = products.filter(p => p.id !== id);
-        saveState();
-        renderProductsTable();
-      }
-    }
-
-    // --- MÓDULO DE CLIENTES ---
-    function renderClientsTable() {
-      const search = document.getElementById('client-search').value.toLowerCase();
-      const tbody = document.getElementById('clients-table-body');
-      tbody.innerHTML = '';
-
-      clients
-        .filter(c => c.name.toLowerCase().includes(search) || c.phone.includes(search))
-        .forEach(c => {
-          tbody.innerHTML += `
-            <tr class="hover:bg-slate-50 transition">
-              <td class="p-3 font-medium text-slate-800">${c.name}</td>
-              <td class="p-3">${c.phone}</td>
-              <td class="p-3">R$ ${parseFloat(c.limit).toFixed(2)}</td>
-              <td class="p-3 font-bold ${c.debt > 0 ? 'text-rose-600' : 'text-emerald-600'}">R$ ${parseFloat(c.debt).toFixed(2)}</td>
-              <td class="p-3 text-center space-x-2">
-                ${c.debt > 0 ? `<button onclick="openPayFiadoModal('${c.id}')" class="px-2 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-semibold rounded"><i class="fa-solid fa-hand-holding-dollar"></i> Receber</button>` : ''}
-                <button onclick="editClient('${c.id}')" class="text-indigo-600 hover:text-indigo-900"><i class="fa-solid fa-pen"></i></button>
-                <button onclick="deleteClient('${c.id}')" class="text-rose-600 hover:text-rose-900"><i class="fa-solid fa-trash"></i></button>
-              </td>
-            </tr>
-          `;
-        });
-    }
-
-    function openClientModal(id = null) {
-      document.getElementById('modal-client').classList.remove('hidden');
-      if (id) {
-        const cli = clients.find(c => c.id === id);
-        document.getElementById('modal-client-title').innerText = 'Editar Cliente';
-        document.getElementById('cli-id').value = cli.id;
-        document.getElementById('cli-name').value = cli.name;
-        document.getElementById('cli-phone').value = cli.phone;
-        document.getElementById('cli-limit').value = cli.limit;
-      } else {
-        document.getElementById('modal-client-title').innerText = 'Cadastrar Cliente';
-        document.getElementById('cli-id').value = '';
-        document.getElementById('cli-name').value = '';
-        document.getElementById('cli-phone').value = '';
-        document.getElementById('cli-limit').value = '0.00';
-      }
-    }
-
-    function saveClient() {
-      const id = document.getElementById('cli-id').value;
-      const name = document.getElementById('cli-name').value.trim();
-      const phone = document.getElementById('cli-phone').value.trim();
-      const limit = parseFloat(document.getElementById('cli-limit').value) || 0;
-
-      if (!name) { alert('Digite o nome do cliente.'); return; }
-
-      if (id) {
-        const idx = clients.findIndex(c => c.id === id);
-        clients[idx].name = name;
-        clients[idx].phone = phone;
-        clients[idx].limit = limit;
-      } else {
-        clients.push({ id: Date.now().toString(), name, phone, limit, debt: 0 });
-      }
-
-      saveState();
-      renderClientsTable();
-      closeModal('modal-client');
-    }
-
-    function editClient(id) { openClientModal(id); }
-
-    function deleteClient(id) {
-      const cli = clients.find(c => c.id === id);
-      if (cli.debt > 0) { alert('Não é possível excluir clientes com pendências financeiras.'); return; }
-      if (confirm('Deseja realmente remover este cliente?')) {
-        clients = clients.filter(c => c.id !== id);
-        saveState();
-        renderClientsTable();
-      }
-    }
-
-    function openPayFiadoModal(cliId) {
-      const cli = clients.find(c => c.id === cliId);
-      document.getElementById('pay-cli-id').value = cli.id;
-      document.getElementById('pay-cli-name').innerText = cli.name;
-      document.getElementById('pay-cli-debt').innerText = `R$ ${parseFloat(cli.debt).toFixed(2)}`;
-      document.getElementById('pay-amount').value = cli.debt.toFixed(2);
-      document.getElementById('modal-pay-fiado').classList.remove('hidden');
-    }
-
-    function confirmPayFiado() {
-      if (!cashier.isOpen) { alert('Abra o caixa antes de receber pagamentos.'); return; }
-
-      const cliId = document.getElementById('pay-cli-id').value;
-      const amount = parseFloat(document.getElementById('pay-amount').value) || 0;
-      const cli = clients.find(c => c.id === cliId);
-
-      if (amount <= 0 || amount > cli.debt) {
-        alert('Valor de pagamento inválido.');
-        return;
-      }
-
-      cli.debt -= amount;
-      cashier.balance += amount;
-      cashier.history.push({
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        type: 'Entrada (Fiado Rec.)',
-        description: `Recebimento Fiado - ${cli.name}`,
-        value: amount
-      });
-
-      saveState();
-      renderClientsTable();
-      updateCashierUI();
-      closeModal('modal-pay-fiado');
-    }
-
-    // --- MÓDULO DE CAIXA ---
-    function updateCashierUI() {
-      const statusBadge = document.getElementById('cashier-status-badge');
-      const statusText = document.getElementById('cashier-status-text');
-      const balanceEl = document.getElementById('cashier-balance');
-      const initialEl = document.getElementById('cashier-initial');
-      const btnOpen = document.getElementById('btn-open-cashier');
-      const btnClose = document.getElementById('btn-close-cashier');
-
-      if (cashier.isOpen) {
-        statusBadge.className = "px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500 text-white flex items-center gap-2";
-        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-white animate-pulse"></span> Caixa Aberto`;
-        statusText.innerText = "Aberto";
-        statusText.className = "text-2xl font-bold text-emerald-600 mt-1";
-        btnOpen.disabled = true;
-        btnOpen.classList.add('opacity-50');
-        btnClose.disabled = false;
-        btnClose.classList.remove('opacity-50');
-      } else {
-        statusBadge.className = "px-3 py-1 rounded-full text-xs font-semibold bg-red-500 text-white flex items-center gap-2";
-        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-white animate-pulse"></span> Caixa Fechado`;
-        statusText.innerText = "Fechado";
-        statusText.className = "text-2xl font-bold text-red-600 mt-1";
-        btnOpen.disabled = false;
-        btnOpen.classList.remove('opacity-50');
-        btnClose.disabled = true;
-        btnClose.classList.add('opacity-50');
-      }
-
-      balanceEl.innerText = `R$ ${cashier.balance.toFixed(2)}`;
-      initialEl.innerText = `R$ ${cashier.initialAmount.toFixed(2)}`;
-
-      const table = document.getElementById('cashier-history-table');
-      table.innerHTML = '';
-      cashier.history.slice().reverse().forEach(h => {
-        const isPositive = h.value > 0;
-        table.innerHTML += `
-          <tr class="hover:bg-slate-50 transition">
-            <td class="p-3 font-mono text-xs text-slate-500">${h.time}</td>
-            <td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-semibold ${isPositive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${h.type}</span></td>
-            <td class="p-3">${h.description}</td>
-            <td class="p-3 text-right font-bold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}">R$ ${Math.abs(h.value).toFixed(2)}</td>
-          </tr>
-        `;
-      });
-    }
-
-    function openCashierModal() { document.getElementById('modal-cashier-open').classList.remove('hidden'); }
-
-    function confirmOpenCashier() {
-      const initial = parseFloat(document.getElementById('cashier-initial-input').value) || 0;
-      cashier.isOpen = true;
-      cashier.initialAmount = initial;
-      cashier.balance = initial;
-      cashier.history = [{
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        type: 'Abertura',
-        description: 'Fundo de Troco Inicial',
-        value: initial
-      }];
-
-      saveState();
-      updateCashierUI();
-      closeModal('modal-cashier-open');
-    }
-
-    function closeCashier() {
-      if (confirm(`Deseja fechar o caixa com o saldo final de R$ ${cashier.balance.toFixed(2)}?`)) {
-        cashier.isOpen = false;
-        saveState();
-        updateCashierUI();
-      }
-    }
-
-    function openTransactionModal(type) {
-      if (!cashier.isOpen) { alert('O caixa precisa estar aberto!'); return; }
-      document.getElementById('modal-tx-type').value = type;
-      document.getElementById('modal-tx-title').innerText = type === 'entrada' ? 'Suprimento de Caixa' : 'Sangria / Saída de Caixa';
-      document.getElementById('modal-tx-desc').value = '';
-      document.getElementById('modal-tx-value').value = '';
-      document.getElementById('modal-transaction').classList.remove('hidden');
-    }
-
-    function saveTransaction() {
-      const type = document.getElementById('modal-tx-type').value;
-      const desc = document.getElementById('modal-tx-desc').value.trim();
-      const val = parseFloat(document.getElementById('modal-tx-value').value) || 0;
-
-      if (!desc || val <= 0) { alert('Preencha a descrição e um valor válido.'); return; }
-
-      const realValue = type === 'entrada' ? val : -val;
-      cashier.balance += realValue;
-      cashier.history.push({
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        type: type === 'entrada' ? 'Suprimento' : 'Sangria',
-        description: desc,
-        value: realValue
-      });
-
-      saveState();
-      updateCashierUI();
-      closeModal('modal-transaction');
-    }
-
-    // --- MÓDULO FRENTE DE CAIXA (POS) ---
-    function renderPosProducts() {
-      const search = document.getElementById('pos-search').value.toLowerCase();
-      const grid = document.getElementById('pos-products-grid');
-      grid.innerHTML = '';
-
-      products
-        .filter(p => p.name.toLowerCase().includes(search) || p.sku.toLowerCase().includes(search))
-        .forEach(p => {
-          grid.innerHTML += `
-            <div onclick="addToCart('${p.id}')" class="cursor-pointer bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-300 p-3 rounded-lg flex flex-col justify-between transition group">
-              <div>
-                <span class="text-[10px] text-slate-400 font-mono">${p.sku}</span>
-                <h4 class="font-semibold text-slate-800 text-sm group-hover:text-indigo-600 line-clamp-2">${p.name}</h4>
+          <div class="bg-white p-4 md:p-6 rounded-lg shadow-md flex flex-col justify-between">
+            <div>
+              <h2 class="text-lg md:text-xl font-bold mb-4 text-gray-700">Carrinho</h2>
+              <div id="itensCarrinho" class="space-y-2 max-h-60 overflow-y-auto border-b pb-4 mb-4">
+                <p class="text-gray-500 text-sm">Nenhum item selecionado.</p>
               </div>
-              <div class="mt-2 font-bold text-indigo-900 text-sm">R$ ${parseFloat(p.price).toFixed(2)}</div>
+              <div class="text-right text-xl font-bold text-gray-800">
+                Total: R$ <span id="totalCarrinho">0,00</span>
+              </div>
             </div>
-          `;
+
+            <div class="mt-6 border-t pt-4">
+              <label class="block text-sm font-medium mb-1">Pagamento</label>
+              <select id="formaPagamento" class="w-full p-2 border rounded mb-3" onchange="tratarTrocaPagamento()">
+                <option value="vista">À Vista (Dinheiro/PIX/Cartão)</option>
+                <option value="fiado">Fiado (Conta de Cliente)</option>
+              </select>
+
+              <div id="containerClienteFiado" class="hidden mb-3">
+                <label class="block text-sm font-medium mb-1">Cliente</label>
+                <select id="selectClienteFiado" class="w-full p-2 border rounded"></select>
+              </div>
+
+              <button onclick="finalizarVenda()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded shadow">
+                Finalizar Venda
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 2: CONTROLE DE CAIXA -->
+      <section id="controleCaixa" class="aba-conteudo">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Ações de Caixa</h2>
+            <div id="formAberturaCaixa" class="mb-6">
+              <p class="text-sm text-gray-600 mb-2">Valor inicial (troco):</p>
+              <div class="flex gap-2">
+                <input type="number" id="valorInicialCaixa" step="0.01" placeholder="100.00" class="p-2 border rounded w-full">
+                <button onclick="abrirCaixa()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold">Abrir</button>
+              </div>
+            </div>
+            <div id="formOperacoesCaixa" class="hidden space-y-4">
+              <button onclick="fecharCaixa()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold">Fechar Caixa</button>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Resumo do Caixa</h2>
+            <div class="space-y-3">
+              <div class="flex justify-between py-2 border-b">
+                <span>Fundo Inicial:</span>
+                <span class="font-bold">R$ <span id="resumoInicial">0,00</span></span>
+              </div>
+              <div class="flex justify-between py-2 border-b text-green-600">
+                <span>Entradas:</span>
+                <span class="font-bold">R$ <span id="resumoEntradas">0,00</span></span>
+              </div>
+              <div class="flex justify-between py-2 text-xl font-bold border-t pt-3">
+                <span>Saldo Atual:</span>
+                <span class="text-blue-600">R$ <span id="resumoTotal">0,00</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 3: CADASTRO DE PRODUTOS -->
+      <section id="produtos" class="aba-conteudo">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Cadastrar Produto</h2>
+            <form id="formProduto" onsubmit="salvarProduto(event)" class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium">Nome</label>
+                <input type="text" id="prodNome" required class="w-full p-2 border rounded">
+              </div>
+              <div>
+                <label class="block text-sm font-medium">Preço Custo (R$)</label>
+                <input type="number" id="prodCusto" step="0.01" required oninput="calcularMargemLucro()" class="w-full p-2 border rounded">
+              </div>
+              <div>
+                <label class="block text-sm font-medium">Preço Venda (R$)</label>
+                <input type="number" id="prodVenda" step="0.01" required oninput="calcularMargemLucro()" class="w-full p-2 border rounded">
+              </div>
+              <div class="bg-gray-50 p-3 rounded text-sm">
+                Margem de Lucro: <span id="prodLucroPercentual" class="font-bold text-green-600">0.00%</span>
+              </div>
+              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold">Salvar Produto</button>
+            </form>
+          </div>
+
+          <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Produtos Cadastrados</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-gray-100 border-b text-sm">
+                    <th class="p-2">Nome</th>
+                    <th class="p-2">Custo</th>
+                    <th class="p-2">Venda</th>
+                    <th class="p-2">Lucro (%)</th>
+                  </tr>
+                </thead>
+                <tbody id="tabelaProdutos"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 4: CLIENTES, GASTO MENSAL E FIADO -->
+      <section id="clientes" class="aba-conteudo">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Cadastrar Cliente</h2>
+            <form id="formCliente" onsubmit="salvarCliente(event)" class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium">Nome Completo</label>
+                <input type="text" id="cliNome" required class="w-full p-2 border rounded">
+              </div>
+              <div>
+                <label class="block text-sm font-medium">Telefone</label>
+                <input type="text" id="cliTelefone" required class="w-full p-2 border rounded">
+              </div>
+              <div>
+                <label class="block text-sm font-medium">Limite Fiado (R$)</label>
+                <input type="number" id="cliLimite" step="0.01" required class="w-full p-2 border rounded">
+              </div>
+              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold">Salvar Cliente</button>
+            </form>
+          </div>
+
+          <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Controle de Fiados e Gastos Mensais</h2>
+            <div id="listaClientes" class="space-y-4"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 5: RELATÓRIOS E LUCROS -->
+      <section id="relatorios" class="aba-conteudo">
+        <div class="space-y-6">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
+              <span class="text-xs text-gray-500 font-bold block">Vendas Mês</span>
+              <span class="text-lg md:text-2xl font-bold text-gray-800">R$ <span id="relVendasMes">0,00</span></span>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
+              <span class="text-xs text-gray-500 font-bold block">Lucro Mês</span>
+              <span class="text-lg md:text-2xl font-bold text-green-600">R$ <span id="relLucroMes">0,00</span></span>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500">
+              <span class="text-xs text-gray-500 font-bold block">Vendas Semana</span>
+              <span class="text-lg md:text-2xl font-bold text-gray-800">R$ <span id="relVendasSemana">0,00</span></span>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-emerald-500">
+              <span class="text-xs text-gray-500 font-bold block">Lucro Semana</span>
+              <span class="text-lg md:text-2xl font-bold text-emerald-600">R$ <span id="relLucroSemana">0,00</span></span>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Histórico de Vendas</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-gray-100 border-b text-sm">
+                    <th class="p-2">Data/Hora</th>
+                    <th class="p-2">Pagto</th>
+                    <th class="p-2">Venda</th>
+                    <th class="p-2">Custo</th>
+                    <th class="p-2">Lucro</th>
+                  </tr>
+                </thead>
+                <tbody id="tabelaHistoricoVendas"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- LÓGICA EM JAVASCRIPT -->
+  <script>
+    // ESTADO DA APLICAÇÃO
+    let usuarioAtual = JSON.parse(localStorage.getItem('pdv_usuario')) || null;
+    let produtos = JSON.parse(localStorage.getItem('pdv_produtos')) || [];
+    let clientes = JSON.parse(localStorage.getItem('pdv_clientes')) || [];
+    let caixa = JSON.parse(localStorage.getItem('pdv_caixa')) || { aberto: false, inicial: 0, entradas: 0, movimentacoes: [] };
+    let vendas = JSON.parse(localStorage.getItem('pdv_vendas')) || [];
+    let carrinho = [];
+
+    // AUTENTICAÇÃO E LOGIN
+    function fazerLogin(e) {
+      e.preventDefault();
+      const usuario = document.getElementById('loginUsuario').value;
+      const perfil = document.getElementById('loginPerfil').value;
+
+      usuarioAtual = { nome: usuario, perfil: perfil };
+      localStorage.setItem('pdv_usuario', JSON.stringify(usuarioAtual));
+      
+      iniciarSessao();
+    }
+
+    function fazerLogout() {
+      usuarioAtual = null;
+      localStorage.removeItem('pdv_usuario');
+      document.getElementById('telaLogin').classList.remove('hidden');
+      document.getElementById('appPrincipal').classList.add('hidden');
+    }
+
+    function iniciarSessao() {
+      if (!usuarioAtual) return;
+
+      document.getElementById('telaLogin').classList.add('hidden');
+      document.getElementById('appPrincipal').classList.remove('hidden');
+      document.getElementById('labelUsuarioLogado').innerText = `Usuário: ${usuarioAtual.nome} (${usuarioAtual.perfil})`;
+
+      // Bloqueia relatórios para vendedores simples
+      const botoesAdmin = document.querySelectorAll('.admin-only');
+      botoesAdmin.forEach(btn => {
+        if (usuarioAtual.perfil !== 'admin') {
+          btn.classList.add('hidden');
+        } else {
+          btn.classList.remove('hidden');
+        }
+      });
+
+      atualizarUICaixa();
+      renderizarGridProdutos();
+    }
+
+    // NAVEGAÇÃO DE ABAS
+    function alternarAba(idAba) {
+      document.querySelectorAll('.aba-conteudo').forEach(el => el.classList.remove('ativa'));
+      document.querySelectorAll('nav button').forEach(el => el.classList.remove('border-b-2', 'border-white'));
+      
+      document.getElementById(idAba).classList.add('ativa');
+      document.getElementById(`btn-${idAba}`).classList.add('border-b-2', 'border-white');
+
+      if (idAba === 'frenteCaixa') renderizarGridProdutos();
+      if (idAba === 'produtos') renderizarTabelaProdutos();
+      if (idAba === 'clientes') renderizarClientes();
+      if (idAba === 'controleCaixa') atualizarUICaixa();
+      if (idAba === 'relatorios') renderizarRelatorios();
+    }
+
+    // MÓDULO PRODUTOS
+    function calcularMargemLucro() {
+      const custo = parseFloat(document.getElementById('prodCusto').value) || 0;
+      const venda = parseFloat(document.getElementById('prodVenda').value) || 0;
+      let margem = custo > 0 ? ((venda - custo) / custo) * 100 : 0;
+      document.getElementById('prodLucroPercentual').innerText = `${margem.toFixed(2)}%`;
+    }
+
+    function salvarProduto(e) {
+      e.preventDefault();
+      const nome = document.getElementById('prodNome').value;
+      const custo = parseFloat(document.getElementById('prodCusto').value);
+      const venda = parseFloat(document.getElementById('prodVenda').value);
+
+      produtos.push({ id: Date.now(), nome, custo, venda });
+      localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
+
+      document.getElementById('formProduto').reset();
+      document.getElementById('prodLucroPercentual').innerText = '0.00%';
+      renderizarTabelaProdutos();
+      alert('Produto cadastrado com sucesso!');
+    }
+
+    function renderizarTabelaProdutos() {
+      const tbody = document.getElementById('tabelaProdutos');
+      tbody.innerHTML = '';
+      produtos.forEach(prod => {
+        const margem = prod.custo > 0 ? (((prod.venda - prod.custo) / prod.custo) * 100).toFixed(2) : '0.00';
+        tbody.innerHTML += `
+          <tr class="border-b text-sm">
+            <td class="p-2">${prod.nome}</td>
+            <td class="p-2">R$ ${prod.custo.toFixed(2)}</td>
+            <td class="p-2">R$ ${prod.venda.toFixed(2)}</td>
+            <td class="p-2 font-bold ${margem >= 0 ? 'text-green-600' : 'text-red-600'}">${margem}%</td>
+          </tr>`;
+      });
+    }
+
+    // MÓDULO CLIENTES & FIADO
+    function salvarCliente(e) {
+      e.preventDefault();
+      const nome = document.getElementById('cliNome').value;
+      const telefone = document.getElementById('cliTelefone').value;
+      const limite = parseFloat(document.getElementById('cliLimite').value);
+
+      clientes.push({ id: Date.now(), nome, telefone, limite, saldoDevedor: 0, historicoTransacoes: [] });
+      localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
+
+      document.getElementById('formCliente').reset();
+      renderizarClientes();
+      alert('Cliente cadastrado!');
+    }
+
+    function calcularGastoMesAtual(cliente) {
+      const agora = new Date();
+      let totalGastoMes = 0;
+      if (cliente.historicoTransacoes) {
+        cliente.historicoTransacoes.forEach(t => {
+          const d = new Date(t.data);
+          if (t.tipo === 'compra' && d.getMonth() === agora.getMonth() && d.getFullYear() === agora.getFullYear()) {
+            totalGastoMes += t.valor;
+          }
         });
-    }
-
-    function addToCart(prodId) {
-      const prod = products.find(p => p.id === prodId);
-      const existing = cart.find(item => item.product.id === prodId);
-
-      if (existing) {
-        existing.qty++;
-      } else {
-        cart.push({ product: prod, qty: 1 });
       }
-      renderCart();
+      return totalGastoMes;
     }
 
-    function removeFromCart(prodId) {
-      cart = cart.filter(item => item.product.id !== prodId);
-      renderCart();
-    }
-
-    function updateCartQty(prodId, delta) {
-      const item = cart.find(i => i.product.id === prodId);
-      if (item) {
-        item.qty += delta;
-        if (item.qty <= 0) removeFromCart(prodId);
-        else renderCart();
+    function renderizarClientes() {
+      const lista = document.getElementById('listaClientes');
+      lista.innerHTML = '';
+      if (clientes.length === 0) {
+        lista.innerHTML = '<p class="text-gray-500 text-sm">Nenhum cliente cadastrado.</p>';
+        return;
       }
+      clientes.forEach(cli => {
+        const gastoMes = calcularGastoMesAtual(cli);
+        const limiteDisponivel = cli.limite - cli.saldoDevedor;
+        lista.innerHTML += `
+          <div class="border p-4 rounded-lg bg-gray-50 space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-bold text-gray-800">${cli.nome}</h3>
+                <p class="text-xs text-gray-500">${cli.telefone}</p>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-gray-500 block">Dívida</span>
+                <span class="text-lg font-bold text-red-600">R$ ${cli.saldoDevedor.toFixed(2)}</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs bg-white p-2 rounded border">
+              <div><span class="text-gray-500 block">Gasto Mês:</span><span class="font-bold text-blue-600">R$ ${gastoMes.toFixed(2)}</span></div>
+              <div><span class="text-gray-500 block">Disp.:</span><span class="font-bold ${limiteDisponivel >= 0 ? 'text-green-600' : 'text-red-600'}">R$ ${limiteDisponivel.toFixed(2)}</span></div>
+            </div>
+            <div class="pt-2 border-t flex gap-2">
+              <input type="number" id="inputPagamento_${cli.id}" step="0.01" placeholder="Abater (R$)" class="p-1 text-sm border rounded w-full">
+              <button onclick="receberPagamentoCliente(${cli.id})" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded">Pagar</button>
+            </div>
+          </div>`;
+      });
     }
 
-    function clearCart() {
-      cart = [];
-      renderCart();
+    function receberPagamentoCliente(idCliente) {
+      if (!caixa.aberto) return alert('Abra o caixa primeiro!');
+      const input = document.getElementById(`inputPagamento_${idCliente}`);
+      const valor = parseFloat(input.value);
+      if (!valor || valor <= 0) return alert('Digite um valor válido.');
+
+      const cliente = clientes.find(c => c.id === idCliente);
+      if (!cliente) return;
+
+      cliente.saldoDevedor = Math.max(0, cliente.saldoDevedor - valor);
+      if (!cliente.historicoTransacoes) cliente.historicoTransacoes = [];
+      cliente.historicoTransacoes.push({ data: new Date().toISOString(), tipo: 'pagamento', valor });
+
+      caixa.entradas += valor;
+      localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
+      localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
+
+      alert('Pagamento abatido com sucesso!');
+      renderizarClientes();
+      atualizarUICaixa();
     }
 
-    function renderCart() {
-      const container = document.getElementById('cart-items');
+    // MÓDULO FRENTE DE CAIXA
+    function renderizarGridProdutos() {
+      const container = document.getElementById('gridProdutosVenda');
+      container.innerHTML = '';
+      if (produtos.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm col-span-3">Nenhum produto cadastrado.</p>';
+        return;
+      }
+      produtos.forEach(prod => {
+        container.innerHTML += `
+          <div onclick="adicionarAoCarrinho(${prod.id})" class="border p-3 rounded-lg text-center cursor-pointer hover:border-blue-500 bg-gray-50 hover:bg-blue-50 transition">
+            <h4 class="font-bold text-gray-800 text-sm">${prod.nome}</h4>
+            <p class="text-blue-600 font-bold mt-1">R$ ${prod.venda.toFixed(2)}</p>
+          </div>`;
+      });
+    }
+
+    function adicionarAoCarrinho(id) {
+      const prod = produtos.find(p => p.id === id);
+      if (!prod) return;
+      const item = carrinho.find(i => i.id === id);
+      if (item) item.qtd++;
+      else carrinho.push({ ...prod, qtd: 1 });
+      renderizarCarrinho();
+    }
+
+    function renderizarCarrinho() {
+      const container = document.getElementById('itensCarrinho');
       container.innerHTML = '';
       let total = 0;
-
-      if (cart.length === 0) {
-        container.innerHTML = `<div class="text-center text-slate-400 text-xs py-8">Carrinho vazio</div>`;
-      } else {
-        cart.forEach(item => {
-          const itemTotal = item.product.price * item.qty;
-          total += itemTotal;
-          container.innerHTML += `
-            <div class="flex justify-between items-center pt-2">
-              <div class="flex-1">
-                <h5 class="text-xs font-semibold text-slate-800">${item.product.name}</h5>
-                <span class="text-[11px] text-slate-500">R$ ${item.product.price.toFixed(2)} un</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <button onclick="updateCartQty('${item.product.id}', -1)" class="w-5 h-5 bg-slate-200 text-slate-700 rounded text-xs hover:bg-slate-300">-</button>
-                <span class="text-xs font-bold w-4 text-center">${item.qty}</span>
-                <button onclick="updateCartQty('${item.product.id}', 1)" class="w-5 h-5 bg-slate-200 text-slate-700 rounded text-xs hover:bg-slate-300">+</button>
-                <span class="text-xs font-bold text-slate-800 w-16 text-right">R$ ${itemTotal.toFixed(2)}</span>
-              </div>
-            </div>
-          `;
-        });
+      if (carrinho.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm">Nenhum item.</p>';
+        document.getElementById('totalCarrinho').innerText = '0,00';
+        return;
       }
-
-      document.getElementById('cart-subtotal').innerText = `R$ ${total.toFixed(2)}`;
-      document.getElementById('cart-total').innerText = `R$ ${total.toFixed(2)}`;
+      carrinho.forEach(item => {
+        const sub = item.venda * item.qtd;
+        total += sub;
+        container.innerHTML += `
+          <div class="flex justify-between items-center text-sm border-b pb-1">
+            <div><span class="font-medium">${item.nome}</span><span class="text-xs text-gray-500 block">${item.qtd}x R$ ${item.venda.toFixed(2)}</span></div>
+            <span class="font-bold">R$ ${sub.toFixed(2)}</span>
+          </div>`;
+      });
+      document.getElementById('totalCarrinho').innerText = total.toFixed(2);
     }
 
-    function toggleClientSelectForFiado() {
-      const payType = document.getElementById('pos-payment-type').value;
-      const box = document.getElementById('pos-client-select-box');
-      const select = document.getElementById('pos-client-select');
-
-      if (payType === 'fiado') {
-        box.classList.remove('hidden');
-        select.innerHTML = '<option value="">-- Selecione o Cliente --</option>';
-        clients.forEach(c => {
-          select.innerHTML += `<option value="${c.id}">${c.name} (Disp: R$ ${(c.limit - c.debt).toFixed(2)})</option>`;
-        });
-      } else {
-        box.classList.add('hidden');
-      }
+    function tratarTrocaPagamento() {
+      const forma = document.getElementById('formaPagamento').value;
+      const containerFiado = document.getElementById('containerClienteFiado');
+      if (forma === 'fiado') {
+        containerFiado.classList.remove('hidden');
+        const select = document.getElementById('selectClienteFiado');
+        select.innerHTML = '';
+        clientes.forEach(cli => select.innerHTML += `<option value="${cli.id}">${cli.nome} (Disp: R$ ${(cli.limite - cli.saldoDevedor).toFixed(2)})</option>`);
+      } else containerFiado.classList.add('hidden');
     }
 
-    function finishSale() {
-      if (cart.length === 0) { alert('Adicione produtos ao carrinho.'); return; }
+    function finalizarVenda() {
+      if (carrinho.length === 0) return alert('Carrinho vazio!');
+      if (!caixa.aberto) return alert('Caixa fechado!');
 
-      const total = cart.reduce((acc, item) => acc + (item.product.price * item.qty), 0);
-      const payType = document.getElementById('pos-payment-type').value;
+      let totalVenda = 0, totalCusto = 0;
+      carrinho.forEach(i => { totalVenda += i.venda * i.qtd; totalCusto += i.custo * i.qtd; });
+      const lucro = totalVenda - totalCusto;
+      const forma = document.getElementById('formaPagamento').value;
+      let detalhe = 'À Vista';
 
-      if (payType.startsWith('avista')) {
-        if (!cashier.isOpen) { alert('Abra o caixa antes de realizar vendas à vista.'); return; }
+      if (forma === 'vista') {
+        caixa.entradas += totalVenda;
+        localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
+      } else {
+        const idCli = parseInt(document.getElementById('selectClienteFiado').value);
+        const cli = clientes.find(c => c.id === idCli);
+        if (!cli) return alert('Cliente inválido!');
+        if ((cli.saldoDevedor + totalVenda) > cli.limite) return alert('Limite de crédito excedido!');
 
-        cashier.balance += total;
-        cashier.history.push({
-          time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          type: 'Venda À Vista',
-          description: `Venda #${Date.now().toString().slice(-4)} (${cart.length} itens)`,
-          value: total
-        });
-        alert(`Venda finalizada com sucesso!\nTotal: R$ ${total.toFixed(2)}`);
-      } else if (payType === 'fiado') {
-        const cliId = document.getElementById('pos-client-select').value;
-        if (!cliId) { alert('Selecione um cliente para a venda fiado.'); return; }
+        cli.saldoDevedor += totalVenda;
+        if (!cli.historicoTransacoes) cli.historicoTransacoes = [];
+        cli.historicoTransacoes.push({ data: new Date().toISOString(), tipo: 'compra', valor: totalVenda });
+        localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
+        detalhe = `Fiado (${cli.nome})`;
+      }
 
-        const cli = clients.find(c => c.id === cliId);
-        const available = cli.limit - cli.debt;
+      vendas.push({ id: Date.now(), data: new Date().toISOString(), formaPagamento: detalhe, totalVenda, totalCusto, lucroObtido: lucro });
+      localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
-        if (total > available) {
-          alert(`Limite de fiado excedido!\nSaldo disponível: R$ ${available.toFixed(2)}\nTotal Venda: R$ ${total.toFixed(2)}`);
-          return;
+      alert('Venda realizada!');
+      carrinho = [];
+      renderizarCarrinho();
+      atualizarUICaixa();
+    }
+
+    // RELATÓRIOS & MÉTRICAS
+    function renderizarRelatorios() {
+      const agora = new Date();
+      const seteDiasAtras = new Date();
+      seteDiasAtras.setDate(agora.getDate() - 7);
+
+      let vMes = 0, lMes = 0, vSemana = 0, lSemana = 0;
+      const tbody = document.getElementById('tabelaHistoricoVendas');
+      tbody.innerHTML = '';
+
+      [...vendas].reverse().forEach(v => {
+        const d = new Date(v.data);
+        if (d.getMonth() === agora.getMonth() && d.getFullYear() === agora.getFullYear()) {
+          vMes += v.totalVenda; lMes += v.lucroObtido;
         }
+        if (d >= seteDiasAtras) {
+          vSemana += v.totalVenda; lSemana += v.lucroObtido;
+        }
+        tbody.innerHTML += `
+          <tr class="border-b text-sm">
+            <td class="p-2">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+            <td class="p-2">${v.formaPagamento}</td>
+            <td class="p-2 font-bold">R$ ${v.totalVenda.toFixed(2)}</td>
+            <td class="p-2 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td>
+            <td class="p-2 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
+          </tr>`;
+      });
 
-        cli.debt += total;
-        alert(`Venda Fiado registrada com sucesso!\nCliente: ${cli.name}\nNovo Saldo Devedor: R$ ${cli.debt.toFixed(2)}`);
-      }
-
-      cart = [];
-      saveState();
-      renderCart();
-      updateCashierUI();
-      renderClientsTable();
+      document.getElementById('relVendasMes').innerText = vMes.toFixed(2);
+      document.getElementById('relLucroMes').innerText = lMes.toFixed(2);
+      document.getElementById('relVendasSemana').innerText = vSemana.toFixed(2);
+      document.getElementById('relLucroSemana').innerText = lSemana.toFixed(2);
     }
+
+    // CONTROLE DE CAIXA
+    function abrirCaixa() {
+      const v = parseFloat(document.getElementById('valorInicialCaixa').value) || 0;
+      caixa = { aberto: true, inicial: v, entradas: 0, movimentacoes: [] };
+      localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
+      atualizarUICaixa();
+      alert('Caixa aberto!');
+    }
+
+    function fecharCaixa() {
+      alert(`Caixa Fechado. Total: R$ ${(caixa.inicial + caixa.entradas).toFixed(2)}`);
+      caixa = { aberto: false, inicial: 0, entradas: 0, movimentacoes: [] };
+      localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
+      atualizarUICaixa();
+    }
+
+    function atualizarUICaixa() {
+      const statusTopo = document.getElementById('statusCaixaTopo');
+      if (caixa.aberto) {
+        statusTopo.innerText = 'Caixa: Aberto';
+        statusTopo.className = 'bg-green-600 px-3 py-1 rounded-full text-xs md:text-sm font-bold';
+        document.getElementById('formAberturaCaixa').classList.add('hidden');
+        document.getElementById('formOperacoesCaixa').classList.remove('hidden');
+      } else {
+        statusTopo.innerText = 'Caixa: Fechado';
+        statusTopo.className = 'bg-red-600 px-3 py-1 rounded-full text-xs md:text-sm font-bold';
+        document.getElementById('formAberturaCaixa').classList.remove('hidden');
+        document.getElementById('formOperacoesCaixa').classList.add('hidden');
+      }
+      document.getElementById('resumoInicial').innerText = caixa.inicial.toFixed(2);
+      document.getElementById('resumoEntradas').innerText = caixa.entradas.toFixed(2);
+      document.getElementById('resumoTotal').innerText = (caixa.inicial + caixa.entradas).toFixed(2);
+    }
+
+    // INICIALIZAÇÃO
+    if (usuarioAtual) iniciarSessao();
   </script>
 </body>
 </html>
