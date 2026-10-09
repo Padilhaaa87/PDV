@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Gestão Comercial Completa</title>
+  <title>PDV Web - Gestão Comercial e Relatório Mensal Seletivo</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -36,7 +36,7 @@
         </button>
       </div>
 
-      <!-- FORMULÁRIO 1: LOGIN DE USUÁRIO (TEXTO COM SENHA REMOVIDO) -->
+      <!-- FORMULÁRIO 1: LOGIN DE USUÁRIO -->
       <form id="formLogin" onsubmit="fazerLogin(event)" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700">Usuário</label>
@@ -263,44 +263,66 @@
         </div>
       </section>
 
-      <!-- ABA 5: RELATÓRIOS (DIÁRIO, SEMANAL E MENSAL) -->
+      <!-- ABA 5: RELATÓRIOS COM SELEÇÃO DE MÊS -->
       <section id="relatorios" class="aba-conteudo">
         <div class="space-y-6">
           
+          <!-- SELETOR DE MÊS E ANO -->
+          <div class="bg-white p-4 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h2 class="text-lg font-bold text-gray-700">Filtro de Período</h2>
+              <p class="text-xs text-gray-500">Selecione o mês para visualizar as estatísticas específicas</p>
+            </div>
+            <div class="w-full md:w-auto flex items-center gap-2">
+              <label class="text-sm font-semibold text-gray-600 whitespace-nowrap">Mês do Relatório:</label>
+              <select id="selectFiltroMes" onchange="renderizarRelatorios()" class="p-2 border rounded font-semibold bg-gray-50 text-blue-700 w-full md:w-auto outline-none focus:ring-2 focus:ring-blue-500">
+                <!-- Opções de mês/ano geradas dinamicamente via JavaScript -->
+              </select>
+            </div>
+          </div>
+
+          <!-- INDICADORES FINANCEIROS DE VENDAS E LUCROS -->
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
             
+            <!-- VENDAS DE HOJE -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-amber-500">
               <span class="text-xs text-gray-500 font-bold block uppercase">Vendas Hoje</span>
               <span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasHoje">0,00</span></span>
             </div>
 
+            <!-- LUCRO DE HOJE -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-lime-500">
               <span class="text-xs text-gray-500 font-bold block uppercase">Lucro Hoje</span>
               <span class="text-base md:text-xl font-bold text-lime-600">R$ <span id="relLucroHoje">0,00</span></span>
             </div>
 
+            <!-- VENDAS SEMANA -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500">
               <span class="text-xs text-gray-500 font-bold block uppercase">Vendas Semana</span>
               <span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasSemana">0,00</span></span>
             </div>
 
+            <!-- LUCRO SEMANA -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-emerald-500">
               <span class="text-xs text-gray-500 font-bold block uppercase">Lucro Semana</span>
               <span class="text-base md:text-xl font-bold text-emerald-600">R$ <span id="relLucroSemana">0,00</span></span>
             </div>
 
+            <!-- VENDAS MÊS SELECIONADO -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
-              <span class="text-xs text-gray-500 font-bold block uppercase">Vendas Mês</span>
+              <span class="text-xs text-gray-500 font-bold block uppercase" id="labelCardVendasMes">Vendas Mês</span>
               <span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasMes">0,00</span></span>
             </div>
 
+            <!-- LUCRO MÊS SELECIONADO -->
             <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
-              <span class="text-xs text-gray-500 font-bold block uppercase">Lucro Mês</span>
+              <span class="text-xs text-gray-500 font-bold block uppercase" id="labelCardLucroMes">Lucro Mês</span>
               <span class="text-base md:text-xl font-bold text-green-600">R$ <span id="relLucroMes">0,00</span></span>
             </div>
 
           </div>
 
+          <!-- HISTÓRICO DE VENDAS -->
           <div class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-bold mb-4 text-gray-700">Histórico de Vendas Realizadas</h2>
             <div class="overflow-x-auto">
@@ -329,7 +351,7 @@
   <!-- LÓGICA EM JAVASCRIPT                                              -->
   <!-- ================================================================= -->
   <script>
-    // ESTADO DA APLICAÇÃO (CONTA ADMIN PADRÃO INICIALIZADA SILENCIOSAMENTE)
+    // ESTADO DA APLICAÇÃO
     let contasRegistradas = JSON.parse(localStorage.getItem('pdv_contas')) || [
       { usuario: 'admin', senha: '123', perfil: 'admin' }
     ];
@@ -341,7 +363,12 @@
     let vendas = JSON.parse(localStorage.getItem('pdv_vendas')) || [];
     let carrinho = [];
 
-    // --- GERENCIAMENTO DE AUTENTICAÇÃO ---
+    const nomesMeses = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    // --- AUTENTICAÇÃO DE USUÁRIOS ---
     function alternarFormAutenticacao(modo) {
       const formLogin = document.getElementById('formLogin');
       const formCadastro = document.getElementById('formCadastro');
@@ -442,7 +469,10 @@
       if (idAba === 'produtos') renderizarTabelaProdutos();
       if (idAba === 'clientes') renderizarClientes();
       if (idAba === 'controleCaixa') atualizarUICaixa();
-      if (idAba === 'relatorios') renderizarRelatorios();
+      if (idAba === 'relatorios') {
+        carregarOpcoesMesesRelatorio();
+        renderizarRelatorios();
+      }
     }
 
     // --- MÓDULO DE PRODUTOS ---
@@ -661,19 +691,58 @@
       atualizarUICaixa();
     }
 
-    // --- MÓDULO DE RELATÓRIOS (DIÁRIO, SEMANAL E MENSAL) ---
+    // --- CARREGAR MESES NA CAIXA DE SELEÇÃO ---
+    function carregarOpcoesMesesRelatorio() {
+      const select = document.getElementById('selectFiltroMes');
+      const opcaoAnterior = select.value;
+      select.innerHTML = '';
+
+      const agora = new Date();
+      const mesAtualChave = `${agora.getFullYear()}-${agora.getMonth()}`;
+
+      // Conjunto para evitar meses duplicados
+      const mesesExistentes = new Set();
+      mesesExistentes.add(mesAtualChave);
+
+      vendas.forEach(v => {
+        const d = new Date(v.data);
+        mesesExistentes.add(`${d.getFullYear()}-${d.getMonth()}`);
+      });
+
+      // Ordenar chaves de ano-mês
+      const mesesOrdenados = Array.from(mesesExistentes).sort().reverse();
+
+      mesesOrdenados.forEach(chave => {
+        const [ano, mes] = chave.split('-');
+        const nomeRotulo = `${nomesMeses[parseInt(mes)]} / ${ano}`;
+        select.innerHTML += `<option value="${chave}">${nomeRotulo}</option>`;
+      });
+
+      // Restaura a seleção anterior se ainda for válida
+      if (opcaoAnterior && Array.from(select.options).some(o => o.value === opcaoAnterior)) {
+        select.value = opcaoAnterior;
+      } else {
+        select.value = mesAtualChave;
+      }
+    }
+
+    // --- MÓDULO DE RELATÓRIOS COM SELETOR DE MÊS ---
     function renderizarRelatorios() {
       const agora = new Date();
       const diaHoje = agora.getDate();
-      const mesAtual = agora.getMonth();
-      const anoAtual = agora.getFullYear();
+      const mesAtualReal = agora.getMonth();
+      const anoAtualReal = agora.getFullYear();
+
+      // Mês e Ano selecionados pelo usuário na caixa de seleção
+      const selectMes = document.getElementById('selectFiltroMes');
+      const [anoSelecionado, mesSelecionado] = (selectMes.value || `${anoAtualReal}-${mesAtualReal}`).split('-').map(Number);
 
       const seteDiasAtras = new Date();
       seteDiasAtras.setDate(agora.getDate() - 7);
 
       let vHoje = 0, lHoje = 0;
       let vSemana = 0, lSemana = 0;
-      let vMes = 0, lMes = 0;
+      let vMesSelec = 0, lMesSelec = 0;
 
       const tbody = document.getElementById('tabelaHistoricoVendas');
       tbody.innerHTML = '';
@@ -685,19 +754,22 @@
       [...vendas].reverse().forEach(v => {
         const d = new Date(v.data);
 
-        if (d.getDate() === diaHoje && d.getMonth() === mesAtual && d.getFullYear() === anoAtual) {
+        // Vendas de Hoje
+        if (d.getDate() === diaHoje && d.getMonth() === mesAtualReal && d.getFullYear() === anoAtualReal) {
           vHoje += v.totalVenda;
           lHoje += v.lucroObtido;
         }
 
-        if (d.getMonth() === mesAtual && d.getFullYear() === anoAtual) {
-          vMes += v.totalVenda;
-          lMes += v.lucroObtido;
-        }
-
+        // Vendas da Semana
         if (d >= seteDiasAtras) {
           vSemana += v.totalVenda;
           lSemana += v.lucroObtido;
+        }
+
+        // Vendas do Mês Selecionado na Caixa de Seleção
+        if (d.getMonth() === mesSelecionado && d.getFullYear() === anoSelecionado) {
+          vMesSelec += v.totalVenda;
+          lMesSelec += v.lucroObtido;
         }
 
         tbody.innerHTML += `
@@ -710,12 +782,18 @@
           </tr>`;
       });
 
+      // Atualiza títulos dos cartões com o nome do mês selecionado
+      const nomeMes = nomesMeses[mesSelecionado];
+      document.getElementById('labelCardVendasMes').innerText = `Vendas (${nomeMes}/${anoSelecionado})`;
+      document.getElementById('labelCardLucroMes').innerText = `Lucro (${nomeMes}/${anoSelecionado})`;
+
+      // Atualiza valores dos cartões
       document.getElementById('relVendasHoje').innerText = vHoje.toFixed(2);
       document.getElementById('relLucroHoje').innerText = lHoje.toFixed(2);
       document.getElementById('relVendasSemana').innerText = vSemana.toFixed(2);
       document.getElementById('relLucroSemana').innerText = lSemana.toFixed(2);
-      document.getElementById('relVendasMes').innerText = vMes.toFixed(2);
-      document.getElementById('relLucroMes').innerText = lMes.toFixed(2);
+      document.getElementById('relVendasMes').innerText = vMesSelec.toFixed(2);
+      document.getElementById('relLucroMes').innerText = lMesSelec.toFixed(2);
     }
 
     // --- CONTROLE DE CAIXA ---
