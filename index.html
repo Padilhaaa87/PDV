@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Exclusão de Relatório de Caixa</title>
-  <!-- Tailwind CSS para estilização rápida e responsiva -->
+  <title>PDV Web - Relatório de Caixa com Custo Total</title>
+  <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .aba-conteudo { display: none; }
@@ -167,7 +167,7 @@
         </div>
       </section>
 
-      <!-- ABA 3: CONTROLE DE CAIXA E RELATÓRIO DE SESSÕES -->
+      <!-- ABA 3: CONTROLE DE CAIXA E RELATÓRIO DE SESSÕES COM CUSTO TOTAL -->
       <section id="controleCaixa" class="aba-conteudo space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -203,12 +203,12 @@
           </div>
         </div>
 
-        <!-- RELATÓRIO DE SESSÕES COM OPÇÃO DE EXCLUSÃO -->
+        <!-- RELATÓRIO DE CAIXAS COM A COLUNA CUSTO TOTAL -->
         <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
           <div class="flex justify-between items-center border-b pb-3">
             <div>
               <h2 class="text-xl font-bold text-gray-700">📋 Relatório de Caixas e Histórico de Sessões</h2>
-              <p class="text-xs text-gray-500">Veja quem abriu o caixa, horários, saldo final e gerencie o histórico</p>
+              <p class="text-xs text-gray-500">Acompanhe quem abriu o caixa, horários, custos dos produtos vendidos e dinheiro final</p>
             </div>
             <button onclick="limparTodoHistoricoCaixas()" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition">
               🗑️ Limpar Todo o Histórico
@@ -222,6 +222,7 @@
                   <th class="p-3">Abertura</th>
                   <th class="p-3">Fecho</th>
                   <th class="p-3">Fundo Inicial</th>
+                  <th class="p-3 text-red-600">Custo Total</th>
                   <th class="p-3">Dinheiro Final</th>
                   <th class="p-3 text-center">Status</th>
                   <th class="p-3 text-center">Ações</th>
@@ -1409,7 +1410,6 @@
       renderizarTabelaHistoricoSessoes();
     }
 
-    // EXCLUIR UMA SESSÃO INDIVIDUAL DO HISTÓRICO DE CAIXAS
     function excluirSessaoCaixa(idSessao) {
       const sessao = historicoCaixas.find(s => s.id === idSessao);
       if (!sessao) return;
@@ -1427,7 +1427,6 @@
       renderizarTabelaHistoricoSessoes();
     }
 
-    // LIMPAR TODO O HISTÓRICO DE SESSÕES DE CAIXA
     function limparTodoHistoricoCaixas() {
       if (caixa.aberto) {
         return alert('⚠️ Não é possível limpar o histórico enquanto houver um caixa ABERTO!');
@@ -1442,21 +1441,32 @@
       renderizarTabelaHistoricoSessoes();
     }
 
+    // CÁLCULO E EXIBIÇÃO DO CUSTO TOTAL NO RELATÓRIO DE CAIXA
     function renderizarTabelaHistoricoSessoes() {
       const tbody = document.getElementById('tabelaHistoricoSessoesCaixa');
       if (!tbody) return;
 
-      tbody.innerHTML = historicoCaixas.length === 0 ? '<tr><td colspan="7" class="p-4 text-center text-gray-500 text-sm">Nenhuma sessão de caixa registrada.</td></tr>' : '';
+      tbody.innerHTML = historicoCaixas.length === 0 ? '<tr><td colspan="8" class="p-4 text-center text-gray-500 text-sm">Nenhuma sessão de caixa registrada.</td></tr>' : '';
 
       [...historicoCaixas].reverse().forEach(sessao => {
         const dAbertura = new Date(sessao.dataAbertura);
         const dataAberturaFmt = dAbertura.toLocaleDateString() + ' ' + dAbertura.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         
         let dataFechoFmt = '---';
+        let dFechoObj = new Date();
         if (sessao.dataFecho) {
-          const dFecho = new Date(sessao.dataFecho);
-          dataFechoFmt = dFecho.toLocaleDateString() + ' ' + dFecho.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          dFechoObj = new Date(sessao.dataFecho);
+          dataFechoFmt = dFechoObj.toLocaleDateString() + ' ' + dFechoObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         }
+
+        // CÁLCULO DINÂMICO DO CUSTO TOTAL DAS VENDAS REALIZADAS NESTA SESSÃO DE CAIXA
+        let custoTotalSessao = 0;
+        vendas.forEach(v => {
+          const dVenda = new Date(v.data);
+          if (dVenda >= dAbertura && (!sessao.dataFecho || dVenda <= dFechoObj)) {
+            custoTotalSessao += (v.totalCusto || 0);
+          }
+        });
 
         const badgeStatus = sessao.status === 'Aberto' 
           ? `<span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">Aberto</span>`
@@ -1473,6 +1483,7 @@
             <td class="p-3 text-gray-600">${dataAberturaFmt}</td>
             <td class="p-3 text-gray-600">${dataFechoFmt}</td>
             <td class="p-3">R$ ${sessao.inicial.toFixed(2)}</td>
+            <td class="p-3 font-bold text-red-600">R$ ${custoTotalSessao.toFixed(2)}</td>
             <td class="p-3 font-bold text-blue-600">R$ ${totalExibicao.toFixed(2)}</td>
             <td class="p-3 text-center">${badgeStatus}</td>
             <td class="p-3 text-center">
