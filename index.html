@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Relatório de Caixas e Sessões</title>
-  <!-- Tailwind CSS para estilo visual responsivo -->
+  <title>PDV Web - Opções de Pagamento Simplificadas</title>
+  <!-- Tailwind CSS para estilização leve e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .aba-conteudo { display: none; }
@@ -108,18 +108,19 @@
             <div class="mt-6 border-t pt-4 space-y-3">
               <div>
                 <label class="block text-sm font-medium mb-1">Forma de Pagamento</label>
+                <!-- OPÇÕES SIMPLIFICADAS CONFORME SOLICITADO -->
                 <select id="formaPagamento" class="w-full p-2 border rounded" onchange="tratarTrocaPagamento()">
-                  <option value="vista_dinheiro">💵 À Vista (Dinheiro)</option>
-                  <option value="vista_pix">📱 À Vista (PIX)</option>
-                  <option value="vista_cartao">💳 À Vista (Cartão)</option>
-                  <option value="fiado">📋 Fiado (Conta de Cliente)</option>
+                  <option value="dinheiro">💵 Dinheiro</option>
+                  <option value="cartao">💳 Cartão</option>
+                  <option value="pix">📱 PIX</option>
+                  <option value="fiado">📋 Fiado</option>
                 </select>
               </div>
 
               <div>
                 <div class="flex justify-between items-center mb-1">
                   <label class="block text-sm font-medium">
-                    Cliente <span id="labelClienteOpcional" class="text-xs text-gray-400">(Opcional para À Vista)</span>
+                    Cliente <span id="labelClienteOpcional" class="text-xs text-gray-400">(Opcional)</span>
                   </label>
                   <button onclick="cadastrarClienteRapido()" class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold px-2 py-0.5 rounded transition">
                     ➕ Novo Cliente
@@ -167,7 +168,7 @@
         </div>
       </section>
 
-      <!-- ABA 3: CONTROLE DE CAIXA E RELATÓRIO DE SESSÕES/ABERTURAS -->
+      <!-- ABA 3: CONTROLE DE CAIXA E RELATÓRIO DE SESSÕES -->
       <section id="controleCaixa" class="aba-conteudo space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -203,7 +204,6 @@
           </div>
         </div>
 
-        <!-- NOVO RELATÓRIO DE CAIXAS ABERTOS E HISTÓRICO DE SESSÕES -->
         <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
           <div class="flex justify-between items-center border-b pb-3">
             <div>
@@ -401,9 +401,7 @@
       fiado: 0 
     };
 
-    // HISTÓRICO DE SESSÕES / ABERTURAS DE CAIXA
     let historicoCaixas = JSON.parse(localStorage.getItem('pdv_historico_caixas')) || [];
-    
     let vendas = JSON.parse(localStorage.getItem('pdv_vendas')) || [];
     let carrinho = [];
 
@@ -777,7 +775,7 @@
         if (comprasVista.length > 0) {
           htmlVista = `
             <div class="mt-2 border-t pt-2">
-              <span class="text-xs font-bold text-emerald-700 block mb-1">💵 Histórico de Compras À Vista (Pagas):</span>
+              <span class="text-xs font-bold text-emerald-700 block mb-1">💵 Histórico de Compras Pagas:</span>
               <div class="space-y-1 max-h-28 overflow-y-auto">`;
           comprasVista.forEach(trans => {
             const dataFmt = new Date(trans.data).toLocaleDateString() + ' ' + new Date(trans.data).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -853,9 +851,9 @@
         caixa.entradas = Math.max(0, caixa.entradas - compra.valor);
         const vendaGeral = vendas.find(v => v.data === dataTransacao);
         if (vendaGeral) {
-          if (vendaGeral.tipoPagamento === 'vista_dinheiro') caixa.dinheiro = Math.max(0, (caixa.dinheiro || 0) - compra.valor);
-          if (vendaGeral.tipoPagamento === 'vista_pix') caixa.pix = Math.max(0, (caixa.pix || 0) - compra.valor);
-          if (vendaGeral.tipoPagamento === 'vista_cartao') caixa.cartao = Math.max(0, (caixa.cartao || 0) - compra.valor);
+          if (vendaGeral.tipoPagamento === 'dinheiro') caixa.dinheiro = Math.max(0, (caixa.dinheiro || 0) - compra.valor);
+          if (vendaGeral.tipoPagamento === 'pix') caixa.pix = Math.max(0, (caixa.pix || 0) - compra.valor);
+          if (vendaGeral.tipoPagamento === 'cartao') caixa.cartao = Math.max(0, (caixa.cartao || 0) - compra.valor);
         }
       }
       localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
@@ -1070,9 +1068,10 @@
       const forma = document.getElementById('formaPagamento').value;
       const label = document.getElementById('labelClienteOpcional');
       if (forma === 'fiado') { label.innerText = "(Obrigatório no Fiado)"; label.className = "text-xs text-red-500 font-bold"; }
-      else { label.innerText = "(Opcional para À Vista)"; label.className = "text-xs text-gray-400"; }
+      else { label.innerText = "(Opcional)"; label.className = "text-xs text-gray-400"; }
     }
 
+    // FINALIZAÇÃO DE VENDA COM OPÇÕES SIMPLIFICADAS
     function finalizarVenda() {
       if (carrinho.length === 0) return alert('Carrinho vazio!');
       if (!caixa.aberto) return alert('Caixa fechado!');
@@ -1085,20 +1084,22 @@
       const cli = clientes.find(c => c.id === parseInt(idCli));
       const dataIso = new Date().toISOString();
       
-      let rotuloForma = 'À Vista (Dinheiro)';
-      if (formaSelec === 'vista_pix') rotuloForma = 'À Vista (PIX)';
-      if (formaSelec === 'vista_cartao') rotuloForma = 'À Vista (Cartão)';
+      // ROTULOS SIMPLIFICADOS
+      let rotuloForma = 'Dinheiro';
+      if (formaSelec === 'pix') rotuloForma = 'PIX';
+      if (formaSelec === 'cartao') rotuloForma = 'Cartão';
+      if (formaSelec === 'fiado') rotuloForma = 'Fiado';
 
-      let detalhe = `${rotuloForma} (Avulsa)`;
+      let detalhe = `${rotuloForma} (Avulso)`;
       const itensComprados = carrinho.map(i => ({ id: i.id, nome: i.nome, venda: i.venda, qtd: i.qtd }));
 
-      if (formaSelec === 'vista_dinheiro') {
+      if (formaSelec === 'dinheiro') {
         caixa.dinheiro = (caixa.dinheiro || 0) + totalVenda;
         caixa.entradas += totalVenda;
-      } else if (formaSelec === 'vista_pix') {
+      } else if (formaSelec === 'pix') {
         caixa.pix = (caixa.pix || 0) + totalVenda;
         caixa.entradas += totalVenda;
-      } else if (formaSelec === 'vista_cartao') {
+      } else if (formaSelec === 'cartao') {
         caixa.cartao = (caixa.cartao || 0) + totalVenda;
         caixa.entradas += totalVenda;
       } else if (formaSelec === 'fiado') {
@@ -1114,7 +1115,7 @@
       localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
 
       if (cli) {
-        if (!formaSelec.startsWith('fiado')) detalhe = `${rotuloForma} (${cli.nome})`;
+        if (formaSelec !== 'fiado') detalhe = `${rotuloForma} (${cli.nome})`;
         if (!cli.historicoTransacoes) cli.historicoTransacoes = [];
         cli.historicoTransacoes.push({ 
           data: dataIso, 
@@ -1254,13 +1255,13 @@
         localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
       }
 
-      if (venda.tipoPagamento === 'vista_dinheiro') {
+      if (venda.tipoPagamento === 'dinheiro') {
         caixa.dinheiro = Math.max(0, (caixa.dinheiro || 0) - venda.totalVenda);
         caixa.entradas = Math.max(0, caixa.entradas - venda.totalVenda);
-      } else if (venda.tipoPagamento === 'vista_pix') {
+      } else if (venda.tipoPagamento === 'pix') {
         caixa.pix = Math.max(0, (caixa.pix || 0) - venda.totalVenda);
         caixa.entradas = Math.max(0, caixa.entradas - venda.totalVenda);
-      } else if (venda.tipoPagamento === 'vista_cartao') {
+      } else if (venda.tipoPagamento === 'cartao') {
         caixa.cartao = Math.max(0, (caixa.cartao || 0) - venda.totalVenda);
         caixa.entradas = Math.max(0, caixa.entradas - venda.totalVenda);
       } else if (venda.tipoPagamento === 'fiado') {
@@ -1356,10 +1357,9 @@
       document.getElementById('labelCardVendasMes').innerText = `Vendas (${nomesMeses[mSel]}/${aSel})`;
       document.getElementById('labelCardLucroMes').innerText = `Lucro (${nomesMeses[mSel]}/${aSel})`;
       document.getElementById('relVendasHoje').innerText = vHoje.toFixed(2); document.getElementById('relLucroHoje').innerText = lHoje.toFixed(2);
-      document.getElementById('relVendasMes').innerText = vMes.innerText = vMes.toFixed(2); document.getElementById('relLucroMes').innerText = lMes.toFixed(2);
+      document.getElementById('relVendasMes').innerText = vMes.toFixed(2); document.getElementById('relLucroMes').innerText = lMes.toFixed(2);
     }
 
-    // --- FUNÇÕES DE CONTROLE DE CAIXA E HISTÓRICO DE SESSÕES ---
     function abrirCaixa() {
       const v = parseFloat(document.getElementById('valorInicialCaixa').value) || 0;
       const resp = sessaoAtiva ? sessaoAtiva.usuario : 'Desconhecido';
@@ -1368,7 +1368,6 @@
       caixa = { aberto: true, inicial: v, entradas: 0, dinheiro: 0, pix: 0, cartao: 0, fiado: 0, responsavel: resp, dataAbertura: dataIso };
       localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
 
-      // Regista uma nova sessão no histórico de caixas
       const novaSessao = {
         id: Date.now(),
         responsavel: resp,
@@ -1393,7 +1392,6 @@
 
       alert(`Caixa Fechado!\nResponsável: ${caixa.responsavel || 'N/A'}\nDinheiro Final em Caixa: R$ ${totalFinal.toFixed(2)}`);
 
-      // Atualiza a sessão aberta no histórico
       const sessaoAberta = historicoCaixas.find(s => s.status === 'Aberto');
       if (sessaoAberta) {
         sessaoAberta.dataFecho = dataIsoFecho;
@@ -1429,7 +1427,6 @@
           ? `<span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">Aberto</span>`
           : `<span class="bg-gray-200 text-gray-700 text-xs font-bold px-2 py-1 rounded-full">Fechado</span>`;
 
-        // Se o caixa ainda estiver aberto, calcula o valor acumulado em tempo real
         let totalExibicao = sessao.totalFinal;
         if (sessao.status === 'Aberto' && caixa.aberto) {
           totalExibicao = (caixa.inicial || 0) + (caixa.entradas || 0);
