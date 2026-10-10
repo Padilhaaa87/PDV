@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Edição de Clientes e Estorno de Compras</title>
+  <title>PDV Web - Estorno com Devolução Automática ao Estoque</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -137,7 +137,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-4">
             <div>
               <h2 class="text-xl font-bold text-gray-700">Registro Geral de Vendas</h2>
-              <p class="text-xs text-gray-500">Consulte todas as vendas realizadas e exclua registos individuais</p>
+              <p class="text-xs text-gray-500">Consulte todas as vendas realizadas e estorne registos individuais com devolução de estoque</p>
             </div>
             <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
               Total Registrado: <span id="qtdTotalVendas">0</span> vendas
@@ -243,7 +243,7 @@
         </div>
       </section>
 
-      <!-- ABA 5: CLIENTES, EDIÇÃO DE DADOS & CANCELAMENTO DE COMPRA -->
+      <!-- ABA 5: CLIENTES & FIADOS -->
       <section id="clientes" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -314,66 +314,28 @@
         </div>
       </section>
 
-      <!-- ABA 7: GESTÃO E EDIÇÃO DE UTILIZADORES (APENAS ADMINISTRADOR) -->
+      <!-- ABA 7: GESTÃO DE UTILIZADORES (ADMIN) -->
       <section id="usuarios" class="aba-conteudo admin-only">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
             <h2 id="tituloFormUsuario" class="text-xl font-bold text-gray-700 border-b pb-2">Editar Utilizador</h2>
-            <p class="text-xs text-gray-500 mb-2">Selecione um utilizador na tabela ao lado para alterar os seus dados ou criar uma nova palavra-passe.</p>
-            
             <form id="formEdicaoUsuario" onsubmit="salvarEdicaoUsuario(event)" class="space-y-3">
               <input type="hidden" id="editUsuarioIndiceOriginal" value="">
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Nome de Utilizador</label>
-                <input type="text" id="editUsuarioNome" required class="w-full p-2 border rounded outline-none focus:ring-2 focus:ring-blue-500">
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Nova Palavra-passe (Senha)</label>
-                <input type="password" id="editUsuarioSenha" placeholder="Digite para alterar a senha" class="w-full p-2 border rounded outline-none focus:ring-2 focus:ring-blue-500">
-                <span class="text-xs text-gray-400">Deixe em branco se não quiser alterar a senha atual.</span>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Perfil de Acesso</label>
-                <select id="editUsuarioPerfil" class="w-full p-2 border rounded">
-                  <option value="vendedor">👤 Vendedor / Atendente</option>
-                  <option value="admin">👑 Administrador (Acesso Total)</option>
-                </select>
-              </div>
-
-              <div class="flex gap-2 pt-2">
-                <button type="submit" id="btnSalvarEdicaoUsuario" disabled class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-bold py-2 rounded shadow transition">
-                  Salvar Alterações
-                </button>
-                <button type="button" onclick="cancelarEdicaoUsuario()" class="w-1/3 bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 rounded shadow transition">
-                  Cancelar
-                </button>
-              </div>
+              <div><label class="block text-sm font-medium text-gray-700">Nome de Utilizador</label><input type="text" id="editUsuarioNome" required class="w-full p-2 border rounded"></div>
+              <div><label class="block text-sm font-medium text-gray-700">Nova Palavra-passe</label><input type="password" id="editUsuarioSenha" class="w-full p-2 border rounded"></div>
+              <div><label class="block text-sm font-medium text-gray-700">Perfil de Acesso</label><select id="editUsuarioPerfil" class="w-full p-2 border rounded"><option value="vendedor">👤 Vendedor</option><option value="admin">👑 Administrador</option></select></div>
+              <div class="flex gap-2 pt-2"><button type="submit" id="btnSalvarEdicaoUsuario" disabled class="w-full bg-blue-600 disabled:bg-gray-300 text-white font-bold py-2 rounded">Salvar</button><button type="button" onclick="cancelarEdicaoUsuario()" class="w-1/3 bg-gray-400 text-white font-bold py-2 rounded">Cancelar</button></div>
             </form>
           </div>
 
           <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md space-y-4">
             <div class="flex justify-between items-center border-b pb-4">
-              <div>
-                <h2 class="text-xl font-bold text-gray-700">Lista de Utilizadores</h2>
-                <p class="text-xs text-gray-500">Clique em ✏️ Editar para alterar as credenciais de qualquer conta</p>
-              </div>
-              <span class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full">
-                Total: <span id="qtdTotalUsuarios">0</span> contas
-              </span>
+              <h2 class="text-xl font-bold text-gray-700">Lista de Utilizadores</h2>
+              <span class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full">Total: <span id="qtdTotalUsuarios">0</span></span>
             </div>
-
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="bg-gray-100 border-b text-sm">
-                    <th class="p-3">Utilizador</th>
-                    <th class="p-3">Perfil</th>
-                    <th class="p-3 text-center">Ações</th>
-                  </tr>
-                </thead>
+                <thead><tr class="bg-gray-100 border-b text-sm"><th class="p-3">Utilizador</th><th class="p-3">Perfil</th><th class="p-3 text-center">Ações</th></tr></thead>
                 <tbody id="tabelaAbaUsuarios"></tbody>
               </table>
             </div>
@@ -439,9 +401,7 @@
       document.getElementById('telaAutenticacao').classList.add('hidden');
       document.getElementById('appPrincipal').classList.remove('oculto-autenticacao');
       document.getElementById('labelUsuarioLogado').innerText = `Sessão: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil})`;
-      
       document.querySelectorAll('.admin-only').forEach(btn => sessaoAtiva.perfil !== 'admin' ? btn.classList.add('hidden') : btn.classList.remove('hidden'));
-      
       atualizarUICaixa();
       renderizarGridProdutos();
       carregarOpcoesClientesVenda();
@@ -474,22 +434,15 @@
       const tbody = document.getElementById('tabelaAbaUsuarios');
       document.getElementById('qtdTotalUsuarios').innerText = contasRegistradas.length;
       tbody.innerHTML = '';
-
       contasRegistradas.forEach((conta, idx) => {
-        const eAdmin = conta.perfil === 'admin';
-        const badgePerfil = eAdmin 
+        const badgePerfil = conta.perfil === 'admin' 
           ? `<span class="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded">👑 Administrador</span>`
           : `<span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">👤 Vendedor</span>`;
-
         tbody.innerHTML += `
           <tr class="border-b text-sm hover:bg-gray-50">
             <td class="p-3 font-semibold text-gray-800">${conta.usuario}</td>
             <td class="p-3">${badgePerfil}</td>
-            <td class="p-3 text-center">
-              <button onclick="prepararEdicaoUsuario(${idx})" class="bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-1 rounded text-xs font-bold transition">
-                ✏️ Editar / Palavra-passe
-              </button>
-            </td>
+            <td class="p-3 text-center"><button onclick="prepararEdicaoUsuario(${idx})" class="bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-1 rounded text-xs font-bold">✏️ Editar / Palavra-passe</button></td>
           </tr>`;
       });
     }
@@ -497,12 +450,10 @@
     function prepararEdicaoUsuario(indice) {
       const conta = contasRegistradas[indice];
       if (!conta) return;
-
       document.getElementById('editUsuarioIndiceOriginal').value = indice;
       document.getElementById('editUsuarioNome').value = conta.usuario;
       document.getElementById('editUsuarioSenha').value = '';
       document.getElementById('editUsuarioPerfil').value = conta.perfil;
-
       document.getElementById('tituloFormUsuario').innerText = `Editar: ${conta.usuario}`;
       document.getElementById('btnSalvarEdicaoUsuario').disabled = false;
     }
@@ -511,33 +462,28 @@
       e.preventDefault();
       const idx = document.getElementById('editUsuarioIndiceOriginal').value;
       if (idx === "") return;
-
       const indice = parseInt(idx);
       const novoNome = document.getElementById('editUsuarioNome').value.trim();
       const novaSenha = document.getElementById('editUsuarioSenha').value;
       const novoPerfil = document.getElementById('editUsuarioPerfil').value;
 
-      const nomeExistente = contasRegistradas.some((c, i) => i !== indice && c.usuario.toLowerCase() === novoNome.toLowerCase());
-      if (nomeExistente) return alert('Já existe outro utilizador com este nome!');
-
-      const nomeAntigo = contasRegistradas[indice].usuario;
-
-      contasRegistradas[indice].usuario = novoNome;
-      contasRegistradas[indice].perfil = novoPerfil;
-      if (novaSenha.trim() !== "") {
-        contasRegistradas[indice].senha = novaSenha;
+      if (contasRegistradas.some((c, i) => i !== indice && c.usuario.toLowerCase() === novoNome.toLowerCase())) {
+        return alert('Já existe outro utilizador com este nome!');
       }
 
-      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
+      const nomeAntigo = contasRegistradas[indice].usuario;
+      contasRegistradas[indice].usuario = novoNome;
+      contasRegistradas[indice].perfil = novoPerfil;
+      if (novaSenha.trim() !== "") contasRegistradas[indice].senha = novaSenha;
 
+      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
       if (sessaoAtiva && sessaoAtiva.usuario === nomeAntigo) {
-        sessaoAtiva.usuario = novoNome;
-        sessaoAtiva.perfil = novoPerfil;
+        sessaoAtiva.usuario = novoNome; sessaoAtiva.perfil = novoPerfil;
         localStorage.setItem('pdv_sessao_ativa', JSON.stringify(sessaoAtiva));
         document.getElementById('labelUsuarioLogado').innerText = `Sessão: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil})`;
       }
 
-      alert(`Dados do utilizador "${novoNome}" atualizados com sucesso!`);
+      alert(`Utilizador "${novoNome}" atualizado com sucesso!`);
       cancelarEdicaoUsuario();
       renderizarTabelaUsuarios();
     }
@@ -566,18 +512,13 @@
       const limite = ilim ? 0 : (limVal !== "" ? parseFloat(limVal) : 0);
 
       if (idEdicao) {
-        // EDIÇÃO DE CLIENTE EXISTENTE
         const idNum = parseInt(idEdicao);
         const cli = clientes.find(c => c.id === idNum);
         if (cli) {
-          cli.nome = nome;
-          cli.telefone = tel;
-          cli.limite = limite;
-          cli.limiteIlimitado = ilim;
-          alert(`Dados do cliente "${nome}" atualizados com sucesso!`);
+          cli.nome = nome; cli.telefone = tel; cli.limite = limite; cli.limiteIlimitado = ilim;
+          alert(`Dados do cliente "${nome}" atualizados!`);
         }
       } else {
-        // CADASTRO DE NOVO CLIENTE
         clientes.push({ id: Date.now(), nome, telefone: tel, limite, limiteIlimitado: ilim, saldoDevedor: 0, historicoTransacoes: [] });
         alert('Cliente cadastrado com sucesso!');
       }
@@ -591,19 +532,12 @@
     function prepararEdicaoCliente(idCliente) {
       const cli = clientes.find(c => c.id === idCliente);
       if (!cli) return;
-
       document.getElementById('cliIdEdicao').value = cli.id;
       document.getElementById('cliNome').value = cli.nome;
       document.getElementById('cliTelefone').value = cli.telefone === "Não informado" ? "" : cli.telefone;
-      
       const cbIlim = document.getElementById('cliIlimitado');
-      cbIlim.checked = cli.limiteIlimitado;
-      alternarCampoLimite(cbIlim);
-      
-      if (!cli.limiteIlimitado) {
-        document.getElementById('cliLimite').value = cli.limite;
-      }
-
+      cbIlim.checked = cli.limiteIlimitado; alternarCampoLimite(cbIlim);
+      if (!cli.limiteIlimitado) document.getElementById('cliLimite').value = cli.limite;
       document.getElementById('tituloFormCliente').innerText = "Editar Cliente";
       document.getElementById('btnSalvarCliente').innerText = "Salvar Alterações";
       document.getElementById('btnCancelarEdicaoCliente').classList.remove('hidden');
@@ -613,8 +547,7 @@
       document.getElementById('cliIdEdicao').value = "";
       document.getElementById('formCliente').reset();
       const cbIlim = document.getElementById('cliIlimitado');
-      cbIlim.checked = false;
-      alternarCampoLimite(cbIlim);
+      cbIlim.checked = false; alternarCampoLimite(cbIlim);
       document.getElementById('tituloFormCliente').innerText = "Cadastrar Cliente";
       document.getElementById('btnSalvarCliente').innerText = "Salvar Cliente";
       document.getElementById('btnCancelarEdicaoCliente').classList.add('hidden');
@@ -627,8 +560,6 @@
       clientes.forEach(cli => {
         const limiteTexto = cli.limiteIlimitado ? "Ilimitado" : `R$ ${cli.limite.toFixed(2)}`;
         const disp = cli.limiteIlimitado ? "Ilimitado" : `R$ ${(cli.limite - cli.saldoDevedor).toFixed(2)} / ${limiteTexto}`;
-        
-        // FILTRAR APENAS AS COMPRAS FIADAS NO HISTÓRICO
         const comprasFiadas = (cli.historicoTransacoes || []).filter(t => t.tipo === 'compra');
 
         let htmlHistoricoCompras = '';
@@ -638,7 +569,7 @@
               <span class="text-xs font-bold text-gray-600 block mb-1">Compras em Fiado Realizadas:</span>
               <div class="space-y-1 max-h-32 overflow-y-auto">`;
           
-          comprasFiadas.forEach((trans, idx) => {
+          comprasFiadas.forEach((trans) => {
             const dataFmt = new Date(trans.data).toLocaleDateString() + ' ' + new Date(trans.data).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             htmlHistoricoCompras += `
               <div class="flex justify-between items-center text-xs bg-white p-1.5 rounded border">
@@ -648,46 +579,32 @@
                 </button>
               </div>`;
           });
-
           htmlHistoricoCompras += `</div></div>`;
         }
 
         lista.innerHTML += `
           <div class="border p-4 rounded-lg bg-gray-50 space-y-3">
             <div class="flex justify-between items-start">
-              <div>
-                <h3 class="font-bold text-gray-800 text-base">${cli.nome}</h3>
-                <p class="text-xs text-gray-500">Contato: ${cli.telefone}</p>
-              </div>
-              <div class="text-right">
-                <span class="text-xs text-gray-500 block">Dívida Atual (Fiado)</span>
-                <span class="text-lg font-bold text-red-600">R$ ${cli.saldoDevedor.toFixed(2)}</span>
-              </div>
+              <div><h3 class="font-bold text-gray-800 text-base">${cli.nome}</h3><p class="text-xs text-gray-500">Contato: ${cli.telefone}</p></div>
+              <div class="text-right"><span class="text-xs text-gray-500 block">Dívida Atual (Fiado)</span><span class="text-lg font-bold text-red-600">R$ ${cli.saldoDevedor.toFixed(2)}</span></div>
             </div>
-
             <div class="grid grid-cols-2 gap-2 text-xs bg-white p-2 rounded border">
               <div><span class="text-gray-500 block">Crédito Disp.:</span><span class="font-bold text-green-600">${disp}</span></div>
               <div><span class="text-gray-500 block">Status:</span><span class="font-bold ${cli.saldoDevedor > 0 ? 'text-amber-600' : 'text-blue-600'}">${cli.saldoDevedor > 0 ? 'Com Débito' : 'Em Dia'}</span></div>
             </div>
-
             ${htmlHistoricoCompras}
-
             <div class="pt-2 border-t flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <div class="flex items-center gap-2 w-full">
                 <input type="number" id="inputAbater_${cli.id}" step="0.01" placeholder="Valor a abater (R$)" class="p-2 border rounded text-sm w-full">
-                <button onclick="receberPagamentoCliente(${cli.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">
-                  💵 Dar Baixa
-                </button>
+                <button onclick="receberPagamentoCliente(${cli.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">💵 Dar Baixa</button>
               </div>
-              <button onclick="prepararEdicaoCliente(${cli.id})" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">
-                ✏️ Editar Dados
-              </button>
+              <button onclick="prepararEdicaoCliente(${cli.id})" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">✏️ Editar Dados</button>
             </div>
           </div>`;
       });
     }
 
-    // EXCLUIR/ESTORNAR UMA COMPRA FIADA DO CLIENTE E RECALCULAR O SALDO DEVEDOR
+    // ESTORNO DE COMPRA FIADA COM DEVOLUÇÃO AO ESTOQUE
     function excluirCompraCliente(idCliente, dataTransacao) {
       const cli = clientes.find(c => c.id === idCliente);
       if (!cli) return;
@@ -696,54 +613,60 @@
       if (idxTrans === -1) return;
 
       const compra = cli.historicoTransacoes[idxTrans];
-      if (!confirm(`Deseja cancelar/estornar a compra no valor de R$ ${compra.valor.toFixed(2)} do cliente ${cli.nome}?`)) return;
+      if (!confirm(`Deseja cancelar/estornar a compra no valor de R$ ${compra.valor.toFixed(2)} do cliente ${cli.nome}?\n(Os produtos serão devolvidos ao estoque)`)) return;
 
-      // Abate o valor do saldo devedor do cliente
+      // 1. Devolver os produtos comprados de volta ao estoque
+      if (compra.itens && Array.isArray(compra.itens)) {
+        compra.itens.forEach(item => {
+          const prod = produtos.find(p => p.id === item.id);
+          if (prod) {
+            prod.estoque += item.qtd;
+          }
+        });
+        localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
+      }
+
+      // 2. Abater valor do saldo devedor
       cli.saldoDevedor = Math.max(0, cli.saldoDevedor - compra.valor);
 
-      // Remove a transação do histórico do cliente
-      cli.historicoTransacoes.splice(idxTrans, 1);
+      // 3. Remover do histórico de vendas geral
+      vendas = vendas.filter(v => !(v.data === dataTransacao && v.totalVenda === compra.valor));
+      localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
+      // 4. Remover do histórico individual do cliente
+      cli.historicoTransacoes.splice(idxTrans, 1);
       localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
-      alert(`Compra estornada! R$ ${compra.valor.toFixed(2)} foram abatidos do saldo devedor de ${cli.nome}.`);
+
+      alert(`Compra estornada com sucesso!\n- R$ ${compra.valor.toFixed(2)} abatidos do saldo devedor de ${cli.nome}.\n- Produtos devolvidos ao estoque.`);
 
       renderizarClientes();
+      renderizarTabelaProdutos();
+      renderizarGridProdutos();
       carregarOpcoesClientesVenda();
       renderizarRelatorios();
     }
 
     function receberPagamentoCliente(idCliente) {
       if (!caixa.aberto) return alert('Por favor, abra o Caixa antes de receber pagamentos!');
-
       const input = document.getElementById(`inputAbater_${idCliente}`);
       const valor = parseFloat(input.value);
-
       if (!valor || valor <= 0) return alert('Digite um valor válido para abater!');
 
       const cliente = clientes.find(c => c.id === idCliente);
       if (!cliente) return;
-
-      if (cliente.saldoDevedor <= 0) {
-        return alert(`O cliente ${cliente.nome} não possui saldo devedor pendente!`);
-      }
+      if (cliente.saldoDevedor <= 0) return alert(`O cliente ${cliente.nome} não possui saldo devedor pendente!`);
 
       const valorAbatido = Math.min(cliente.saldoDevedor, valor);
       cliente.saldoDevedor = Math.max(0, cliente.saldoDevedor - valorAbatido);
 
       if (!cliente.historicoTransacoes) cliente.historicoTransacoes = [];
-      cliente.historicoTransacoes.push({
-        data: new Date().toISOString(),
-        tipo: 'pagamento_fiado',
-        valor: valorAbatido
-      });
+      cliente.historicoTransacoes.push({ data: new Date().toISOString(), tipo: 'pagamento_fiado', valor: valorAbatido });
 
       caixa.entradas += valorAbatido;
-
       localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
       localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
 
-      alert(`Pagamento de R$ ${valorAbatido.toFixed(2)} recebido com sucesso! O saldo devedor de ${cliente.nome} foi atualizado.`);
-      
+      alert(`Pagamento de R$ ${valorAbatido.toFixed(2)} recebido com sucesso!`);
       renderizarClientes();
       atualizarUICaixa();
       carregarOpcoesClientesVenda();
@@ -777,10 +700,7 @@
         const idNum = parseInt(idEdicao);
         const index = produtos.findIndex(p => p.id === idNum);
         if (index !== -1) {
-          produtos[index].nome = nome;
-          produtos[index].custo = custo;
-          produtos[index].venda = venda;
-          produtos[index].estoque = estoque;
+          produtos[index].nome = nome; produtos[index].custo = custo; produtos[index].venda = venda; produtos[index].estoque = estoque;
           alert('Produto atualizado com sucesso!');
         }
       } else {
@@ -796,17 +716,14 @@
     function prepararEdicaoProduto(idProduto) {
       const prod = produtos.find(p => p.id === idProduto);
       if (!prod) return;
-
       document.getElementById('prodIdEdicao').value = prod.id;
       document.getElementById('prodNome').value = prod.nome;
       document.getElementById('prodCusto').value = prod.custo;
       document.getElementById('prodVenda').value = prod.venda;
       document.getElementById('prodEstoque').value = prod.estoque;
-
       document.getElementById('tituloFormProduto').innerText = "Editar Produto";
       document.getElementById('btnSalvarProduto').innerText = "Salvar Alterações";
       document.getElementById('btnCancelarEdicao').classList.remove('hidden');
-
       calcularMargemLucro();
     }
 
@@ -827,14 +744,12 @@
       if (qtdEntradaText === null) return;
       const qtdEntrada = parseInt(qtdEntradaText);
 
-      if (isNaN(qtdEntrada) || qtdEntrada <= 0) {
-        return alert('Digite um número inteiro válido e maior que zero para adicionar ao estoque!');
-      }
+      if (isNaN(qtdEntrada) || qtdEntrada <= 0) return alert('Digite um número inteiro válido!');
 
       prod.estoque += qtdEntrada;
       localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
       renderizarTabelaProdutos();
-      alert(`Sucesso! Foram adicionadas ${qtdEntrada} unidades ao estoque de "${prod.nome}".\nNovo Estoque: ${prod.estoque} un.`);
+      alert(`Sucesso! Foram adicionadas ${qtdEntrada} unidades ao estoque.`);
     }
 
     function importarPlanilhaCSV() {
@@ -856,10 +771,7 @@
             const custo = parseFloat(colunas[1].replace(',', '.')) || 0;
             const venda = parseFloat(colunas[2].replace(',', '.')) || 0;
             const estoque = parseInt(colunas[3]) || 0;
-            if (nome) {
-              produtos.push({ id: Date.now() + index, nome, custo, venda, estoque });
-              adicionados++;
-            }
+            if (nome) { produtos.push({ id: Date.now() + index, nome, custo, venda, estoque }); adicionados++; }
           }
         });
 
@@ -886,12 +798,8 @@
             <td class="p-2 ${corEstoque}">${prod.estoque} un.</td>
             <td class="p-2 font-bold ${margem >= 0 ? 'text-green-600' : 'text-red-600'}">${margem}%</td>
             <td class="p-2 text-center space-x-1 whitespace-nowrap">
-              <button onclick="prepararEdicaoProduto(${prod.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded text-xs font-bold transition">
-                ✏️ Editar
-              </button>
-              <button onclick="adicionarEstoqueProduto(${prod.id})" class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs font-bold transition">
-                ➕ Repor Estoque
-              </button>
+              <button onclick="prepararEdicaoProduto(${prod.id})" class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">✏️ Editar</button>
+              <button onclick="adicionarEstoqueProduto(${prod.id})" class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">➕ Repor Estoque</button>
             </td>
           </tr>`;
       });
@@ -917,12 +825,10 @@
       const itemNoCarrinho = carrinho.find(i => i.id === id);
       const qtdAtualNoCarrinho = itemNoCarrinho ? itemNoCarrinho.qtd : 0;
 
-      if (qtdAtualNoCarrinho + 1 > prod.estoque) {
-        return alert(`Estoque insuficiente! Disponível apenas: ${prod.estoque} un.`);
-      }
+      if (qtdAtualNoCarrinho + 1 > prod.estoque) return alert(`Estoque insuficiente! Disponível: ${prod.estoque} un.`);
 
       if (itemNoCarrinho) itemNoCarrinho.qtd++;
-      else carrinho.push({ ...prod, qtd: 1 });
+      else carrinho.push({ id: prod.id, nome: prod.nome, custo: prod.custo, venda: prod.venda, qtd: 1 });
       renderizarCarrinho();
     }
 
@@ -954,12 +860,14 @@
       const formaSelec = document.getElementById('formaPagamento').value;
       const idCli = document.getElementById('selectClienteVenda').value;
       const cli = clientes.find(c => c.id === parseInt(idCli));
+      const dataIso = new Date().toISOString();
       
       let rotuloForma = 'À Vista (Dinheiro)';
       if (formaSelec === 'vista_pix') rotuloForma = 'À Vista (PIX)';
       if (formaSelec === 'vista_cartao') rotuloForma = 'À Vista (Cartão)';
 
       let detalhe = `${rotuloForma} (Avulsa)`;
+      const itensComprados = carrinho.map(i => ({ id: i.id, nome: i.nome, qtd: i.qtd }));
 
       if (formaSelec.startsWith('vista')) {
         caixa.entradas += totalVenda;
@@ -967,7 +875,7 @@
         if (cli) {
           detalhe = `${rotuloForma} (${cli.nome})`;
           if (!cli.historicoTransacoes) cli.historicoTransacoes = [];
-          cli.historicoTransacoes.push({ data: new Date().toISOString(), tipo: 'compra_vista', valor: totalVenda });
+          cli.historicoTransacoes.push({ data: dataIso, tipo: 'compra_vista', valor: totalVenda, itens: itensComprados });
           localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
         }
       } else {
@@ -977,18 +885,19 @@
         }
         cli.saldoDevedor += totalVenda;
         if (!cli.historicoTransacoes) cli.historicoTransacoes = [];
-        cli.historicoTransacoes.push({ data: new Date().toISOString(), tipo: 'compra', valor: totalVenda });
+        cli.historicoTransacoes.push({ data: dataIso, tipo: 'compra', valor: totalVenda, itens: itensComprados });
         localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
         detalhe = `Fiado (${cli.nome})`;
       }
 
+      // ABATIMENTO DO ESTOQUE DADOS OS ITENS VENDIDOS
       carrinho.forEach(item => {
         const prod = produtos.find(p => p.id === item.id);
         if (prod) prod.estoque = Math.max(0, prod.estoque - item.qtd);
       });
       localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
 
-      const novaVenda = { id: Date.now(), data: new Date().toISOString(), formaPagamento: detalhe, totalVenda, totalCusto, lucroObtido: lucro };
+      const novaVenda = { id: Date.now(), data: dataIso, formaPagamento: detalhe, totalVenda, totalCusto, lucroObtido: lucro, itens: itensComprados };
       vendas.push(novaVenda);
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
@@ -1019,21 +928,40 @@
             <td class="p-3 font-bold text-gray-800">R$ ${v.totalVenda.toFixed(2)}</td>
             <td class="p-3 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td>
             <td class="p-3 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
-            <td class="p-3 text-center"><button onclick="excluirVendaIndividual(${v.id})" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-xs font-bold transition">Excluir</button></td>
+            <td class="p-3 text-center"><button onclick="excluirVendaIndividual(${v.id})" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-xs font-bold transition">🗑️ Estornar</button></td>
           </tr>`;
       });
     }
 
+    // EXCLUIR VENDA GERAL E DEVOLVER PRODUTOS AO ESTOQUE
     function excluirVendaIndividual(idVenda) {
-      if (!confirm('Deseja excluir esta venda do registro?')) return;
+      const venda = vendas.find(v => v.id === idVenda);
+      if (!venda) return;
+
+      if (!confirm(`Deseja estornar esta venda no valor de R$ ${venda.totalVenda.toFixed(2)}?\n(Os produtos serão devolvidos ao estoque)`)) return;
+
+      // 1. Restaura o estoque de todos os produtos envolvidos na venda
+      if (venda.itens && Array.isArray(venda.itens)) {
+        venda.itens.forEach(item => {
+          const prod = produtos.find(p => p.id === item.id);
+          if (prod) {
+            prod.estoque += item.qtd;
+          }
+        });
+        localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
+      }
+
+      // 2. Remove da lista de vendas
       vendas = vendas.filter(v => v.id !== idVenda);
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
       fetch(`http://localhost:8080/api/vendas/${idVenda}`, { method: 'DELETE' })
         .catch(err => console.log('Servidor Java offline.'));
 
-      alert('Venda excluída!');
+      alert('Venda estornada com sucesso e produtos devolvidos ao estoque!');
       renderizarTabelaAbaVendas();
+      renderizarTabelaProdutos();
+      renderizarGridProdutos();
       carregarOpcoesMesesRelatorio();
       renderizarRelatorios();
     }
@@ -1080,7 +1008,7 @@
                 <td class="p-2">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
                 <td class="p-2">${v.formaPagamento}</td><td class="p-2 font-bold">R$ ${v.totalVenda.toFixed(2)}</td>
                 <td class="p-2 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td><td class="p-2 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
-                <td class="p-2 text-center"><button onclick="excluirVendaIndividual(${v.id})" class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Excluir</button></td>
+                <td class="p-2 text-center"><button onclick="excluirVendaIndividual(${v.id})" class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">🗑️ Estornar</button></td>
               </tr>`;
           }
         });
@@ -1088,7 +1016,6 @@
 
       const totalAReceber = clientes.reduce((acc, cli) => acc + (cli.saldoDevedor || 0), 0);
       document.getElementById('relTotalAReceber').innerText = totalAReceber.toFixed(2);
-
       document.getElementById('labelCardVendasMes').innerText = `Vendas (${nomesMeses[mSel]}/${aSel})`;
       document.getElementById('labelCardLucroMes').innerText = `Lucro (${nomesMeses[mSel]}/${aSel})`;
       document.getElementById('relVendasHoje').innerText = vHoje.toFixed(2); document.getElementById('relLucroHoje').innerText = lHoje.toFixed(2);

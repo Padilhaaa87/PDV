@@ -104,3 +104,10 @@ function renderizarTabelaUsuarios() {
       </tr>`;
   });
 }
+  const itensComprados = carrinho.map(i => ({ id: i.id, nome: i.nome, qtd: i.qtd }));
+  venda.itens.forEach(item => {
+  const prod = produtos.find(p => p.id === item.id);
+  if (prod) {
+    prod.estoque += item.qtd; // Devolve ao estoque
+  }
+});
