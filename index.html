@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Multi-Loja & Customização Visual</title>
+  <title>PDV Web - Login Grafite & Modo Escuro</title>
   <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -11,25 +11,37 @@
     .aba-conteudo.ativa { display: block; }
     .oculto-autenticacao { display: none !important; }
 
-    /* ESTILOS CUSTOMIZADOS PARA MODO ESCURO (DARK MODE) */
+    /* ESTILOS CUSTOMIZADOS PARA MODO ESCURO (DARK MODE) NA APLICAÇÃO E NO LOGIN */
     body.dark {
       background-color: #0f172a !important;
       color: #f8fafc !important;
     }
+
+    /* Ajuste para o fundo do Login no Modo Escuro */
+    body.dark #telaAutenticacao {
+      background-color: #0f172a !important;
+    }
+
+    /* Cards e Caixas no Modo Escuro */
     body.dark .bg-white {
       background-color: #1e293b !important;
       color: #f8fafc !important;
     }
+
     body.dark .bg-gray-50, body.dark .bg-gray-100 {
       background-color: #334155 !important;
       color: #f8fafc !important;
     }
+
     body.dark .text-gray-700, body.dark .text-gray-800, body.dark .text-gray-500 {
       color: #cbd5e1 !important;
     }
+
     body.dark .border, body.dark .border-b {
       border-color: #475569 !important;
     }
+
+    /* Entradas e Inputs no Modo Escuro */
     body.dark input, body.dark select {
       background-color: #0f172a !important;
       color: #ffffff !important;
@@ -39,12 +51,20 @@
 </head>
 <body id="bodyApp" class="bg-gray-100 font-sans text-gray-800 transition-colors duration-300">
 
-  <!-- TELA DE AUTENTICAÇÃO COM LOGIN CATEGORIZADO -->
-  <div id="telaAutenticacao" class="min-h-screen flex items-center justify-center bg-blue-900 p-4">
-    <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-lg space-y-6">
+  <!-- TELA DE AUTENTICAÇÃO COM FUNDO CINZA GRAFITE (bg-slate-800) -->
+  <div id="telaAutenticacao" class="min-h-screen flex items-center justify-center bg-slate-800 p-4 transition-colors duration-300">
+    <div class="bg-white p-6 md:p-8 rounded-lg shadow-2xl w-full max-w-lg space-y-6 relative">
+      
+      <!-- BOTÃO DE MODO ESCURO NO LOGIN (CANTO SUPERIOR DIREITO) -->
+      <div class="flex justify-between items-center border-b pb-3">
+        <h1 class="text-2xl font-bold text-blue-600">PDV Comercial</h1>
+        <button onclick="alternarModoEscuro()" id="btnModoEscuroLogin" class="bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 text-xs px-3 py-1.5 rounded-full font-semibold shadow transition flex items-center gap-1">
+          🌙 Modo Escuro
+        </button>
+      </div>
+
       <div class="text-center">
-        <h1 class="text-3xl font-bold text-blue-700">PDV Comercial</h1>
-        <p class="text-gray-500 text-sm mt-1">Selecione o seu tipo de acesso para entrar</p>
+        <p class="text-gray-500 text-sm">Selecione o seu tipo de acesso para entrar no sistema</p>
       </div>
 
       <!-- SELETOR DE PERFIL DE LOGIN E CADASTRO -->
@@ -76,7 +96,7 @@
         </button>
       </form>
 
-      <!-- FORMULÁRIO DE CRIAÇÃO DE NOVA LOJA COM INFORMAÇÃO DE COMPRA E TELEFONE -->
+      <!-- FORMULÁRIO DE CRIAÇÃO DE NOVA LOJA -->
       <form id="formCadastro" onsubmit="cadastrarLojaEUsuario(event)" class="space-y-4 hidden">
         <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 p-4 rounded-lg shadow-sm space-y-2">
           <div class="flex justify-between items-center border-b border-emerald-200 pb-2">
@@ -131,8 +151,8 @@
           <span id="labelUsuarioLogado" class="text-xs text-blue-200">Sessão: Nenhuma</span>
         </div>
         <div class="flex items-center gap-3">
-          <!-- BOTÃO ALTERNADOR DE MODO ESCURO -->
-          <button onclick="alternarModoEscuro()" id="btnModoEscuro" class="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow transition flex items-center gap-1">
+          <!-- BOTÃO ALTERNADOR DE MODO ESCURO NA APLICAÇÃO -->
+          <button onclick="alternarModoEscuro()" id="btnModoEscuroHeader" class="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow transition flex items-center gap-1">
             🌙 Modo Escuro
           </button>
           <div id="statusCaixaTopo" class="bg-black/20 px-3 py-1 rounded-full text-xs md:text-sm font-bold">Caixa: Fechado</div>
@@ -579,7 +599,7 @@
       <!-- ABA 7: GESTÃO DE UTILIZADORES & SELETOR DE COR DA LOJA -->
       <section id="usuarios" class="aba-conteudo admin-only space-y-6">
         
-        <!-- PALETA DE CORES PARA PERSONALIZAÇÃO DA LOJA (NOVA FUNCIONALIDADE) -->
+        <!-- PALETA DE CORES PARA PERSONALIZAÇÃO DA LOJA -->
         <div class="bg-white p-6 rounded-lg shadow-md space-y-3 border-l-4 border-indigo-500">
           <h2 class="text-xl font-bold text-gray-700">🎨 Personalizar Cor de Destaque da Loja</h2>
           <p class="text-xs text-gray-500">Escolha uma cor para personalizar o cabeçalho e os botões da sua loja:</p>
@@ -653,13 +673,17 @@
 
     function aplicarModoEscuro() {
       const body = document.getElementById('bodyApp');
-      const btn = document.getElementById('btnModoEscuro');
+      const btnHeader = document.getElementById('btnModoEscuroHeader');
+      const btnLogin = document.getElementById('btnModoEscuroLogin');
+
       if (modoEscuroAtivo) {
         body.classList.add('dark');
-        btn.innerText = "☀️ Modo Claro";
+        if (btnHeader) btnHeader.innerText = "☀️ Modo Claro";
+        if (btnLogin) btnLogin.innerText = "☀️ Modo Claro";
       } else {
         body.classList.remove('dark');
-        btn.innerText = "🌙 Modo Escuro";
+        if (btnHeader) btnHeader.innerText = "🌙 Modo Escuro";
+        if (btnLogin) btnLogin.innerText = "🌙 Modo Escuro";
       }
     }
 
@@ -684,7 +708,6 @@
       const nav = document.getElementById('navLoja');
       const tema = mapaCores[corKey] || mapaCores['blue'];
 
-      // LIMPA CLASSES ANTERIORES DE COR
       header.className = `text-white p-4 shadow-md sticky top-0 z-50 transition-colors duration-300 ${tema.header}`;
       nav.className = `text-white shadow-inner overflow-x-auto transition-colors duration-300 ${tema.nav}`;
     }
@@ -693,7 +716,6 @@
       if (!lojaAtual || lojaAtual.id === 'GLOBAL') return;
       lojaAtual.corTema = corKey;
       
-      // ATUALIZA NO STORAGE DAS LOJAS
       const idx = lojas.findIndex(l => l.id === lojaAtual.id);
       if (idx !== -1) {
         lojas[idx].corTema = corKey;
@@ -857,7 +879,6 @@
         document.getElementById('labelUsuarioLogado').innerText = `Loja: ${lojaAtual.nomeLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil.toUpperCase()})`;
       }
 
-      // APLICA MODO ESCURO E TEMA DE COR
       aplicarModoEscuro();
       aplicarTemaVisualLoja(lojaAtual.corTema || 'blue');
       atualizarUrlLoja(lojaAtual.nomeLoja);
@@ -1340,8 +1361,12 @@
       renderizarRelatorios();
     }
 
-    if (sessaoAtiva) iniciarSessao(sessaoAtiva);
-    else aplicarModoEscuro();
+    // EXECUTADO IMEDIATAMENTE AO CARREGAR A PÁGINA
+    aplicarModoEscuro();
+
+    if (sessaoAtiva) {
+      iniciarSessao(sessaoAtiva);
+    }
   </script>
 </body>
 </html>
