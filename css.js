@@ -111,3 +111,16 @@ function renderizarTabelaUsuarios() {
     prod.estoque += item.qtd; // Devolve ao estoque
   }
 });
+
+if (formaSelec === 'vista_dinheiro') {
+  caixa.dinheiro += totalVenda;
+  caixa.entradas += totalVenda;
+} else if (formaSelec === 'vista_pix') {
+  caixa.pix += totalVenda;
+  caixa.entradas += totalVenda;
+} ...
+
+if (venda.tipoPagamento === 'vista_dinheiro') {
+  caixa.dinheiro = Math.max(0, caixa.dinheiro - venda.totalVenda);
+  caixa.entradas = Math.max(0, caixa.entradas - venda.totalVenda);
+}

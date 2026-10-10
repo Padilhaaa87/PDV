@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Sincronização de Estornos e Relatório de Clientes</title>
+  <title>PDV Web - Caixa Detalhado com Estorno Automático</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -137,7 +137,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-4">
             <div>
               <h2 class="text-xl font-bold text-gray-700">Registro Geral de Vendas</h2>
-              <p class="text-xs text-gray-500">Ao estornar uma venda aqui, ela será removida do estoque, caixa e da ficha do cliente automaticamente!</p>
+              <p class="text-xs text-gray-500">Ao estornar uma venda, o valor é deduzido do caixa e do histórico do cliente automaticamente!</p>
             </div>
             <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
               Total Registrado: <span id="qtdTotalVendas">0</span> vendas
@@ -162,7 +162,7 @@
         </div>
       </section>
 
-      <!-- ABA 3: CONTROLE DE CAIXA -->
+      <!-- ABA 3: CONTROLE DE CAIXA COM RELATÓRIO DETALHADO POR PAGAMENTO -->
       <section id="controleCaixa" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -180,11 +180,21 @@
           </div>
 
           <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Resumo do Caixa</h2>
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Resumo do Caixa do Dia</h2>
             <div class="space-y-3">
-              <div class="flex justify-between py-2 border-b"><span>Fundo Inicial:</span><span class="font-bold">R$ <span id="resumoInicial">0,00</span></span></div>
-              <div class="flex justify-between py-2 border-b text-green-600"><span>Entradas:</span><span class="font-bold">R$ <span id="resumoEntradas">0,00</span></span></div>
-              <div class="flex justify-between py-2 text-xl font-bold border-t pt-3"><span>Saldo Atual:</span><span class="text-blue-600">R$ <span id="resumoTotal">0,00</span></span></div>
+              <div class="flex justify-between py-2 border-b"><span>Fundo Inicial (Troco):</span><span class="font-bold">R$ <span id="resumoInicial">0,00</span></span></div>
+              
+              <!-- RELATÓRIO DETALHADO POR FORMA DE PAGAMENTO -->
+              <div class="bg-gray-50 p-3 rounded-lg border space-y-2 text-sm">
+                <span class="font-bold text-xs uppercase text-gray-500 block mb-1">Entradas por Categoria</span>
+                <div class="flex justify-between text-green-700"><span>💵 Dinheiro:</span><span class="font-bold">R$ <span id="caixaDinheiro">0,00</span></span></div>
+                <div class="flex justify-between text-blue-700"><span>📱 PIX:</span><span class="font-bold">R$ <span id="caixaPix">0,00</span></span></div>
+                <div class="flex justify-between text-purple-700"><span>💳 Cartão:</span><span class="font-bold">R$ <span id="caixaCartao">0,00</span></span></div>
+                <div class="flex justify-between text-amber-700 border-t pt-1"><span>📋 Fiado (Emitido):</span><span class="font-bold">R$ <span id="caixaFiado">0,00</span></span></div>
+              </div>
+
+              <div class="flex justify-between py-2 border-b text-green-600"><span>Total Entradas em Caixa (Din/PIX/Cartão):</span><span class="font-bold">R$ <span id="resumoEntradas">0,00</span></span></div>
+              <div class="flex justify-between py-2 text-xl font-bold border-t pt-3"><span>Saldo Total em Caixa:</span><span class="text-blue-600">R$ <span id="resumoTotal">0,00</span></span></div>
             </div>
           </div>
         </div>
@@ -243,7 +253,7 @@
         </div>
       </section>
 
-      <!-- ABA 5: CLIENTES & RELATÓRIO DE COMPRAS (FIADO E À VISTA) -->
+      <!-- ABA 5: CLIENTES & RELATÓRIO DE COMPRAS -->
       <section id="clientes" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -351,7 +361,18 @@
     let sessaoAtiva = JSON.parse(localStorage.getItem('pdv_sessao_ativa')) || null;
     let produtos = JSON.parse(localStorage.getItem('pdv_produtos')) || [];
     let clientes = JSON.parse(localStorage.getItem('pdv_clientes')) || [];
-    let caixa = JSON.parse(localStorage.getItem('pdv_caixa')) || { aberto: false, inicial: 0, entradas: 0, movimentacoes: [] };
+    
+    // CAIXA ESTRUTURADO COM CATEGORIAS DETALHADAS DE PAGAMENTO
+    let caixa = JSON.parse(localStorage.getItem('pdv_caixa')) || { 
+      aberto: false, 
+      inicial: 0, 
+      entradas: 0, 
+      dinheiro: 0, 
+      pix: 0, 
+      cartao: 0, 
+      fiado: 0 
+    };
+    
     let vendas = JSON.parse(localStorage.getItem('pdv_vendas')) || [];
     let carrinho = [];
 
@@ -495,7 +516,7 @@
       document.getElementById('btnSalvarEdicaoUsuario').disabled = true;
     }
 
-    // --- MÓDULO CLIENTES, RELATÓRIO COMPLETO & ESTORNOS SINCRONIZADOS ---
+    // --- MÓDULO CLIENTES, RELATÓRIO COMPLETO & ESTORNOS ---
     function alternarCampoLimite(cb) {
       const input = document.getElementById('cliLimite');
       input.value = ''; input.disabled = cb.checked;
@@ -553,7 +574,6 @@
       document.getElementById('btnCancelarEdicaoCliente').classList.add('hidden');
     }
 
-    // RENDERIZA A FICHA E RELATÓRIO COMPLETO (FIADO E À VISTA) DE CADA CLIENTE
     function renderizarClientes() {
       const lista = document.getElementById('listaClientes');
       lista.innerHTML = clientes.length === 0 ? '<p class="text-gray-500 text-sm">Nenhum cliente cadastrado.</p>' : '';
@@ -566,7 +586,6 @@
         const comprasFiadas = transacoes.filter(t => t.tipo === 'compra');
         const comprasVista = transacoes.filter(t => t.tipo === 'compra_vista');
 
-        // MONTAGEM DO RELATÓRIO DE FIADOS
         let htmlFiado = '';
         if (comprasFiadas.length > 0) {
           htmlFiado = `
@@ -584,7 +603,6 @@
           htmlFiado += `</div></div>`;
         }
 
-        // MONTAGEM DO RELATÓRIO À VISTA
         let htmlVista = '';
         if (comprasVista.length > 0) {
           htmlVista = `
@@ -625,7 +643,6 @@
       });
     }
 
-    // ESTORNO NA ÁREA DO CLIENTE
     function excluirCompraCliente(idCliente, dataTransacao) {
       const cli = clientes.find(c => c.id === idCliente);
       if (!cli) return;
@@ -634,9 +651,9 @@
       if (idxTrans === -1) return;
 
       const compra = cli.historicoTransacoes[idxTrans];
-      if (!confirm(`Deseja estornar esta compra no valor de R$ ${compra.valor.toFixed(2)} do cliente ${cli.nome}?\n(Os produtos retornarão ao estoque)`)) return;
+      if (!confirm(`Deseja estornar esta compra no valor de R$ ${compra.valor.toFixed(2)} do cliente ${cli.nome}?\n(Produtos voltarão ao estoque e o caixa será ajustado)`)) return;
 
-      // 1. Devolver produtos ao estoque
+      // Restaura o estoque
       if (compra.itens && Array.isArray(compra.itens)) {
         compra.itens.forEach(item => {
           const prod = produtos.find(p => p.id === item.id);
@@ -645,21 +662,25 @@
         localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
       }
 
-      // 2. Se for fiado, reduz o saldo devedor
+      // Estorno no caixa e saldo do cliente de acordo com a forma de pagamento
       if (compra.tipo === 'compra') {
         cli.saldoDevedor = Math.max(0, cli.saldoDevedor - compra.valor);
-      } 
-      // Se for à vista, desconta das entradas do caixa
-      else if (compra.tipo === 'compra_vista') {
+        caixa.fiado = Math.max(0, (caixa.fiado || 0) - compra.valor);
+      } else if (compra.tipo === 'compra_vista') {
         caixa.entradas = Math.max(0, caixa.entradas - compra.valor);
-        localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
+        // Tenta identificar e subtrair das categorias do caixa
+        const vendaGeral = vendas.find(v => v.data === dataTransacao);
+        if (vendaGeral) {
+          if (vendaGeral.tipoPagamento === 'vista_dinheiro') caixa.dinheiro = Math.max(0, (caixa.dinheiro || 0) - compra.valor);
+          if (vendaGeral.tipoPagamento === 'vista_pix') caixa.pix = Math.max(0, (caixa.pix || 0) - compra.valor);
+          if (vendaGeral.tipoPagamento === 'vista_cartao') caixa.cartao = Math.max(0, (caixa.cartao || 0) - compra.valor);
+        }
       }
+      localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
 
-      // 3. Remover da lista geral de vendas
       vendas = vendas.filter(v => !(v.data === dataTransacao && Math.abs(v.totalVenda - compra.valor) < 0.01));
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
-      // 4. Remover do histórico do cliente
       cli.historicoTransacoes.splice(idxTrans, 1);
       localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
 
@@ -684,6 +705,7 @@
       cliente.historicoTransacoes.push({ data: new Date().toISOString(), tipo: 'pagamento_fiado', valor: valorAbatido });
 
       caixa.entradas += valorAbatido;
+      caixa.dinheiro = (caixa.dinheiro || 0) + valorAbatido; // Recebimento de fiado soma no caixa dinheiro
       localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
       localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
 
@@ -869,6 +891,7 @@
       else { label.innerText = "(Opcional para À Vista)"; label.className = "text-xs text-gray-400"; }
     }
 
+    // PROCESSAMENTO DE VENDAS COM CONTROLE DETALHADO DO CAIXA
     function finalizarVenda() {
       if (carrinho.length === 0) return alert('Carrinho vazio!');
       if (!caixa.aberto) return alert('Caixa fechado!');
@@ -888,28 +911,41 @@
       let detalhe = `${rotuloForma} (Avulsa)`;
       const itensComprados = carrinho.map(i => ({ id: i.id, nome: i.nome, qtd: i.qtd }));
 
-      if (formaSelec.startsWith('vista')) {
+      // 1. SOMA AO CAIXA DE ACORDO COM A FORMA DE PAGAMENTO SELECIONADA
+      if (formaSelec === 'vista_dinheiro') {
+        caixa.dinheiro = (caixa.dinheiro || 0) + totalVenda;
         caixa.entradas += totalVenda;
-        localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
-        if (cli) {
-          detalhe = `${rotuloForma} (${cli.nome})`;
-          if (!cli.historicoTransacoes) cli.historicoTransacoes = [];
-          cli.historicoTransacoes.push({ data: dataIso, tipo: 'compra_vista', valor: totalVenda, itens: itensComprados });
-          localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
-        }
-      } else {
+      } else if (formaSelec === 'vista_pix') {
+        caixa.pix = (caixa.pix || 0) + totalVenda;
+        caixa.entradas += totalVenda;
+      } else if (formaSelec === 'vista_cartao') {
+        caixa.cartao = (caixa.cartao || 0) + totalVenda;
+        caixa.entradas += totalVenda;
+      } else if (formaSelec === 'fiado') {
         if (!cli) return alert('Para vendas Fiadas, é obrigatório selecionar um cliente!');
         if (!cli.limiteIlimitado && ((cli.saldoDevedor + totalVenda) > cli.limite)) {
           return alert(`Venda Recusada! Ultrapassa o limite de crédito (${cli.nome}).`);
         }
         cli.saldoDevedor += totalVenda;
-        if (!cli.historicoTransacoes) cli.historicoTransacoes = [];
-        cli.historicoTransacoes.push({ data: dataIso, tipo: 'compra', valor: totalVenda, itens: itensComprados });
-        localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
+        caixa.fiado = (caixa.fiado || 0) + totalVenda;
         detalhe = `Fiado (${cli.nome})`;
       }
 
-      // ABATIMENTO DO ESTOQUE
+      localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
+
+      if (cli) {
+        if (!formaSelec.startsWith('fiado')) detalhe = `${rotuloForma} (${cli.nome})`;
+        if (!cli.historicoTransacoes) cli.historicoTransacoes = [];
+        cli.historicoTransacoes.push({ 
+          data: dataIso, 
+          tipo: formaSelec === 'fiado' ? 'compra' : 'compra_vista', 
+          valor: totalVenda, 
+          itens: itensComprados 
+        });
+        localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
+      }
+
+      // ABATIMENTO DE ESTOQUE
       carrinho.forEach(item => {
         const prod = produtos.find(p => p.id === item.id);
         if (prod) prod.estoque = Math.max(0, prod.estoque - item.qtd);
@@ -920,6 +956,7 @@
         id: Date.now(), 
         data: dataIso, 
         formaPagamento: detalhe, 
+        tipoPagamento: formaSelec,
         totalVenda, 
         totalCusto, 
         lucroObtido: lucro, 
@@ -929,7 +966,7 @@
       vendas.push(novaVenda);
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
-      alert('Venda realizada e estoque atualizado!');
+      alert('Venda realizada e registrada no caixa!');
       carrinho = [];
       document.getElementById('selectClienteVenda').value = "";
       renderizarCarrinho();
@@ -954,12 +991,12 @@
       });
     }
 
-    // ESTORNO NA ÁREA VENDAS - REMOVE DO CLIENTE (FIADO OU À VISTA) E CAIXA AUTOMATICAMENTE
+    // ESTORNO NA ÁREA DE VENDAS - DEDUZ O VALOR DO CAIXA POR CATEGORIA AUTOMATICAMENTE
     function excluirVendaIndividual(idVenda) {
       const venda = vendas.find(v => v.id === idVenda);
       if (!venda) return;
 
-      if (!confirm(`Deseja estornar esta venda no valor de R$ ${venda.totalVenda.toFixed(2)}?\n(Estoque, caixa e histórico do cliente serão sincronizados)`)) return;
+      if (!confirm(`Deseja estornar esta venda no valor de R$ ${venda.totalVenda.toFixed(2)}?\n(O valor será descontado do caixa e os produtos devolvidos)`)) return;
 
       // 1. Devolver produtos ao estoque
       if (venda.itens && Array.isArray(venda.itens)) {
@@ -970,7 +1007,22 @@
         localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
       }
 
-      // 2. Se a venda tinha cliente, sincroniza com o cliente
+      // 2. Deduzir do caixa de acordo com o tipo de pagamento da venda
+      if (venda.tipoPagamento === 'vista_dinheiro') {
+        caixa.dinheiro = Math.max(0, (caixa.dinheiro || 0) - venda.totalVenda);
+        caixa.entradas = Math.max(0, caixa.entradas - venda.totalVenda);
+      } else if (venda.tipoPagamento === 'vista_pix') {
+        caixa.pix = Math.max(0, (caixa.pix || 0) - venda.totalVenda);
+        caixa.entradas = Math.max(0, caixa.entradas - venda.totalVenda);
+      } else if (venda.tipoPagamento === 'vista_cartao') {
+        caixa.cartao = Math.max(0, (caixa.cartao || 0) - venda.totalVenda);
+        caixa.entradas = Math.max(0, caixa.entradas - venda.totalVenda);
+      } else if (venda.tipoPagamento === 'fiado') {
+        caixa.fiado = Math.max(0, (caixa.fiado || 0) - venda.totalVenda);
+      }
+      localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
+
+      // 3. Remover do histórico do cliente
       if (venda.clienteId) {
         const cli = clientes.find(c => c.id === venda.clienteId);
         if (cli && cli.historicoTransacoes) {
@@ -986,17 +1038,11 @@
         }
       }
 
-      // 3. Se foi à vista, remove do caixa do dia
-      if (!venda.formaPagamento.startsWith('Fiado')) {
-        caixa.entradas = Math.max(0, caixa.entradas - venda.totalVenda);
-        localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
-      }
-
-      // 4. Remove a venda do registro
+      // 4. Remover da lista geral de vendas
       vendas = vendas.filter(v => v.id !== idVenda);
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
-      alert('Venda estornada! Estoque, caixa e cliente atualizados com sucesso.');
+      alert('Venda estornada! O dinheiro foi deduzido do caixa e o estoque atualizado.');
       atualizarTudo();
     }
 
@@ -1067,14 +1113,14 @@
 
     function abrirCaixa() {
       const v = parseFloat(document.getElementById('valorInicialCaixa').value) || 0;
-      caixa = { aberto: true, inicial: v, entradas: 0, movimentacoes: [] };
+      caixa = { aberto: true, inicial: v, entradas: 0, dinheiro: 0, pix: 0, cartao: 0, fiado: 0 };
       localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
       atualizarUICaixa(); alert('Caixa aberto!');
     }
 
     function fecharCaixa() {
-      alert(`Caixa Fechado. Total: R$ ${(caixa.inicial + caixa.entradas).toFixed(2)}`);
-      caixa = { aberto: false, inicial: 0, entradas: 0, movimentacoes: [] };
+      alert(`Caixa Fechado!\nTotal em Caixa (Dinheiro/PIX/Cartão): R$ ${(caixa.inicial + caixa.entradas).toFixed(2)}`);
+      caixa = { aberto: false, inicial: 0, entradas: 0, dinheiro: 0, pix: 0, cartao: 0, fiado: 0 };
       localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
       atualizarUICaixa();
     }
@@ -1088,9 +1134,16 @@
         statusTopo.innerText = 'Caixa: Fechado'; statusTopo.className = 'bg-red-600 px-3 py-1 rounded-full text-xs font-bold';
         document.getElementById('formAberturaCaixa').classList.remove('hidden'); document.getElementById('formOperacoesCaixa').classList.add('hidden');
       }
-      document.getElementById('resumoInicial').innerText = caixa.inicial.toFixed(2);
-      document.getElementById('resumoEntradas').innerText = caixa.entradas.toFixed(2);
-      document.getElementById('resumoTotal').innerText = (caixa.inicial + caixa.entradas).toFixed(2);
+
+      // ATUALIZA OS VALORES POR FORMA DE PAGAMENTO NO PAINEL DO CAIXA
+      document.getElementById('resumoInicial').innerText = (caixa.inicial || 0).toFixed(2);
+      document.getElementById('caixaDinheiro').innerText = (caixa.dinheiro || 0).toFixed(2);
+      document.getElementById('caixaPix').innerText = (caixa.pix || 0).toFixed(2);
+      document.getElementById('caixaCartao').innerText = (caixa.cartao || 0).toFixed(2);
+      document.getElementById('caixaFiado').innerText = (caixa.fiado || 0).toFixed(2);
+
+      document.getElementById('resumoEntradas').innerText = (caixa.entradas || 0).toFixed(2);
+      document.getElementById('resumoTotal').innerText = ((caixa.inicial || 0) + (caixa.entradas || 0)).toFixed(2);
     }
 
     if (sessaoAtiva) iniciarSessao(sessaoAtiva);
