@@ -94,12 +94,20 @@
             </button>
           </div>
         </div>
+
+        <!-- LINK PARA RECUPERAÇÃO DE SENHA VIA E-MAIL -->
+        <div class="text-right">
+          <button type="button" onclick="alternarModalRecuperacao(true)" class="text-xs text-blue-600 hover:underline font-semibold">
+            🔑 Esqueci minha palavra-passe (senha)
+          </button>
+        </div>
+
         <button type="submit" id="btnSubmitLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">
           Acessar Loja como Vendedor
         </button>
       </form>
 
-      <!-- FORMULÁRIO DE CRIAÇÃO DE NOVA LOJA -->
+      <!-- FORMULÁRIO DE CRIAÇÃO DE NOVA LOJA (COM CAMPO DE E-MAIL) -->
       <form id="formCadastro" onsubmit="cadastrarLojaEUsuario(event)" class="space-y-4 hidden">
         <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 p-4 rounded-lg shadow-sm space-y-2">
           <div class="flex justify-between items-center border-b border-emerald-200 pb-2">
@@ -130,12 +138,15 @@
           <input type="text" id="cadNomeLoja" required placeholder="Ex: Mercado Silva, Boutique Elegância" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
+          <label class="block text-sm font-medium text-gray-700">E-mail de Contato / Recuperação <span class="text-red-500">*</span></label>
+          <input type="email" id="cadEmail" required placeholder="seuemail@exemplo.com" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
           <label class="block text-sm font-medium text-gray-700">Nome do Administrador da Loja <span class="text-red-500">*</span></label>
           <input type="text" id="cadUsuario" required placeholder="Escolha um nome de utilizador para o dono" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha) <span class="text-red-500">*</span></label>
-          <!-- CAMPO COM BOTÃO VER SENHA NO CADASTRO -->
           <div class="relative">
             <input type="password" id="cadSenha" required placeholder="Crie uma palavra-passe" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500 pr-10">
             <button type="button" onclick="alternarVisibilidadeSenha('cadSenha', 'btnVerSenhaCad')" id="btnVerSenhaCad" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 text-sm font-semibold">
@@ -146,6 +157,29 @@
         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded transition shadow">
           Validar Código e Criar Loja
         </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE RECUPERAÇÃO DE PALAVRA-PASSE (SENHA) VIA E-MAIL -->
+  <div id="modalRecuperacaoSenha" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl relative">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="text-lg font-bold text-gray-800">📧 Recuperação de Senha</h3>
+        <button onclick="alternarModalRecuperacao(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+      </div>
+      <p class="text-xs text-gray-600">
+        Informe o e-mail cadastrado do seu utilizador (Vendedor, Adm da Loja ou Master) para instruir a recuperação da sua palavra-passe.
+      </p>
+      <form onsubmit="processarRecuperacaoSenha(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">E-mail Cadastrado</label>
+          <input type="email" id="emailRecuperacao" required placeholder="digite.seu.email@exemplo.com" class="w-full p-2.5 border rounded outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="alternarModalRecuperacao(false)" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold text-xs rounded">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded shadow">Enviar Instruções</button>
+        </div>
       </form>
     </div>
   </div>
@@ -248,6 +282,7 @@
               <thead>
                 <tr class="bg-gray-100 border-b">
                   <th class="p-3">Utilizador</th>
+                  <th class="p-3">E-mail</th>
                   <th class="p-3">Perfil de Acesso</th>
                   <th class="p-3">Loja Associada</th>
                   <th class="p-3 text-center">Ações</th>
@@ -607,7 +642,7 @@
       <!-- ABA 7: GESTÃO DE UTILIZADORES & SELETOR DE COR DA LOJA -->
       <section id="usuarios" class="aba-conteudo admin-only space-y-6">
         
-        <!-- NOVO PAINEL DE ALTERAÇÃO DO NOME DA LOJA (EXCLUSIVO PARA O ADM DA LOJA) -->
+        <!-- PAINEL DE ALTERAÇÃO DO NOME DA LOJA -->
         <div class="bg-white p-6 rounded-lg shadow-md space-y-3 border-l-4 border-blue-600">
           <h2 class="text-xl font-bold text-gray-700">✏️ Alterar Nome da Loja</h2>
           <p class="text-xs text-gray-500">Atualize o nome oficial do seu estabelecimento comercial:</p>
@@ -638,6 +673,7 @@
             <h2 id="tituloFormUsuario" class="text-xl font-bold text-gray-700 border-b pb-2">Cadastrar Vendedor / Utilizador</h2>
             <form id="formEdicaoUsuario" onsubmit="salvarNovoUsuarioLoja(event)" class="space-y-3">
               <div><label class="block text-sm font-medium text-gray-700">Nome do Vendedor / Utilizador</label><input type="text" id="editUsuarioNome" required placeholder="Ex: joao_vendedor" class="w-full p-2 border rounded"></div>
+              <div><label class="block text-sm font-medium text-gray-700">E-mail do Utilizador <span class="text-red-500">*</span></label><input type="email" id="editUsuarioEmail" required placeholder="vendedor@exemplo.com" class="w-full p-2 border rounded"></div>
               <div><label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label><input type="password" id="editUsuarioSenha" required placeholder="••••••••" class="w-full p-2 border rounded"></div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Perfil de Acesso</label>
@@ -657,7 +693,7 @@
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
-                <thead><tr class="bg-gray-100 border-b text-sm"><th class="p-3">Utilizador</th><th class="p-3">Perfil</th><th class="p-3 text-center">Ação</th></tr></thead>
+                <thead><tr class="bg-gray-100 border-b text-sm"><th class="p-3">Utilizador</th><th class="p-3">E-mail</th><th class="p-3">Perfil</th><th class="p-3 text-center">Ação</th></tr></thead>
                 <tbody id="tabelaAbaUsuarios"></tbody>
               </table>
             </div>
@@ -682,13 +718,45 @@
       }
     }
 
+    // MODAL E LÓGICA DE RECUPERAÇÃO DE PALAVRA-PASSE (SENHA) VIA E-MAIL
+    function alternarModalRecuperacao(exibir) {
+      const modal = document.getElementById('modalRecuperacaoSenha');
+      if (exibir) {
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+        document.getElementById('emailRecuperacao').value = '';
+      }
+    }
+
+    function processarRecuperacaoSenha(e) {
+      e.preventDefault();
+      const emailInformado = document.getElementById('emailRecuperacao').value.trim().toLowerCase();
+      
+      const contaEncontrada = contasRegistradas.find(c => c.email && c.email.toLowerCase() === emailInformado);
+
+      if (!contaEncontrada) {
+        return alert('❌ Nenhum utilizador cadastrado foi encontrado com este e-mail!');
+      }
+
+      // SIMULAÇÃO DO ENVIO DE INSTRUÇÕES DE RECUPERAÇÃO PARA O E-MAIL
+      const assunto = encodeURIComponent(`Recuperação de Senha - PDV Web`);
+      const corpo = encodeURIComponent(`Olá, ${contaEncontrada.usuario}!\n\nRecebemos uma solicitação de recuperação de senha para a sua conta no PDV Web.\n\nA sua palavra-passe (senha) atual é: ${contaEncontrada.senha}\n\nAtenciosamente,\nEquipe PDV Web.`);
+
+      // TENTA ABRIR O CLIENTE DE E-MAIL PADRÃO
+      window.location.href = `mailto:${contaEncontrada.email}?subject=${assunto}&body=${corpo}`;
+
+      alert(`📧 Instruções enviadas!\n\nSua senha foi recuperada e enviada para o e-mail: ${contaEncontrada.email}\n(Sua senha atual é: ${contaEncontrada.senha})`);
+      alternarModalRecuperacao(false);
+    }
+
     // LISTA DE CÓDIGOS DE COMPRA VÁLIDOS
     let codigosCompraValidos = JSON.parse(localStorage.getItem('pdv_codigos_compra')) || ['MEUPDV123', 'PDV2026', 'VIPPDV'];
 
-    // CONTA MASTER PADRÃO
+    // CONTA MASTER PADRÃO (INCLUI E-MAIL DEFAULT)
     let lojas = JSON.parse(localStorage.getItem('pdv_lojas')) || [];
     let contasRegistradas = JSON.parse(localStorage.getItem('pdv_contas')) || [
-      { usuario: 'master', senha: '123', perfil: 'superadmin', lojaId: null }
+      { usuario: 'master', senha: '123', email: 'master@pdvweb.com', perfil: 'superadmin', lojaId: null }
     ];
     let sessaoAtiva = JSON.parse(localStorage.getItem('pdv_sessao_ativa')) || null;
 
@@ -860,11 +928,12 @@
       }
     }
 
-    // REGISTO DE NOVA LOJA
+    // REGISTO DE NOVA LOJA COM E-MAIL OBRIGATÓRIO
     function cadastrarLojaEUsuario(e) {
       e.preventDefault();
       const codigoCompraInput = document.getElementById('cadCodigoCompra').value.trim().toUpperCase();
       const nomeLoja = document.getElementById('cadNomeLoja').value.trim();
+      const email = document.getElementById('cadEmail').value.trim();
       const usuario = document.getElementById('cadUsuario').value.trim();
       const senha = document.getElementById('cadSenha').value;
 
@@ -881,7 +950,7 @@
       lojas.push(novaLoja);
       localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
 
-      const novaConta = { usuario, senha, perfil: 'admin', lojaId: idLoja };
+      const novaConta = { usuario, senha, email, perfil: 'admin', lojaId: idLoja };
       contasRegistradas.push(novaConta);
       localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
 
@@ -957,7 +1026,6 @@
         document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
         document.getElementById('labelUsuarioLogado').innerText = `Acesso Master: ${sessaoAtiva.usuario}`;
         
-        // TÍTULO ESPECÍFICO PARA O MASTER
         document.title = "PDV MASTER";
 
         renderizarPainelAdminGeral();
@@ -973,10 +1041,8 @@
         document.getElementById('labelNomeLojaTopo').innerText = nomeFormatadoLoja;
         document.getElementById('labelUsuarioLogado').innerText = `Loja: ${nomeFormatadoLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil.toUpperCase()})`;
 
-        // TÍTULO DA GUIA LIMPO COM O NOME DA LOJA
         document.title = nomeFormatadoLoja;
 
-        // PREENCHE O INPUT DE EDIÇÃO COM O NOME ATUAL DA LOJA
         const inputNome = document.getElementById('inputNovoNomeLoja');
         if (inputNome) inputNome.value = lojaAtual.nomeLoja;
       }
@@ -996,7 +1062,6 @@
       document.getElementById('appPrincipal').classList.add('oculto-autenticacao');
       document.getElementById('telaAutenticacao').classList.remove('hidden');
       
-      // RESTAURA O TÍTULO PADRÃO DA GUIA NA TELA DE LOGIN
       document.title = "PDV Web - Autenticação";
 
       selecionarTipoAcesso('vendedor');
@@ -1028,7 +1093,7 @@
       const utilizadoresNormais = contasRegistradas.filter(c => c.perfil !== 'superadmin');
       document.getElementById('qtdGlobalUsuarios').innerText = utilizadoresNormais.length;
 
-      tbodyUsuarios.innerHTML = utilizadoresNormais.length === 0 ? '<tr><td colspan="4" class="p-4 text-center text-gray-500">Nenhum utilizador ou vendedor cadastrado.</td></tr>' : '';
+      tbodyUsuarios.innerHTML = utilizadoresNormais.length === 0 ? '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum utilizador ou vendedor cadastrado.</td></tr>' : '';
 
       utilizadoresNormais.forEach(conta => {
         const loja = lojas.find(l => l.id === conta.lojaId);
@@ -1041,6 +1106,7 @@
         tbodyUsuarios.innerHTML += `
           <tr class="border-b text-sm hover:bg-gray-50">
             <td class="p-3 font-bold text-gray-800">${conta.usuario}</td>
+            <td class="p-3 text-xs text-gray-600">${conta.email || 'Não informado'}</td>
             <td class="p-3">${badgePerfil}</td>
             <td class="p-3 font-semibold text-purple-900">${nomeLoja}</td>
             <td class="p-3 text-center">
@@ -1131,7 +1197,7 @@
       }
     }
 
-    // UTILIZADORES E VENDEDORES DA LOJA
+    // UTILIZADORES E VENDEDORES DA LOJA (COM REGISTO DE E-MAIL)
     function renderizarTabelaUsuarios() {
       const tbody = document.getElementById('tabelaAbaUsuarios');
       const usuariosLoja = contasRegistradas.filter(c => c.lojaId === lojaAtual.id);
@@ -1144,6 +1210,7 @@
         tbody.innerHTML += `
           <tr class="border-b text-sm hover:bg-gray-50">
             <td class="p-3 font-semibold text-gray-800">${conta.usuario}</td>
+            <td class="p-3 text-xs text-gray-600">${conta.email || 'Não informado'}</td>
             <td class="p-3">${badgePerfil}</td>
             <td class="p-3 text-center">
               <button onclick="removerUsuarioLoja('${conta.usuario}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-2 py-1 rounded text-xs">🗑️ Excluir</button>
@@ -1155,12 +1222,13 @@
     function salvarNovoUsuarioLoja(e) {
       e.preventDefault();
       const usuario = document.getElementById('editUsuarioNome').value.trim();
+      const email = document.getElementById('editUsuarioEmail').value.trim();
       const senha = document.getElementById('editUsuarioSenha').value;
       const perfil = document.getElementById('editUsuarioPerfil').value;
 
       if (contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase())) return alert('Este utilizador já existe!');
 
-      contasRegistradas.push({ usuario, senha, perfil, lojaId: lojaAtual.id });
+      contasRegistradas.push({ usuario, email, senha, perfil, lojaId: lojaAtual.id });
       localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
       alert(`Vendedor / Utilizador "${usuario}" cadastrado com sucesso!`);
       document.getElementById('formEdicaoUsuario').reset();
