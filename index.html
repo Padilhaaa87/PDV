@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Emissão de Recibo e Extrato de Débitos</title>
-  <!-- Tailwind CSS para estilização visual rápida e responsiva -->
+  <title>PDV Web - Relatório de Caixas e Sessões</title>
+  <!-- Tailwind CSS para estilo visual responsivo -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .aba-conteudo { display: none; }
@@ -167,8 +167,8 @@
         </div>
       </section>
 
-      <!-- ABA 3: CONTROLE DE CAIXA -->
-      <section id="controleCaixa" class="aba-conteudo">
+      <!-- ABA 3: CONTROLE DE CAIXA E RELATÓRIO DE SESSÕES/ABERTURAS -->
+      <section id="controleCaixa" class="aba-conteudo space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-bold mb-4 text-gray-700">Ações de Caixa</h2>
@@ -185,7 +185,7 @@
           </div>
 
           <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Resumo do Caixa do Dia</h2>
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Resumo do Caixa Atual</h2>
             <div class="space-y-3">
               <div class="flex justify-between py-2 border-b"><span>Fundo Inicial (Troco):</span><span class="font-bold">R$ <span id="resumoInicial">0,00</span></span></div>
               
@@ -197,9 +197,34 @@
                 <div class="flex justify-between text-amber-700 border-t pt-1"><span>📋 Fiado (Emitido):</span><span class="font-bold">R$ <span id="caixaFiado">0,00</span></span></div>
               </div>
 
-              <div class="flex justify-between py-2 border-b text-green-600"><span>Total Entradas em Caixa (Din/PIX/Cartão):</span><span class="font-bold">R$ <span id="resumoEntradas">0,00</span></span></div>
-              <div class="flex justify-between py-2 text-xl font-bold border-t pt-3"><span>Saldo Total em Caixa:</span><span class="text-blue-600">R$ <span id="resumoTotal">0,00</span></span></div>
+              <div class="flex justify-between py-2 border-b text-green-600"><span>Total Entradas (Din/PIX/Cartão):</span><span class="font-bold">R$ <span id="resumoEntradas">0,00</span></span></div>
+              <div class="flex justify-between py-2 text-xl font-bold border-t pt-3"><span>Dinheiro Final em Caixa:</span><span class="text-blue-600">R$ <span id="resumoTotal">0,00</span></span></div>
             </div>
+          </div>
+        </div>
+
+        <!-- NOVO RELATÓRIO DE CAIXAS ABERTOS E HISTÓRICO DE SESSÕES -->
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
+          <div class="flex justify-between items-center border-b pb-3">
+            <div>
+              <h2 class="text-xl font-bold text-gray-700">📋 Relatório de Caixas e Histórico de Sessões</h2>
+              <p class="text-xs text-gray-500">Veja quem abriu o caixa, horários e o saldo final acumulado</p>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-100 border-b text-sm">
+                  <th class="p-3">Responsável</th>
+                  <th class="p-3">Abertura</th>
+                  <th class="p-3">Fecho</th>
+                  <th class="p-3">Fundo Inicial</th>
+                  <th class="p-3">Dinheiro Final</th>
+                  <th class="p-3 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaHistoricoSessoesCaixa"></tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -375,6 +400,9 @@
       cartao: 0, 
       fiado: 0 
     };
+
+    // HISTÓRICO DE SESSÕES / ABERTURAS DE CAIXA
+    let historicoCaixas = JSON.parse(localStorage.getItem('pdv_historico_caixas')) || [];
     
     let vendas = JSON.parse(localStorage.getItem('pdv_vendas')) || [];
     let carrinho = [];
@@ -448,7 +476,7 @@
       if (idAba === 'vendas') renderizarTabelaAbaVendas();
       if (idAba === 'produtos') renderizarTabelaProdutos();
       if (idAba === 'clientes') renderizarClientes();
-      if (idAba === 'controleCaixa') atualizarUICaixa();
+      if (idAba === 'controleCaixa') { atualizarUICaixa(); renderizarTabelaHistoricoSessoes(); }
       if (idAba === 'relatorios') { carregarOpcoesMesesRelatorio(); renderizarRelatorios(); }
       if (idAba === 'usuarios') renderizarTabelaUsuarios();
     }
@@ -606,7 +634,6 @@
       carregarOpcoesClientesVenda();
     }
 
-    // ENVIAR EXTRATO DE DÉBITOS PELO WHATSAPP
     function enviarExtratoWhatsApp(idCliente) {
       const cli = clientes.find(c => c.id === idCliente);
       if (!cli) return;
@@ -615,9 +642,8 @@
         return alert(`O cliente ${cli.nome} não possui telefone cadastrado! Edite o cadastro para informar o número.`);
       }
 
-      // Limpa caracteres especiais do telefone para o link do WhatsApp
       let numTel = cli.telefone.replace(/\D/g, '');
-      if (numTel.length <= 11) numTel = '55' + numTel; // Adiciona DDD/País padrão se necessário
+      if (numTel.length <= 11) numTel = '55' + numTel;
 
       const comprasFiadas = (cli.historicoTransacoes || []).filter(t => t.tipo === 'compra');
       
@@ -641,7 +667,6 @@
       window.open(url, '_blank');
     }
 
-    // IMPRIMIR EXTRATO FORMATADO DO CLIENTE
     function imprimirExtratoCliente(idCliente) {
       const cli = clientes.find(c => c.id === idCliente);
       if (!cli) return;
@@ -778,7 +803,6 @@
             ${htmlFiado}
             ${htmlVista}
             
-            <!-- AÇÕES DE EXTRATO E PAGAMENTO DO CLIENTE -->
             <div class="pt-2 border-t space-y-2">
               <div class="flex items-center gap-2">
                 <button onclick="enviarExtratoWhatsApp(${cli.id})" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 rounded shadow transition">
@@ -1122,7 +1146,6 @@
       vendas.push(novaVenda);
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
-      // IMPRIMIR RECIBO DA VENDA ACABADA DE REALIZAR
       if (confirm('Venda realizada com sucesso!\nDeseja imprimir o recibo para o cliente?')) {
         imprimirReciboVenda(novaVenda.id);
       }
@@ -1133,7 +1156,6 @@
       atualizarTudo();
     }
 
-    // IMPRESSÃO DE RECIBO DE VENDA
     function imprimirReciboVenda(idVenda) {
       const v = vendas.find(item => item.id === idVenda);
       if (!v) return;
@@ -1275,6 +1297,7 @@
       renderizarClientes();
       carregarOpcoesClientesVenda();
       atualizarUICaixa();
+      renderizarTabelaHistoricoSessoes();
       carregarOpcoesMesesRelatorio();
       renderizarRelatorios();
     }
@@ -1333,31 +1356,109 @@
       document.getElementById('labelCardVendasMes').innerText = `Vendas (${nomesMeses[mSel]}/${aSel})`;
       document.getElementById('labelCardLucroMes').innerText = `Lucro (${nomesMeses[mSel]}/${aSel})`;
       document.getElementById('relVendasHoje').innerText = vHoje.toFixed(2); document.getElementById('relLucroHoje').innerText = lHoje.toFixed(2);
-      document.getElementById('relVendasMes').innerText = vMes.toFixed(2); document.getElementById('relLucroMes').innerText = lMes.toFixed(2);
+      document.getElementById('relVendasMes').innerText = vMes.innerText = vMes.toFixed(2); document.getElementById('relLucroMes').innerText = lMes.toFixed(2);
     }
 
+    // --- FUNÇÕES DE CONTROLE DE CAIXA E HISTÓRICO DE SESSÕES ---
     function abrirCaixa() {
       const v = parseFloat(document.getElementById('valorInicialCaixa').value) || 0;
-      caixa = { aberto: true, inicial: v, entradas: 0, dinheiro: 0, pix: 0, cartao: 0, fiado: 0 };
+      const resp = sessaoAtiva ? sessaoAtiva.usuario : 'Desconhecido';
+      const dataIso = new Date().toISOString();
+
+      caixa = { aberto: true, inicial: v, entradas: 0, dinheiro: 0, pix: 0, cartao: 0, fiado: 0, responsavel: resp, dataAbertura: dataIso };
       localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
-      atualizarUICaixa(); alert('Caixa aberto!');
+
+      // Regista uma nova sessão no histórico de caixas
+      const novaSessao = {
+        id: Date.now(),
+        responsavel: resp,
+        dataAbertura: dataIso,
+        dataFecho: null,
+        inicial: v,
+        totalFinal: v,
+        status: 'Aberto'
+      };
+
+      historicoCaixas.push(novaSessao);
+      localStorage.setItem('pdv_historico_caixas', JSON.stringify(historicoCaixas));
+
+      atualizarUICaixa(); 
+      renderizarTabelaHistoricoSessoes();
+      alert(`Caixa aberto com sucesso por ${resp}!`);
     }
 
     function fecharCaixa() {
-      alert(`Caixa Fechado!\nTotal em Caixa (Dinheiro/PIX/Cartão): R$ ${(caixa.inicial + caixa.entradas).toFixed(2)}`);
+      const totalFinal = (caixa.inicial || 0) + (caixa.entradas || 0);
+      const dataIsoFecho = new Date().toISOString();
+
+      alert(`Caixa Fechado!\nResponsável: ${caixa.responsavel || 'N/A'}\nDinheiro Final em Caixa: R$ ${totalFinal.toFixed(2)}`);
+
+      // Atualiza a sessão aberta no histórico
+      const sessaoAberta = historicoCaixas.find(s => s.status === 'Aberto');
+      if (sessaoAberta) {
+        sessaoAberta.dataFecho = dataIsoFecho;
+        sessaoAberta.totalFinal = totalFinal;
+        sessaoAberta.status = 'Fechado';
+        localStorage.setItem('pdv_historico_caixas', JSON.stringify(historicoCaixas));
+      }
+
       caixa = { aberto: false, inicial: 0, entradas: 0, dinheiro: 0, pix: 0, cartao: 0, fiado: 0 };
       localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
+      
       atualizarUICaixa();
+      renderizarTabelaHistoricoSessoes();
+    }
+
+    function renderizarTabelaHistoricoSessoes() {
+      const tbody = document.getElementById('tabelaHistoricoSessoesCaixa');
+      if (!tbody) return;
+
+      tbody.innerHTML = historicoCaixas.length === 0 ? '<tr><td colspan="6" class="p-4 text-center text-gray-500 text-sm">Nenhuma sessão de caixa registrada.</td></tr>' : '';
+
+      [...historicoCaixas].reverse().forEach(sessao => {
+        const dAbertura = new Date(sessao.dataAbertura);
+        const dataAberturaFmt = dAbertura.toLocaleDateString() + ' ' + dAbertura.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        let dataFechoFmt = '---';
+        if (sessao.dataFecho) {
+          const dFecho = new Date(sessao.dataFecho);
+          dataFechoFmt = dFecho.toLocaleDateString() + ' ' + dFecho.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        const badgeStatus = sessao.status === 'Aberto' 
+          ? `<span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">Aberto</span>`
+          : `<span class="bg-gray-200 text-gray-700 text-xs font-bold px-2 py-1 rounded-full">Fechado</span>`;
+
+        // Se o caixa ainda estiver aberto, calcula o valor acumulado em tempo real
+        let totalExibicao = sessao.totalFinal;
+        if (sessao.status === 'Aberto' && caixa.aberto) {
+          totalExibicao = (caixa.inicial || 0) + (caixa.entradas || 0);
+        }
+
+        tbody.innerHTML += `
+          <tr class="border-b text-sm hover:bg-gray-50">
+            <td class="p-3 font-semibold text-gray-800">👤 ${sessao.responsavel}</td>
+            <td class="p-3 text-gray-600">${dataAberturaFmt}</td>
+            <td class="p-3 text-gray-600">${dataFechoFmt}</td>
+            <td class="p-3">R$ ${sessao.inicial.toFixed(2)}</td>
+            <td class="p-3 font-bold text-blue-600">R$ ${totalExibicao.toFixed(2)}</td>
+            <td class="p-3 text-center">${badgeStatus}</td>
+          </tr>`;
+      });
     }
 
     function atualizarUICaixa() {
       const statusTopo = document.getElementById('statusCaixaTopo');
       if (caixa.aberto) {
-        statusTopo.innerText = 'Caixa: Aberto'; statusTopo.className = 'bg-green-600 px-3 py-1 rounded-full text-xs font-bold';
-        document.getElementById('formAberturaCaixa').classList.add('hidden'); document.getElementById('formOperacoesCaixa').classList.remove('hidden');
+        statusTopo.innerText = `Caixa: Aberto (${caixa.responsavel || 'Vendedor'})`; 
+        statusTopo.className = 'bg-green-600 px-3 py-1 rounded-full text-xs font-bold';
+        document.getElementById('formAberturaCaixa').classList.add('hidden'); 
+        document.getElementById('formOperacoesCaixa').classList.remove('hidden');
       } else {
-        statusTopo.innerText = 'Caixa: Fechado'; statusTopo.className = 'bg-red-600 px-3 py-1 rounded-full text-xs font-bold';
-        document.getElementById('formAberturaCaixa').classList.remove('hidden'); document.getElementById('formOperacoesCaixa').classList.add('hidden');
+        statusTopo.innerText = 'Caixa: Fechado'; 
+        statusTopo.className = 'bg-red-600 px-3 py-1 rounded-full text-xs font-bold';
+        document.getElementById('formAberturaCaixa').classList.remove('hidden'); 
+        document.getElementById('formOperacoesCaixa').classList.add('hidden');
       }
 
       document.getElementById('resumoInicial').innerText = (caixa.inicial || 0).toFixed(2);
