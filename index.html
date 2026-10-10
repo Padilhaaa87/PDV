@@ -1,4 +1,4 @@
-]<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -607,6 +607,18 @@
       <!-- ABA 7: GESTÃO DE UTILIZADORES & SELETOR DE COR DA LOJA -->
       <section id="usuarios" class="aba-conteudo admin-only space-y-6">
         
+        <!-- NOVO PAINEL DE ALTERAÇÃO DO NOME DA LOJA (EXCLUSIVO PARA O ADM DA LOJA) -->
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-3 border-l-4 border-blue-600">
+          <h2 class="text-xl font-bold text-gray-700">✏️ Alterar Nome da Loja</h2>
+          <p class="text-xs text-gray-500">Atualize o nome oficial do seu estabelecimento comercial:</p>
+          <div class="flex flex-col sm:flex-row gap-2 pt-1 max-w-lg">
+            <input type="text" id="inputNovoNomeLoja" placeholder="Digite o novo nome da loja" class="p-2 border rounded font-semibold w-full">
+            <button onclick="alterarNomeLojaAtual()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded text-sm shadow transition whitespace-nowrap">
+              💾 Salvar Novo Nome
+            </button>
+          </div>
+        </div>
+
         <!-- PALETA DE CORES PARA PERSONALIZAÇÃO DA LOJA -->
         <div class="bg-white p-6 rounded-lg shadow-md space-y-3 border-l-4 border-indigo-500">
           <h2 class="text-xl font-bold text-gray-700">🎨 Personalizar Cor de Destaque da Loja</h2>
@@ -745,6 +757,56 @@
 
       aplicarTemaVisualLoja(corKey);
       alert('🎨 Tema de cores da loja atualizado!');
+    }
+
+    // ALTERAÇÃO DO NOME DA LOJA PELO ADMINISTRADOR DA LOJA
+    function alterarNomeLojaAtual() {
+      const input = document.getElementById('inputNovoNomeLoja');
+      const novoNome = input.value.trim();
+
+      if (!novoNome) {
+        return alert('Por favor, informe o novo nome da loja!');
+      }
+
+      if (!lojaAtual || lojaAtual.id === 'GLOBAL') return;
+
+      lojaAtual.nomeLoja = novoNome;
+
+      const idx = lojas.findIndex(l => l.id === lojaAtual.id);
+      if (idx !== -1) {
+        lojas[idx].nomeLoja = novoNome;
+        localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
+      }
+
+      const nomeFormatadoLoja = formatarNomeLojaPDV(novoNome);
+      document.getElementById('labelNomeLojaTopo').innerText = nomeFormatadoLoja;
+      document.getElementById('labelUsuarioLogado').innerText = `Loja: ${nomeFormatadoLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil.toUpperCase()})`;
+
+      document.title = nomeFormatadoLoja;
+      atualizarUrlLoja(novoNome);
+
+      alert(`✅ Nome da loja atualizado para "${nomeFormatadoLoja}" com sucesso!`);
+    }
+
+    // RENOMEAR LOJA PELO USUÁRIO MASTER (SUPER ADMIN)
+    function renomearLojaMaster(idLoja) {
+      const loja = lojas.find(l => l.id === idLoja);
+      if (!loja) return;
+
+      const novoNome = prompt(`Digite o novo nome para a loja "${loja.nomeLoja}":`, loja.nomeLoja);
+      if (!novoNome || !novoNome.trim()) return;
+
+      loja.nomeLoja = novoNome.trim();
+      localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
+
+      if (lojaAtual && lojaAtual.id === idLoja) {
+        lojaAtual.nomeLoja = novoNome.trim();
+        const nomeFormatado = formatarNomeLojaPDV(novoNome.trim());
+        document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatado})`;
+      }
+
+      renderizarPainelAdminGeral();
+      alert(`✅ Loja renomeada para "${formatarNomeLojaPDV(novoNome.trim())}"!`);
     }
 
     // ATUALIZAR A BARRA DE URL E O TÍTULO DA GUIA DO NAVEGADOR
@@ -895,7 +957,7 @@
         document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
         document.getElementById('labelUsuarioLogado').innerText = `Acesso Master: ${sessaoAtiva.usuario}`;
         
-        // EXIBE ESPECIFICAMENTE "PDV MASTER" NA GUIA DO NAVEGADOR QUANDO O UTILIZADOR É MASTER
+        // TÍTULO ESPECÍFICO PARA O MASTER
         document.title = "PDV MASTER";
 
         renderizarPainelAdminGeral();
@@ -911,8 +973,12 @@
         document.getElementById('labelNomeLojaTopo').innerText = nomeFormatadoLoja;
         document.getElementById('labelUsuarioLogado').innerText = `Loja: ${nomeFormatadoLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil.toUpperCase()})`;
 
-        // TÍTULO LIMPO NA GUIA DO NAVEGADOR APENAS COM O NOME DA LOJA
+        // TÍTULO DA GUIA LIMPO COM O NOME DA LOJA
         document.title = nomeFormatadoLoja;
+
+        // PREENCHE O INPUT DE EDIÇÃO COM O NOME ATUAL DA LOJA
+        const inputNome = document.getElementById('inputNovoNomeLoja');
+        if (inputNome) inputNome.value = lojaAtual.nomeLoja;
       }
 
       aplicarModoEscuro();
@@ -930,7 +996,7 @@
       document.getElementById('appPrincipal').classList.add('oculto-autenticacao');
       document.getElementById('telaAutenticacao').classList.remove('hidden');
       
-      // RESTAURA O TÍTULO PADRÃO DA GUIA DO NAVEGADOR NA TELA DE LOGIN
+      // RESTAURA O TÍTULO PADRÃO DA GUIA NA TELA DE LOGIN
       document.title = "PDV Web - Autenticação";
 
       selecionarTipoAcesso('vendedor');
@@ -951,8 +1017,9 @@
             <td class="p-3 text-xs text-gray-500">${l.id}</td>
             <td class="p-3 text-xs text-gray-600">${d}</td>
             <td class="p-3 text-center space-x-2">
-              <button onclick="mudarParaLoja('${l.id}')" class="bg-blue-600 text-white font-bold px-3 py-1.5 rounded text-xs">🔍 Acessar</button>
-              <button onclick="excluirLojaGeral('${l.id}')" class="bg-red-600 text-white font-bold px-3 py-1.5 rounded text-xs">🗑️ Excluir</button>
+              <button onclick="mudarParaLoja('${l.id}')" class="bg-blue-600 text-white font-bold px-2 py-1 rounded text-xs">🔍 Acessar</button>
+              <button onclick="renomearLojaMaster('${l.id}')" class="bg-amber-600 text-white font-bold px-2 py-1 rounded text-xs">✏️ Renomear</button>
+              <button onclick="excluirLojaGeral('${l.id}')" class="bg-red-600 text-white font-bold px-2 py-1 rounded text-xs">🗑️ Excluir</button>
             </td>
           </tr>`;
       });
@@ -1027,7 +1094,6 @@
       const nomeFormatadoLoja = formatarNomeLojaPDV(lojaAtual.nomeLoja);
       document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
       
-      // AO VISUALIZAR UMA LOJA ESPECÍFICA NO MODO MASTER, ATUALIZA PARA O NOME DA LOJA
       document.title = nomeFormatadoLoja;
 
       aplicarTemaVisualLoja(lojaAtual.corTema || 'blue');
@@ -1061,7 +1127,6 @@
       if (idAba === 'usuarios') renderizarTabelaUsuarios();
       if (idAba === 'adminGeral') {
         renderizarPainelAdminGeral();
-        // AO RETORNAR PARA A ABA MASTER, ATUALIZA A GUIA PARA "PDV MASTER"
         if (sessaoAtiva && sessaoAtiva.perfil === 'superadmin') document.title = "PDV MASTER";
       }
     }
