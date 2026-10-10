@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Layout Expandido & Multi-Loja</title>
+  <title>PDV Web - Bloqueio de Segurança & Multi-Loja</title>
   <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -417,7 +417,7 @@
         </div>
       </section>
 
-      <!-- ABA 6: RELATÓRIOS FINANCEIROS EXPANDIDOS E MAIORES -->
+      <!-- ABA 6: RELATÓRIOS FINANCEIROS EXPANDIDOS -->
       <section id="relatorios" class="aba-conteudo">
         <div class="space-y-6">
           <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
@@ -651,6 +651,7 @@
       iniciarSessao(novaConta);
     }
 
+    // VALIDAÇÃO RIGOROSA E BLOQUEIO DE ACESSO
     function fazerLogin(e) {
       e.preventDefault();
       const u = document.getElementById('loginUsuario').value.trim();
@@ -660,8 +661,14 @@
       const conta = contasRegistradas.find(c => c.usuario.toLowerCase() === u.toLowerCase() && c.senha === s);
       if (!conta) return alert('Utilizador ou palavra-passe incorretos!');
 
+      // TENTATIVA DE ACESSO AO PAINEL MASTER
       if (tipo === 'adminMaster' && conta.perfil !== 'superadmin') {
-        return alert('Acesso Negado! Esta conta não possui privilégios de Adm Master.');
+        return alert('⛔ ACESSO NEGADO!\nEsta conta não possui privilégios de Administrador Master.');
+      }
+
+      // TENTATIVA DO VENDEDOR ENTRAR NA ABA ADM LOJA
+      if (tipo === 'adminLoja' && conta.perfil === 'vendedor') {
+        return alert('⛔ ACESSO NEGADO!\nContas com perfil de Vendedor só podem aceder ao sistema pela aba "🛒 Vendedor".');
       }
 
       iniciarSessao(conta);
@@ -710,7 +717,11 @@
         renderizarPainelAdminGeral();
       } else {
         document.querySelectorAll('.admin-geral-only').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('.admin-only').forEach(el => sessaoAtiva.perfil !== 'admin' ? el.classList.add('hidden') : el.classList.remove('hidden'));
+        
+        // OCULTA ABAS DE ADMIN SE FOR VENDEDOR
+        document.querySelectorAll('.admin-only').forEach(el => {
+          sessaoAtiva.perfil !== 'admin' ? el.classList.add('hidden') : el.classList.remove('hidden');
+        });
         
         carregarDadosLoja(conta.lojaId);
         document.getElementById('labelNomeLojaTopo').innerText = lojaAtual.nomeLoja;
