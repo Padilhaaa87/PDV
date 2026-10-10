@@ -95,9 +95,12 @@
         </div>
 
         <!-- LINK PARA RECUPERAÇÃO DE SENHA VIA E-MAIL -->
-        <div class="text-right">
-          <button type="button" onclick="alternarModalRecuperacao(true)" class="text-xs text-blue-600 hover:underline font-semibold">
-            🔑 Esqueci minha palavra-passe (senha)
+        <div class="flex justify-between items-center text-xs">
+          <button type="button" onclick="alternarModalConfirmacaoToken(true)" class="text-amber-700 font-semibold hover:underline">
+            🔑 Tenho um código de confirmação
+          </button>
+          <button type="button" onclick="alternarModalRecuperacao(true)" class="text-blue-600 hover:underline font-semibold">
+            Esqueci minha palavra-passe (senha)
           </button>
         </div>
 
@@ -160,15 +163,15 @@
     </div>
   </div>
 
-  <!-- MODAL DE RECUPERAÇÃO DE PALAVRA-PASSE VIA E-MAIL -->
+  <!-- MODAL DE SOLICITAÇÃO DE RECUPERAÇÃO DE SENHA -->
   <div id="modalRecuperacaoSenha" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl relative">
       <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="text-lg font-bold text-gray-800">📧 Recuperação de Senha</h3>
+        <h3 class="text-lg font-bold text-gray-800">🔒 Solagitar Redefinição de Senha</h3>
         <button onclick="alternarModalRecuperacao(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
       </div>
       <p class="text-xs text-gray-600">
-        Informe o e-mail cadastrado do seu utilizador para receber as instruções de recuperação da sua palavra-passe.
+        Ao solicitar a redefinição, a sua palavra-passe antiga será <strong>bloqueada imediatamente</strong>. O acesso só será liberado após a confirmação com o código enviado para o seu e-mail.
       </p>
       <form onsubmit="processarRecuperacaoSenha(event)" class="space-y-3">
         <div>
@@ -177,7 +180,34 @@
         </div>
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" onclick="alternarModalRecuperacao(false)" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold text-xs rounded">Cancelar</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded shadow">Enviar Instruções</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded shadow">Enviar Instruções e Bloquear Senha Antiga</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIRMAÇÃO DO TOKEN E REDEFINIÇÃO DE SENHA -->
+  <div id="modalConfirmacaoToken" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl relative">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="text-lg font-bold text-emerald-700">✅ Confirmar E-mail e Redefinir Senha</h3>
+        <button onclick="alternarModalConfirmacaoToken(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+      </div>
+      <p class="text-xs text-gray-600">
+        Insira o código de confirmação enviado para o seu e-mail e defina a sua nova palavra-passe para desbloquear a sua conta.
+      </p>
+      <form onsubmit="confirmarERedefinirSenha(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Código de Confirmação (Token)</label>
+          <input type="text" id="tokenConfirmacao" required placeholder="Ex: 839210" class="w-full p-2.5 border rounded uppercase font-mono tracking-widest text-center text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Nova Palavra-passe (Senha)</label>
+          <input type="password" id="novaSenhaRedefinida" required placeholder="••••••••" class="w-full p-2.5 border rounded outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="alternarModalConfirmacaoToken(false)" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold text-xs rounded">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded shadow">Liberar Conta e Salvar Nova Senha</button>
         </div>
       </form>
     </div>
@@ -721,7 +751,7 @@
       }
     }
 
-    // MODAL E RECUPERAÇÃO DE PALAVRA-PASSE
+    // ALTERNAR MODAIS DE RECUPERAÇÃO E CONFIRMAÇÃO DE TOKEN
     function alternarModalRecuperacao(exibir) {
       const modal = document.getElementById('modalRecuperacaoSenha');
       if (exibir) {
@@ -732,6 +762,18 @@
       }
     }
 
+    function alternarModalConfirmacaoToken(exibir) {
+      const modal = document.getElementById('modalConfirmacaoToken');
+      if (exibir) {
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+        document.getElementById('tokenConfirmacao').value = '';
+        document.getElementById('novaSenhaRedefinida').value = '';
+      }
+    }
+
+    // PASSO 1: SOLICITAR REDEFINIÇÃO DE SENHA E BLOQUEAR CONTA ANTIGA
     function processarRecuperacaoSenha(e) {
       e.preventDefault();
       const emailInformado = document.getElementById('emailRecuperacao').value.trim().toLowerCase();
@@ -741,12 +783,46 @@
         return alert('❌ Nenhum utilizador cadastrado foi encontrado com este e-mail!');
       }
 
-      const assunto = encodeURIComponent(`Recuperação de Senha - PDV Web`);
-      const corpo = encodeURIComponent(`Olá, ${contaEncontrada.usuario}!\n\nA sua palavra-passe (senha) atual é: ${contaEncontrada.senha}\n\nAtenciosamente,\nEquipe PDV Web.`);
+      // GERA TOKEN ÚNICO E BLOQUEIA A CONTA ATUAL
+      const token = Math.floor(100000 + Math.random() * 900000).toString();
+      contaEncontrada.bloqueadoPorRecuperacao = true;
+      contaEncontrada.tokenRecuperacao = token;
+
+      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
+
+      const assunto = encodeURIComponent(`Código de Confirmação de Redefinição - PDV Web`);
+      const corpo = encodeURIComponent(`Olá, ${contaEncontrada.usuario}!\n\nRecebemos uma solicitação de redefinição de palavra-passe para a sua conta.\n\nA sua palavra-passe antiga foi BLOQUEADA por segurança.\n\nSeu código de confirmação é: ${token}\n\nInsira este código na tela de confirmação do sistema para desbloquear a conta e cadastrar uma nova senha.\n\nAtenciosamente,\nEquipe PDV Web.`);
 
       window.location.href = `mailto:${contaEncontrada.email}?subject=${assunto}&body=${corpo}`;
-      alert(`📧 Instruções enviadas!\nSua palavra-passe atual é: ${contaEncontrada.senha}`);
+
+      alert(`📧 Instruções enviadas por e-mail!\n\nA sua palavra-passe antiga foi BLOQUEADA.\n\nFoi gerado o Código de Confirmação: ${token}\n(Consulte a sua caixa de e-mail e clique em "Tenho um código de confirmação" na tela de login)`);
+
       alternarModalRecuperacao(false);
+      alternarModalConfirmacaoToken(true);
+      document.getElementById('tokenConfirmacao').value = token;
+    }
+
+    // PASSO 2: CONFIRMAR TOKEN E LIBERAR NOVA SENHA
+    function confirmarERedefinirSenha(e) {
+      e.preventDefault();
+      const token = document.getElementById('tokenConfirmacao').value.trim();
+      const novaSenha = document.getElementById('novaSenhaRedefinida').value;
+
+      const conta = contasRegistradas.find(c => c.tokenRecuperacao === token);
+
+      if (!conta) {
+        return alert('❌ Código de confirmação inválido ou expirado!');
+      }
+
+      // REINICIA O ESTADO DE SEGURANÇA DA CONTA
+      conta.senha = novaSenha;
+      conta.bloqueadoPorRecuperacao = false;
+      conta.tokenRecuperacao = null;
+
+      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
+
+      alert(`🎉 Palavra-passe redefinida com sucesso!\nA sua conta foi desbloqueada. Você já pode fazer login com a sua nova senha.`);
+      alternarModalConfirmacaoToken(false);
     }
 
     // LISTA DE CÓDIGOS DE COMPRA VÁLIDOS
@@ -767,7 +843,7 @@
 
     // CONTA MASTER VINCULADA À LOJA BASE MASTER
     let contasRegistradas = JSON.parse(localStorage.getItem('pdv_contas')) || [
-      { usuario: 'master', senha: '123', email: 'master@pdvweb.com', perfil: 'superadmin', lojaId: 'LOJA_MASTER_BASE' }
+      { usuario: 'master', senha: '123', email: 'master@pdvweb.com', perfil: 'superadmin', lojaId: 'LOJA_MASTER_BASE', bloqueadoPorRecuperacao: false }
     ];
     let sessaoAtiva = JSON.parse(localStorage.getItem('pdv_sessao_ativa')) || null;
 
@@ -949,7 +1025,7 @@
       lojas.push(novaLoja);
       localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
 
-      const novaConta = { usuario, senha, email, perfil: 'admin', lojaId: idLoja };
+      const novaConta = { usuario, senha, email, perfil: 'admin', lojaId: idLoja, bloqueadoPorRecuperacao: false };
       contasRegistradas.push(novaConta);
       localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
 
@@ -957,14 +1033,23 @@
       iniciarSessao(novaConta);
     }
 
+    // VALIDAÇÃO E LOGIN COM VERIFICAÇÃO DE BLOQUEIO DE SEGURANÇA
     function fazerLogin(e) {
       e.preventDefault();
       const u = document.getElementById('loginUsuario').value.trim();
       const s = document.getElementById('loginSenha').value;
       const tipo = document.getElementById('tipoAcessoSelecionado').value;
 
-      const conta = contasRegistradas.find(c => c.usuario.toLowerCase() === u.toLowerCase() && c.senha === s);
+      const conta = contasRegistradas.find(c => c.usuario.toLowerCase() === u.toLowerCase());
+
       if (!conta) return alert('Utilizador ou palavra-passe incorretos!');
+
+      // VERIFICA SE A CONTA ESTÁ BLOQUEADA POR SOLICITAÇÃO DE RECUPERAÇÃO
+      if (conta.bloqueadoPorRecuperacao) {
+        return alert('⛔ ACESSO BLOQUEADO!\n\nFoi solicitada uma redefinição de palavra-passe para esta conta.\nA palavra-passe antiga foi desativada por segurança.\n\nPor favor, consulte o seu e-mail e utilize a opção "Tenho um código de confirmação" para redefinir a sua senha e desbloquear o acesso.');
+      }
+
+      if (conta.senha !== s) return alert('Utilizador ou palavra-passe incorretos!');
 
       if (tipo === 'adminMaster' && conta.perfil !== 'superadmin') {
         return alert('⛔ ACESSO NEGADO!\nEsta conta não possui privilégios de Administrador Master.');
@@ -1092,9 +1177,13 @@
           ? `<span class="bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-1 rounded-full">🏢 Adm Loja</span>`
           : `<span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">🛒 Vendedor</span>`;
 
+        const badgeStatus = conta.bloqueadoPorRecuperacao
+          ? `<span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-0.5 rounded ml-1">🔒 Bloqueado</span>`
+          : '';
+
         tbodyUsuarios.innerHTML += `
           <tr class="border-b text-sm hover:bg-gray-50">
-            <td class="p-3 font-bold text-gray-800">${conta.usuario}</td>
+            <td class="p-3 font-bold text-gray-800">${conta.usuario} ${badgeStatus}</td>
             <td class="p-3 text-xs text-gray-600">${conta.email || 'Não informado'}</td>
             <td class="p-3">${badgePerfil}</td>
             <td class="p-3 font-semibold text-purple-900">${nomeLoja}</td>
@@ -1185,7 +1274,7 @@
       }
     }
 
-    // UTILIZADORES E VENDEDORES DA LOJA (COM EDIÇÃO DE DADOS COMPLETA)
+    // UTILIZADORES E VENDEDORES DA LOJA
     function renderizarTabelaUsuarios() {
       const tbody = document.getElementById('tabelaAbaUsuarios');
       const usuariosLoja = contasRegistradas.filter(c => c.lojaId === lojaAtual.id);
@@ -1195,9 +1284,14 @@
         const badgePerfil = conta.perfil === 'admin' 
           ? `<span class="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded">👑 Administrador</span>`
           : `<span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">👤 Vendedor</span>`;
+
+        const badgeStatus = conta.bloqueadoPorRecuperacao
+          ? `<span class="bg-red-100 text-red-800 text-xs font-bold px-1.5 py-0.5 rounded block text-center mt-1">🔒 Aguardando Troca</span>`
+          : '';
+
         tbody.innerHTML += `
           <tr class="border-b text-sm hover:bg-gray-50">
-            <td class="p-3 font-semibold text-gray-800">${conta.usuario}</td>
+            <td class="p-3 font-semibold text-gray-800">${conta.usuario} ${badgeStatus}</td>
             <td class="p-3 text-xs text-gray-600">${conta.email || 'Não informado'}</td>
             <td class="p-3">${badgePerfil}</td>
             <td class="p-3 text-center space-x-2">
@@ -1240,22 +1334,23 @@
       const perfil = document.getElementById('editUsuarioPerfil').value;
 
       if (original) {
-        // EDIÇÃO DE UTILIZADOR
         const conta = contasRegistradas.find(c => c.usuario === original);
         if (conta) {
           conta.usuario = usuario;
           conta.email = email;
-          if (senha) conta.senha = senha;
+          if (senha) {
+            conta.senha = senha;
+            conta.bloqueadoPorRecuperacao = false; // DESBLOQUEIA AO ALTERAR A SENHA DIRETO PELO ADM
+          }
           conta.perfil = perfil;
         }
         alert(`✅ Dados do utilizador "${usuario}" atualizados com sucesso!`);
       } else {
-        // CADASTRO DE NOVO UTILIZADOR
         if (!senha) return alert('Por favor, informe a palavra-passe para o novo utilizador!');
         if (contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase())) {
           return alert('Este utilizador já existe!');
         }
-        contasRegistradas.push({ usuario, email, senha, perfil, lojaId: lojaAtual.id });
+        contasRegistradas.push({ usuario, email, senha, perfil, lojaId: lojaAtual.id, bloqueadoPorRecuperacao: false });
         alert(`Vendedor / Utilizador "${usuario}" cadastrado com sucesso!`);
       }
 
