@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Personalizado por Loja</title>
+  <title>PDV Web - Autenticação</title>
   <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -11,7 +11,7 @@
     .aba-conteudo.ativa { display: block; }
     .oculto-autenticacao { display: none !important; }
 
-    /* ESTILOS CUSTOMIZADOS PARA MODO ESCURO (DARK MODE) NA APLICAÇÃO E NO LOGIN */
+    /* ESTILOS CUSTOMIZADOS PARA MODO ESCURO (DARK MODE) */
     body.dark {
       background-color: #0f172a !important;
       color: #f8fafc !important;
@@ -28,7 +28,7 @@
       color: #f8fafc !important;
     }
 
-    body.dark .bg-gray-50, body.dark .bg-gray-100 {
+    body.dark .bg-gray-50, body.dark .bg-gray-100, body.dark .bg-blue-50 {
       background-color: #334155 !important;
       color: #f8fafc !important;
     }
@@ -51,14 +51,14 @@
 </head>
 <body id="bodyApp" class="bg-gray-100 font-sans text-gray-800 transition-colors duration-300">
 
-  <!-- TELA DE AUTENTICAÇÃO COM FUNDO CINZA GRAFITE (bg-slate-800) -->
-  <div id="telaAutenticacao" class="min-h-screen flex items-center justify-center bg-slate-800 p-4 transition-colors duration-300">
-    <div class="bg-white p-6 md:p-8 rounded-lg shadow-2xl w-full max-w-lg space-y-6 relative">
+  <!-- TELA DE AUTENTICAÇÃO COM FUNDO LEVE AZUL SUAVE (bg-blue-50) -->
+  <div id="telaAutenticacao" class="min-h-screen flex items-center justify-center bg-blue-50 p-4 transition-colors duration-300">
+    <div class="bg-white p-6 md:p-8 rounded-xl shadow-xl border border-blue-100 w-full max-w-lg space-y-6 relative">
       
       <!-- BOTÃO DE MODO ESCURO NO LOGIN (CANTO SUPERIOR DIREITO) -->
       <div class="flex justify-between items-center border-b pb-3">
         <h1 class="text-2xl font-bold text-blue-600">PDV Comercial</h1>
-        <button onclick="alternarModoEscuro()" id="btnModoEscuroLogin" class="bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 text-xs px-3 py-1.5 rounded-full font-semibold shadow transition flex items-center gap-1">
+        <button onclick="alternarModoEscuro()" id="btnModoEscuroLogin" class="bg-gray-100 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-full font-semibold shadow-sm transition flex items-center gap-1 border">
           🌙 Modo Escuro
         </button>
       </div>
@@ -143,7 +143,7 @@
 
   <!-- APLICAÇÃO PRINCIPAL DA LOJA -->
   <div id="appPrincipal" class="oculto-autenticacao min-h-screen flex flex-col">
-    <!-- HEADER DINÂMICO COM O NOME DA LOJA (PDV [Nome da Loja]) -->
+    <!-- HEADER DINÂMICO COM O NOME DA LOJA -->
     <header id="headerLoja" class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50 transition-colors duration-300">
       <div class="max-w-7xl mx-auto flex justify-between items-center">
         <div>
@@ -726,7 +726,7 @@
       alert('🎨 Tema de cores da loja atualizado!');
     }
 
-    // ATUALIZAR A BARRA DE URL COM O NOME DA LOJA
+    // ATUALIZAR A BARRA DE URL E O TÍTULO DA GUIA DO NAVEGADOR
     function atualizarUrlLoja(nomeLoja) {
       if (!nomeLoja) return;
       const slug = nomeLoja.toLowerCase().replace(/[^a-z0-9]/g, '-');
@@ -873,6 +873,10 @@
         const nomeFormatadoLoja = formatarNomeLojaPDV(lojaAtual.nomeLoja);
         document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
         document.getElementById('labelUsuarioLogado').innerText = `Acesso Master: ${sessaoAtiva.usuario}`;
+        
+        // ATUALIZA A GUIA DO NAVEGADOR
+        document.title = `Master (${nomeFormatadoLoja}) - PDV Web`;
+
         renderizarPainelAdminGeral();
       } else {
         document.querySelectorAll('.admin-geral-only').forEach(el => el.classList.add('hidden'));
@@ -882,10 +886,12 @@
         
         carregarDadosLoja(conta.lojaId);
         
-        // FORMATAR FORMATO PDV [NOME DA LOJA]
         const nomeFormatadoLoja = formatarNomeLojaPDV(lojaAtual.nomeLoja);
         document.getElementById('labelNomeLojaTopo').innerText = nomeFormatadoLoja;
         document.getElementById('labelUsuarioLogado').innerText = `Loja: ${nomeFormatadoLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil.toUpperCase()})`;
+
+        // ATUALIZA A GUIA DO NAVEGADOR COM O NOME DA LOJA LOGADA
+        document.title = `${nomeFormatadoLoja} - PDV Web`;
       }
 
       aplicarModoEscuro();
@@ -902,6 +908,10 @@
       localStorage.removeItem('pdv_sessao_ativa');
       document.getElementById('appPrincipal').classList.add('oculto-autenticacao');
       document.getElementById('telaAutenticacao').classList.remove('hidden');
+      
+      // RESTAURA O TÍTULO PADRÃO DA GUIA DO NAVEGADOR
+      document.title = "PDV Web - Autenticação";
+
       selecionarTipoAcesso('vendedor');
     }
 
@@ -995,6 +1005,10 @@
       carregarDadosLoja(idLoja);
       const nomeFormatadoLoja = formatarNomeLojaPDV(lojaAtual.nomeLoja);
       document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
+      
+      // ATUALIZA A GUIA DO NAVEGADOR
+      document.title = `${nomeFormatadoLoja} - PDV Web`;
+
       aplicarTemaVisualLoja(lojaAtual.corTema || 'blue');
       atualizarUrlLoja(lojaAtual.nomeLoja);
       alert(`Visualizando loja: "${nomeFormatadoLoja}"`);
