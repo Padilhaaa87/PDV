@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Relatório de Caixa com Custo Total</title>
-  <!-- Tailwind CSS para estilização rápida e moderna -->
+  <title>PDV Web - Gestão Completa de Custos e Caixa</title>
+  <!-- Tailwind CSS para estilização moderna e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .aba-conteudo { display: none; }
@@ -167,7 +167,7 @@
         </div>
       </section>
 
-      <!-- ABA 3: CONTROLE DE CAIXA E RELATÓRIO DE SESSÕES COM CUSTO TOTAL -->
+      <!-- ABA 3: CONTROLE DE CAIXA E DETALHAMENTO COMPLETO DAS FORMAS DE PAGAMENTO -->
       <section id="controleCaixa" class="aba-conteudo space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -203,29 +203,31 @@
           </div>
         </div>
 
-        <!-- RELATÓRIO DE CAIXAS COM A COLUNA CUSTO TOTAL -->
+        <!-- RELATÓRIO DE SESSÕES COM DISCRIMINAÇÃO COMPLETA DE PAGAMENTOS -->
         <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
           <div class="flex justify-between items-center border-b pb-3">
             <div>
               <h2 class="text-xl font-bold text-gray-700">📋 Relatório de Caixas e Histórico de Sessões</h2>
-              <p class="text-xs text-gray-500">Acompanhe quem abriu o caixa, horários, custos dos produtos vendidos e dinheiro final</p>
+              <p class="text-xs text-gray-500">Valores descriminados por Dinheiro, PIX, Cartão, Fiado e Custos por sessão</p>
             </div>
             <button onclick="limparTodoHistoricoCaixas()" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition">
               🗑️ Limpar Todo o Histórico
             </button>
           </div>
           <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse text-xs md:text-sm">
               <thead>
-                <tr class="bg-gray-100 border-b text-sm">
-                  <th class="p-3">Responsável</th>
-                  <th class="p-3">Abertura</th>
-                  <th class="p-3">Fecho</th>
-                  <th class="p-3">Fundo Inicial</th>
-                  <th class="p-3 text-red-600">Custo Total</th>
-                  <th class="p-3">Dinheiro Final</th>
-                  <th class="p-3 text-center">Status</th>
-                  <th class="p-3 text-center">Ações</th>
+                <tr class="bg-gray-100 border-b">
+                  <th class="p-2">Responsável</th>
+                  <th class="p-2">Abertura / Fecho</th>
+                  <th class="p-2 text-green-700">💵 Dinheiro</th>
+                  <th class="p-2 text-blue-700">📱 PIX</th>
+                  <th class="p-2 text-purple-700">💳 Cartão</th>
+                  <th class="p-2 text-amber-700">📋 Fiado</th>
+                  <th class="p-2 text-red-600">Custo Total</th>
+                  <th class="p-2 font-bold">Total Final</th>
+                  <th class="p-2 text-center">Status</th>
+                  <th class="p-2 text-center">Ações</th>
                 </tr>
               </thead>
               <tbody id="tabelaHistoricoSessoesCaixa"></tbody>
@@ -234,7 +236,7 @@
         </div>
       </section>
 
-      <!-- ABA 4: PRODUTOS & ESTOQUE -->
+      <!-- ABA 4: PRODUTOS & ESTOQUE COM VALOR TOTAL DO ESTOQUE EM CUSTO -->
       <section id="produtos" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md space-y-6">
@@ -266,22 +268,33 @@
             </div>
           </div>
 
-          <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Produtos e Estoque Disponível</h2>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="bg-gray-100 border-b text-sm">
-                    <th class="p-2">Nome</th>
-                    <th class="p-2">Custo</th>
-                    <th class="p-2">Venda</th>
-                    <th class="p-2">Estoque</th>
-                    <th class="p-2">Lucro (%)</th>
-                    <th class="p-2 text-center">Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="tabelaProdutos"></tbody>
-              </table>
+          <div class="md:col-span-2 space-y-4">
+            <!-- INDICADOR DE VALOR INVESTIDO NO ESTOQUE (CUSTO TOTAL) -->
+            <div class="bg-white p-4 rounded-lg shadow-md flex justify-between items-center border-l-4 border-indigo-600">
+              <div>
+                <span class="text-xs font-bold text-gray-500 uppercase block">Custo Total Investido no Estoque</span>
+                <span class="text-xs text-gray-400">Soma do preço de custo × quantidade disponível</span>
+              </div>
+              <span class="text-xl md:text-2xl font-bold text-indigo-700">R$ <span id="valorCustoEstoqueTotal">0,00</span></span>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+              <h2 class="text-xl font-bold mb-4 text-gray-700">Produtos e Estoque Disponível</h2>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-gray-100 border-b text-sm">
+                      <th class="p-2">Nome</th>
+                      <th class="p-2">Custo</th>
+                      <th class="p-2">Venda</th>
+                      <th class="p-2">Estoque</th>
+                      <th class="p-2">Lucro (%)</th>
+                      <th class="p-2 text-center">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tabelaProdutos"></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -315,13 +328,13 @@
         </div>
       </section>
 
-      <!-- ABA 6: RELATÓRIOS -->
+      <!-- ABA 6: RELATÓRIOS FINANCEIROS COM CUSTOS DIÁRIO, SEMANAL E MENSAL -->
       <section id="relatorios" class="aba-conteudo">
         <div class="space-y-6">
           <div class="bg-white p-4 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h2 class="text-lg font-bold text-gray-700">Filtro e Gestão de Período</h2>
-              <p class="text-xs text-gray-500">Selecione o mês desejado ou limpe todo o histórico do sistema</p>
+              <p class="text-xs text-gray-500">Selecione o mês desejado para análise das vendas e custos</p>
             </div>
             <div class="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div class="flex items-center gap-2">
@@ -332,14 +345,38 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 md:gap-4">
-            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-amber-500"><span class="text-xs text-gray-500 font-bold block uppercase">Vendas Hoje</span><span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasHoje">0,00</span></span></div>
-            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-lime-500"><span class="text-xs text-gray-500 font-bold block uppercase">Lucro Hoje</span><span class="text-base md:text-xl font-bold text-lime-600">R$ <span id="relLucroHoje">0,00</span></span></div>
-            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500"><span class="text-xs text-gray-500 font-bold block uppercase">Vendas Semana</span><span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasSemana">0,00</span></span></div>
-            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-emerald-500"><span class="text-xs text-gray-500 font-bold block uppercase">Lucro Semana</span><span class="text-base md:text-xl font-bold text-emerald-600">R$ <span id="relLucroSemana">0,00</span></span></div>
-            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500"><span class="text-xs text-gray-500 font-bold block uppercase" id="labelCardVendasMes">Vendas Mês</span><span class="text-base md:text-xl font-bold text-gray-800">R$ <span id="relVendasMes">0,00</span></span></div>
-            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500"><span class="text-xs text-gray-500 font-bold block uppercase" id="labelCardLucroMes">Lucro Mês</span><span class="text-base md:text-xl font-bold text-green-600">R$ <span id="relLucroMes">0,00</span></span></div>
-            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-rose-500"><span class="text-xs text-gray-500 font-bold block uppercase">Total a Receber</span><span class="text-base md:text-xl font-bold text-rose-600">R$ <span id="relTotalAReceber">0,00</span></span></div>
+          <!-- CARDS DE MÉTRICAS FINANCEIRAS COM CUSTO TOTAL DIÁRIO, SEMANAL E MENSAL -->
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4">
+            <!-- HOJE -->
+            <div class="bg-white p-3 rounded-lg shadow border-l-4 border-amber-500">
+              <span class="text-[10px] text-gray-500 font-bold block uppercase">Vendas Hoje</span>
+              <span class="text-sm md:text-base font-bold text-gray-800">R$ <span id="relVendasHoje">0,00</span></span>
+              <span class="text-[10px] text-red-500 block mt-1">Custo: R$ <span id="relCustoHoje">0,00</span></span>
+              <span class="text-[10px] text-lime-600 font-bold block">Lucro: R$ <span id="relLucroHoje">0,00</span></span>
+            </div>
+
+            <!-- SEMANA -->
+            <div class="bg-white p-3 rounded-lg shadow border-l-4 border-purple-500">
+              <span class="text-[10px] text-gray-500 font-bold block uppercase">Vendas Semana</span>
+              <span class="text-sm md:text-base font-bold text-gray-800">R$ <span id="relVendasSemana">0,00</span></span>
+              <span class="text-[10px] text-red-500 block mt-1">Custo: R$ <span id="relCustoSemana">0,00</span></span>
+              <span class="text-[10px] text-emerald-600 font-bold block">Lucro: R$ <span id="relLucroSemana">0,00</span></span>
+            </div>
+
+            <!-- MÊS -->
+            <div class="bg-white p-3 rounded-lg shadow border-l-4 border-blue-500">
+              <span class="text-[10px] text-gray-500 font-bold block uppercase" id="labelCardVendasMes">Vendas Mês</span>
+              <span class="text-sm md:text-base font-bold text-gray-800">R$ <span id="relVendasMes">0,00</span></span>
+              <span class="text-[10px] text-red-500 block mt-1">Custo Mês: R$ <span id="relCustoMes">0,00</span></span>
+              <span class="text-[10px] text-green-600 font-bold block">Lucro Mês: R$ <span id="relLucroMes">0,00</span></span>
+            </div>
+
+            <!-- TOTAL A RECEBER -->
+            <div class="bg-white p-3 rounded-lg shadow border-l-4 border-rose-500 flex flex-col justify-center">
+              <span class="text-[10px] text-gray-500 font-bold block uppercase">Total a Receber</span>
+              <span class="text-sm md:text-base font-bold text-rose-600">R$ <span id="relTotalAReceber">0,00</span></span>
+              <span class="text-[10px] text-gray-400 block mt-1">Saldo Fiado Aberto</span>
+            </div>
           </div>
 
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -907,7 +944,7 @@
       });
     }
 
-    // --- MÓDULO DE PRODUTOS E ESTOQUE ---
+    // --- MÓDULO DE PRODUTOS E CÁLCULO DE CUSTO TOTAL DE ESTOQUE ---
     function calcularMargemLucro() {
       const c = parseFloat(document.getElementById('prodCusto').value) || 0;
       const v = parseFloat(document.getElementById('prodVenda').value) || 0;
@@ -1012,10 +1049,15 @@
     function renderizarTabelaProdutos() {
       const tbody = document.getElementById('tabelaProdutos');
       tbody.innerHTML = '';
+      
+      let custoTotalEstoque = 0;
+
       produtos.forEach(prod => {
         const margem = prod.custo > 0 ? (((prod.venda - prod.custo) / prod.custo) * 100).toFixed(2) : '0.00';
         const corEstoque = prod.estoque <= 2 ? 'text-red-600 font-bold' : 'text-gray-800 font-semibold';
         
+        custoTotalEstoque += (prod.custo * prod.estoque);
+
         tbody.innerHTML += `
           <tr class="border-b text-sm">
             <td class="p-2 font-medium">${prod.nome}</td>
@@ -1029,6 +1071,8 @@
             </td>
           </tr>`;
       });
+
+      document.getElementById('valorCustoEstoqueTotal').innerText = custoTotalEstoque.toFixed(2);
     }
 
     function renderizarGridProdutos() {
@@ -1326,26 +1370,55 @@
       if (opAnt && Array.from(select.options).some(o => o.value === opAnt)) select.value = opAnt;
     }
 
+    // RELATÓRIOS MENSAL, SEMANAL E DIÁRIO COM CUSTO TOTAL INTEGRADO
     function renderizarRelatorios() {
       const agora = new Date();
       const selectMes = document.getElementById('selectFiltroMes');
       const temVendas = vendas.length > 0 && selectMes.value;
       let [aSel, mSel] = temVendas ? selectMes.value.split('-').map(Number) : [agora.getFullYear(), agora.getMonth()];
-      let vHoje = 0, lHoje = 0, vMes = 0, lMes = 0;
+      
+      let vHoje = 0, cHoje = 0, lHoje = 0;
+      let vSemana = 0, cSemana = 0, lSemana = 0;
+      let vMes = 0, cMes = 0, lMes = 0;
+
+      const inicioSemana = new Date(agora);
+      inicioSemana.setDate(agora.getDate() - agora.getDay());
+      inicioSemana.setHours(0,0,0,0);
+
       const tbody = document.getElementById('tabelaHistoricoVendas');
       tbody.innerHTML = !temVendas ? '<tr><td colspan="6" class="p-4 text-center text-gray-500 text-sm">Nenhuma venda registrada.</td></tr>' : '';
 
       if (temVendas) {
         [...vendas].reverse().forEach(v => {
           const d = new Date(v.data);
-          if (d.getDate() === agora.getDate() && d.getMonth() === agora.getMonth() && d.getFullYear() === agora.getFullYear()) { vHoje += v.totalVenda; lHoje += v.lucroObtido; }
+          
+          // HOJE
+          if (d.getDate() === agora.getDate() && d.getMonth() === agora.getMonth() && d.getFullYear() === agora.getFullYear()) { 
+            vHoje += v.totalVenda; 
+            cHoje += (v.totalCusto || 0);
+            lHoje += v.lucroObtido; 
+          }
+
+          // SEMANA
+          if (d >= inicioSemana) {
+            vSemana += v.totalVenda;
+            cSemana += (v.totalCusto || 0);
+            lSemana += v.lucroObtido;
+          }
+
+          // MÊS SELECIONADO
           if (d.getMonth() === mSel && d.getFullYear() === aSel) {
-            vMes += v.totalVenda; lMes += v.lucroObtido;
+            vMes += v.totalVenda; 
+            cMes += (v.totalCusto || 0);
+            lMes += v.lucroObtido;
+
             tbody.innerHTML += `
               <tr class="border-b text-sm">
                 <td class="p-2">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-                <td class="p-2">${v.formaPagamento}</td><td class="p-2 font-bold">R$ ${v.totalVenda.toFixed(2)}</td>
-                <td class="p-2 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td><td class="p-2 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
+                <td class="p-2">${v.formaPagamento}</td>
+                <td class="p-2 font-bold">R$ ${v.totalVenda.toFixed(2)}</td>
+                <td class="p-2 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td>
+                <td class="p-2 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
                 <td class="p-2 text-center space-x-1">
                   <button onclick="imprimirReciboVenda(${v.id})" class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs font-bold transition">🧾 Recibo</button>
                   <button onclick="excluirVendaIndividual(${v.id})" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded text-xs font-bold transition">🗑️ Estornar</button>
@@ -1358,9 +1431,21 @@
       const totalAReceber = clientes.reduce((acc, cli) => acc + (cli.saldoDevedor || 0), 0);
       document.getElementById('relTotalAReceber').innerText = totalAReceber.toFixed(2);
       document.getElementById('labelCardVendasMes').innerText = `Vendas (${nomesMeses[mSel]}/${aSel})`;
-      document.getElementById('labelCardLucroMes').innerText = `Lucro (${nomesMeses[mSel]}/${aSel})`;
-      document.getElementById('relVendasHoje').innerText = vHoje.toFixed(2); document.getElementById('relLucroHoje').innerText = lHoje.toFixed(2);
-      document.getElementById('relVendasMes').innerText = vMes.toFixed(2); document.getElementById('relLucroMes').innerText = lMes.toFixed(2);
+
+      // VALORES HOJE
+      document.getElementById('relVendasHoje').innerText = vHoje.toFixed(2); 
+      document.getElementById('relCustoHoje').innerText = cHoje.toFixed(2);
+      document.getElementById('relLucroHoje').innerText = lHoje.toFixed(2);
+
+      // VALORES SEMANA
+      document.getElementById('relVendasSemana').innerText = vSemana.toFixed(2);
+      document.getElementById('relCustoSemana').innerText = cSemana.toFixed(2);
+      document.getElementById('relLucroSemana').innerText = lSemana.toFixed(2);
+
+      // VALORES MÊS
+      document.getElementById('relVendasMes').innerText = vMes.toFixed(2); 
+      document.getElementById('relCustoMes').innerText = cMes.toFixed(2);
+      document.getElementById('relLucroMes').innerText = lMes.toFixed(2);
     }
 
     function abrirCaixa() {
@@ -1378,6 +1463,10 @@
         dataFecho: null,
         inicial: v,
         totalFinal: v,
+        dinheiro: 0,
+        pix: 0,
+        cartao: 0,
+        fiado: 0,
         status: 'Aberto'
       };
 
@@ -1389,15 +1478,29 @@
       alert(`Caixa aberto com sucesso por ${resp}!`);
     }
 
+    // RELATÓRIO DO FECHO DO CAIXA DISCRIMINANDO CADA FORMA DE PAGAMENTO
     function fecharCaixa() {
       const totalFinal = (caixa.inicial || 0) + (caixa.entradas || 0);
       const dataIsoFecho = new Date().toISOString();
 
-      alert(`Caixa Fechado!\nResponsável: ${caixa.responsavel || 'N/A'}\nDinheiro Final em Caixa: R$ ${totalFinal.toFixed(2)}`);
+      alert(`📋 RELATÓRIO FINAL DO FECHO DE CAIXA\n` +
+            `-----------------------------------\n` +
+            `👤 Responsável: ${caixa.responsavel || 'N/A'}\n` +
+            `💵 Dinheiro: R$ ${(caixa.dinheiro || 0).toFixed(2)}\n` +
+            `📱 PIX: R$ ${(caixa.pix || 0).toFixed(2)}\n` +
+            `💳 Cartão: R$ ${(caixa.cartao || 0).toFixed(2)}\n` +
+            `📋 Fiado Emitido: R$ ${(caixa.fiado || 0).toFixed(2)}\n` +
+            `-----------------------------------\n` +
+            `💰 Fundo Inicial (Troco): R$ ${(caixa.inicial || 0).toFixed(2)}\n` +
+            `🔵 DINHEIRO FINAL EM CAIXA: R$ ${totalFinal.toFixed(2)}`);
 
       const sessaoAberta = historicoCaixas.find(s => s.status === 'Aberto');
       if (sessaoAberta) {
         sessaoAberta.dataFecho = dataIsoFecho;
+        sessaoAberta.dinheiro = caixa.dinheiro || 0;
+        sessaoAberta.pix = caixa.pix || 0;
+        sessaoAberta.cartao = caixa.cartao || 0;
+        sessaoAberta.fiado = caixa.fiado || 0;
         sessaoAberta.totalFinal = totalFinal;
         sessaoAberta.status = 'Fechado';
         localStorage.setItem('pdv_historico_caixas', JSON.stringify(historicoCaixas));
@@ -1441,12 +1544,12 @@
       renderizarTabelaHistoricoSessoes();
     }
 
-    // CÁLCULO E EXIBIÇÃO DO CUSTO TOTAL NO RELATÓRIO DE CAIXA
+    // EXIBIÇÃO DETALHADA DAS FORMAS DE PAGAMENTO NO HISTÓRICO DE SESSÕES
     function renderizarTabelaHistoricoSessoes() {
       const tbody = document.getElementById('tabelaHistoricoSessoesCaixa');
       if (!tbody) return;
 
-      tbody.innerHTML = historicoCaixas.length === 0 ? '<tr><td colspan="8" class="p-4 text-center text-gray-500 text-sm">Nenhuma sessão de caixa registrada.</td></tr>' : '';
+      tbody.innerHTML = historicoCaixas.length === 0 ? '<tr><td colspan="10" class="p-4 text-center text-gray-500 text-sm">Nenhuma sessão de caixa registrada.</td></tr>' : '';
 
       [...historicoCaixas].reverse().forEach(sessao => {
         const dAbertura = new Date(sessao.dataAbertura);
@@ -1459,14 +1562,26 @@
           dataFechoFmt = dFechoObj.toLocaleDateString() + ' ' + dFechoObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         }
 
-        // CÁLCULO DINÂMICO DO CUSTO TOTAL DAS VENDAS REALIZADAS NESTA SESSÃO DE CAIXA
         let custoTotalSessao = 0;
+        let vDin = sessao.dinheiro || 0;
+        let vPix = sessao.pix || 0;
+        let vCart = sessao.cartao || 0;
+        let vFia = sessao.fiado || 0;
+
+        // SE O CAIXA ESTIVER ABERTO, CALCULA EM TEMPO REAL OS VALORES DAS VENDAS
         vendas.forEach(v => {
           const dVenda = new Date(v.data);
           if (dVenda >= dAbertura && (!sessao.dataFecho || dVenda <= dFechoObj)) {
             custoTotalSessao += (v.totalCusto || 0);
           }
         });
+
+        if (sessao.status === 'Aberto' && caixa.aberto) {
+          vDin = caixa.dinheiro || 0;
+          vPix = caixa.pix || 0;
+          vCart = caixa.cartao || 0;
+          vFia = caixa.fiado || 0;
+        }
 
         const badgeStatus = sessao.status === 'Aberto' 
           ? `<span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">Aberto</span>`
@@ -1478,15 +1593,17 @@
         }
 
         tbody.innerHTML += `
-          <tr class="border-b text-sm hover:bg-gray-50">
-            <td class="p-3 font-semibold text-gray-800">👤 ${sessao.responsavel}</td>
-            <td class="p-3 text-gray-600">${dataAberturaFmt}</td>
-            <td class="p-3 text-gray-600">${dataFechoFmt}</td>
-            <td class="p-3">R$ ${sessao.inicial.toFixed(2)}</td>
-            <td class="p-3 font-bold text-red-600">R$ ${custoTotalSessao.toFixed(2)}</td>
-            <td class="p-3 font-bold text-blue-600">R$ ${totalExibicao.toFixed(2)}</td>
-            <td class="p-3 text-center">${badgeStatus}</td>
-            <td class="p-3 text-center">
+          <tr class="border-b text-xs md:text-sm hover:bg-gray-50">
+            <td class="p-2 font-semibold text-gray-800">👤 ${sessao.responsavel}</td>
+            <td class="p-2 text-gray-600">A: ${dataAberturaFmt}<br/>F: ${dataFechoFmt}</td>
+            <td class="p-2 font-semibold text-green-700">R$ ${vDin.toFixed(2)}</td>
+            <td class="p-2 font-semibold text-blue-700">R$ ${vPix.toFixed(2)}</td>
+            <td class="p-2 font-semibold text-purple-700">R$ ${vCart.toFixed(2)}</td>
+            <td class="p-2 font-semibold text-amber-700">R$ ${vFia.toFixed(2)}</td>
+            <td class="p-2 font-bold text-red-600">R$ ${custoTotalSessao.toFixed(2)}</td>
+            <td class="p-2 font-bold text-blue-600">R$ ${totalExibicao.toFixed(2)}</td>
+            <td class="p-2 text-center">${badgeStatus}</td>
+            <td class="p-2 text-center">
               <button onclick="excluirSessaoCaixa(${sessao.id})" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-2 py-1 rounded text-xs transition">
                 🗑️ Excluir
               </button>
