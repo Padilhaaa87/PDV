@@ -3,16 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Gestão Global de Utilizadores & Multi-Loja</title>
+  <title>PDV Web - Multi-Loja & Customização Visual</title>
   <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .aba-conteudo { display: none; }
     .aba-conteudo.ativa { display: block; }
     .oculto-autenticacao { display: none !important; }
+
+    /* ESTILOS CUSTOMIZADOS PARA MODO ESCURO (DARK MODE) */
+    body.dark {
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+    }
+    body.dark .bg-white {
+      background-color: #1e293b !important;
+      color: #f8fafc !important;
+    }
+    body.dark .bg-gray-50, body.dark .bg-gray-100 {
+      background-color: #334155 !important;
+      color: #f8fafc !important;
+    }
+    body.dark .text-gray-700, body.dark .text-gray-800, body.dark .text-gray-500 {
+      color: #cbd5e1 !important;
+    }
+    body.dark .border, body.dark .border-b {
+      border-color: #475569 !important;
+    }
+    body.dark input, body.dark select {
+      background-color: #0f172a !important;
+      color: #ffffff !important;
+      border-color: #475569 !important;
+    }
   </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800">
+<body id="bodyApp" class="bg-gray-100 font-sans text-gray-800 transition-colors duration-300">
 
   <!-- TELA DE AUTENTICAÇÃO COM LOGIN CATEGORIZADO -->
   <div id="telaAutenticacao" class="min-h-screen flex items-center justify-center bg-blue-900 p-4">
@@ -98,28 +123,34 @@
 
   <!-- APLICAÇÃO PRINCIPAL DA LOJA -->
   <div id="appPrincipal" class="oculto-autenticacao min-h-screen flex flex-col">
-    <header class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50">
+    <!-- HEADER DINÂMICO COM COR DO TEMA -->
+    <header id="headerLoja" class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50 transition-colors duration-300">
       <div class="max-w-7xl mx-auto flex justify-between items-center">
         <div>
           <h1 id="labelNomeLojaTopo" class="text-xl md:text-2xl font-bold">PDV Web</h1>
           <span id="labelUsuarioLogado" class="text-xs text-blue-200">Sessão: Nenhuma</span>
         </div>
         <div class="flex items-center gap-3">
-          <div id="statusCaixaTopo" class="bg-blue-800 px-3 py-1 rounded-full text-xs md:text-sm font-bold">Caixa: Fechado</div>
+          <!-- BOTÃO ALTERNADOR DE MODO ESCURO -->
+          <button onclick="alternarModoEscuro()" id="btnModoEscuro" class="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow transition flex items-center gap-1">
+            🌙 Modo Escuro
+          </button>
+          <div id="statusCaixaTopo" class="bg-black/20 px-3 py-1 rounded-full text-xs md:text-sm font-bold">Caixa: Fechado</div>
           <button onclick="fazerLogout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded font-semibold shadow">Sair</button>
         </div>
       </div>
     </header>
 
-    <nav class="bg-blue-800 text-white shadow-inner overflow-x-auto">
-      <div class="max-w-7xl mx-auto flex border-b border-blue-600 min-w-max">
-        <button onclick="alternarAba('frenteCaixa')" id="btn-frenteCaixa" class="py-3 px-5 hover:bg-blue-700 font-semibold border-b-2 border-white text-sm md:text-base">Frente de Caixa</button>
-        <button onclick="alternarAba('vendas')" id="btn-vendas" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Vendas</button>
-        <button onclick="alternarAba('controleCaixa')" id="btn-controleCaixa" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Caixa</button>
-        <button onclick="alternarAba('produtos')" id="btn-produtos" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Produtos & Estoque</button>
-        <button onclick="alternarAba('clientes')" id="btn-clientes" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Clientes & Fiado</button>
-        <button onclick="alternarAba('relatorios')" id="btn-relatorios" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base admin-only">Relatórios & Lucros</button>
-        <button onclick="alternarAba('usuarios')" id="btn-usuarios" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base admin-only">👥 Utilizadores</button>
+    <!-- NAVEGAÇÃO DINÂMICA COM COR DO TEMA -->
+    <nav id="navLoja" class="bg-blue-800 text-white shadow-inner overflow-x-auto transition-colors duration-300">
+      <div class="max-w-7xl mx-auto flex border-b border-white/20 min-w-max">
+        <button onclick="alternarAba('frenteCaixa')" id="btn-frenteCaixa" class="py-3 px-5 hover:bg-black/10 font-semibold border-b-2 border-white text-sm md:text-base">Frente de Caixa</button>
+        <button onclick="alternarAba('vendas')" id="btn-vendas" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Vendas</button>
+        <button onclick="alternarAba('controleCaixa')" id="btn-controleCaixa" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Caixa</button>
+        <button onclick="alternarAba('produtos')" id="btn-produtos" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Produtos & Estoque</button>
+        <button onclick="alternarAba('clientes')" id="btn-clientes" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Clientes & Fiado</button>
+        <button onclick="alternarAba('relatorios')" id="btn-relatorios" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base admin-only">Relatórios & Lucros</button>
+        <button onclick="alternarAba('usuarios')" id="btn-usuarios" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base admin-only">👥 Utilizadores & Tema</button>
         <button onclick="alternarAba('adminGeral')" id="btn-adminGeral" class="py-3 px-5 bg-purple-900 hover:bg-purple-800 font-bold text-amber-300 text-sm md:text-base admin-geral-only hidden">👑 PAINEL ADM GERAL</button>
       </div>
     </nav>
@@ -172,7 +203,7 @@
           </div>
         </div>
 
-        <!-- CONTROLO GLOBAL DE UTILIZADORES E VENDEDORES (NOVA FUNCIONALIDADE) -->
+        <!-- CONTROLO GLOBAL DE UTILIZADORES E VENDEDORES -->
         <div class="bg-white p-6 rounded-lg shadow-md space-y-4 border-l-4 border-blue-600">
           <div class="flex justify-between items-center border-b pb-3">
             <div>
@@ -483,7 +514,7 @@
             </div>
           </div>
 
-          <!-- CARDS DE RESUMO FINANCEIRO EXPANDIDOS EM LARGURA TOTAL -->
+          <!-- CARDS DE RESUMO FINANCEIRO EXPANDIDOS -->
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             <div class="bg-white p-6 md:p-8 rounded-xl shadow-md border-l-8 border-amber-500 flex flex-col justify-between space-y-4">
               <div>
@@ -535,7 +566,7 @@
               <table class="w-full text-left border-collapse">
                 <thead>
                   <tr class="bg-gray-100 border-b text-sm">
-                    <th class="p-2">Data/Hora</th><th class="p-2">Pagamento</th><th class="p-2">Total Venda</th><th class="p-2">Total Custo</th><th class="p-2">Lucro Obtido</th><th class="p-2 text-center">Ações</th>
+                    <th class="p-2">Data/Hora</th><th class="p-2">Pagamento</th><th class="p-2">Total Venda</th><th class="p-2">Total Custo</th><th class="p-2 text-center">Ações</th>
                   </tr>
                 </thead>
                 <tbody id="tabelaHistoricoVendas"></tbody>
@@ -545,8 +576,23 @@
         </div>
       </section>
 
-      <!-- ABA 7: GESTÃO DE VENDEDORES E UTILIZADORES DA LOJA (ADMIN LOJA) -->
-      <section id="usuarios" class="aba-conteudo admin-only">
+      <!-- ABA 7: GESTÃO DE UTILIZADORES & SELETOR DE COR DA LOJA -->
+      <section id="usuarios" class="aba-conteudo admin-only space-y-6">
+        
+        <!-- PALETA DE CORES PARA PERSONALIZAÇÃO DA LOJA (NOVA FUNCIONALIDADE) -->
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-3 border-l-4 border-indigo-500">
+          <h2 class="text-xl font-bold text-gray-700">🎨 Personalizar Cor de Destaque da Loja</h2>
+          <p class="text-xs text-gray-500">Escolha uma cor para personalizar o cabeçalho e os botões da sua loja:</p>
+          <div class="flex flex-wrap gap-3 pt-2">
+            <button onclick="alterarTemaLoja('blue')" class="px-4 py-2 bg-blue-700 text-white font-bold text-xs rounded shadow hover:opacity-90">🔵 Azul Padrão</button>
+            <button onclick="alterarTemaLoja('emerald')" class="px-4 py-2 bg-emerald-700 text-white font-bold text-xs rounded shadow hover:opacity-90">🟢 Esmeralda</button>
+            <button onclick="alterarTemaLoja('purple')" class="px-4 py-2 bg-purple-700 text-white font-bold text-xs rounded shadow hover:opacity-90">🟣 Roxo VIP</button>
+            <button onclick="alterarTemaLoja('amber')" class="px-4 py-2 bg-amber-600 text-white font-bold text-xs rounded shadow hover:opacity-90">🟠 Âmbar / Laranja</button>
+            <button onclick="alterarTemaLoja('rose')" class="px-4 py-2 bg-rose-700 text-white font-bold text-xs rounded shadow hover:opacity-90">🔴 Rosa / Vermelho</button>
+            <button onclick="alterarTemaLoja('slate')" class="px-4 py-2 bg-slate-800 text-white font-bold text-xs rounded shadow hover:opacity-90">🖤 Grafite Escuro</button>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
             <h2 id="tituloFormUsuario" class="text-xl font-bold text-gray-700 border-b pb-2">Cadastrar Vendedor / Utilizador</h2>
@@ -602,7 +648,69 @@
     let vendas = [];
     let carrinho = [];
 
-    const nomesMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    // MODO ESCURO (DARK MODE)
+    let modoEscuroAtivo = localStorage.getItem('pdv_modo_escuro') === 'true';
+
+    function aplicarModoEscuro() {
+      const body = document.getElementById('bodyApp');
+      const btn = document.getElementById('btnModoEscuro');
+      if (modoEscuroAtivo) {
+        body.classList.add('dark');
+        btn.innerText = "☀️ Modo Claro";
+      } else {
+        body.classList.remove('dark');
+        btn.innerText = "🌙 Modo Escuro";
+      }
+    }
+
+    function alternarModoEscuro() {
+      modoEscuroAtivo = !modoEscuroAtivo;
+      localStorage.setItem('pdv_modo_escuro', modoEscuroAtivo);
+      aplicarModoEscuro();
+    }
+
+    // ALTERAÇÃO DE PALETA DE COR DA LOJA
+    const mapaCores = {
+      blue: { header: 'bg-blue-700', nav: 'bg-blue-800' },
+      emerald: { header: 'bg-emerald-700', nav: 'bg-emerald-800' },
+      purple: { header: 'bg-purple-700', nav: 'bg-purple-800' },
+      amber: { header: 'bg-amber-600', nav: 'bg-amber-700' },
+      rose: { header: 'bg-rose-700', nav: 'bg-rose-800' },
+      slate: { header: 'bg-slate-800', nav: 'bg-slate-900' }
+    };
+
+    function aplicarTemaVisualLoja(corKey) {
+      const header = document.getElementById('headerLoja');
+      const nav = document.getElementById('navLoja');
+      const tema = mapaCores[corKey] || mapaCores['blue'];
+
+      // LIMPA CLASSES ANTERIORES DE COR
+      header.className = `text-white p-4 shadow-md sticky top-0 z-50 transition-colors duration-300 ${tema.header}`;
+      nav.className = `text-white shadow-inner overflow-x-auto transition-colors duration-300 ${tema.nav}`;
+    }
+
+    function alterarTemaLoja(corKey) {
+      if (!lojaAtual || lojaAtual.id === 'GLOBAL') return;
+      lojaAtual.corTema = corKey;
+      
+      // ATUALIZA NO STORAGE DAS LOJAS
+      const idx = lojas.findIndex(l => l.id === lojaAtual.id);
+      if (idx !== -1) {
+        lojas[idx].corTema = corKey;
+        localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
+      }
+
+      aplicarTemaVisualLoja(corKey);
+      alert('🎨 Tema de cores da loja atualizado!');
+    }
+
+    // ATUALIZAR A BARRA DE URL COM O NOME DA LOJA
+    function atualizarUrlLoja(nomeLoja) {
+      if (!nomeLoja) return;
+      const slug = nomeLoja.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const novaUrl = window.location.pathname + '?loja=' + slug;
+      window.history.pushState({ path: novaUrl }, '', novaUrl);
+    }
 
     // CONTROLADOR DA TELA DE LOGIN CATEGORIZADA
     function selecionarTipoAcesso(tipo) {
@@ -664,7 +772,7 @@
       }
 
       const idLoja = 'LOJA_' + Date.now();
-      const novaLoja = { id: idLoja, nomeLoja: nomeLoja, codigoUsado: codigoCompraInput, dataCriacao: new Date().toISOString() };
+      const novaLoja = { id: idLoja, nomeLoja: nomeLoja, codigoUsado: codigoCompraInput, corTema: 'blue', dataCriacao: new Date().toISOString() };
       lojas.push(novaLoja);
       localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
 
@@ -676,7 +784,7 @@
       iniciarSessao(novaConta);
     }
 
-    // VALIDAÇÃO RIGOROSA E BLOQUEIO DE ACESSO
+    // VALIDAÇÃO E BLOQUEIO DE ACESSO
     function fazerLogin(e) {
       e.preventDefault();
       const u = document.getElementById('loginUsuario').value.trim();
@@ -686,12 +794,10 @@
       const conta = contasRegistradas.find(c => c.usuario.toLowerCase() === u.toLowerCase() && c.senha === s);
       if (!conta) return alert('Utilizador ou palavra-passe incorretos!');
 
-      // TENTATIVA DE ACESSO AO PAINEL MASTER
       if (tipo === 'adminMaster' && conta.perfil !== 'superadmin') {
         return alert('⛔ ACESSO NEGADO!\nEsta conta não possui privilégios de Administrador Master.');
       }
 
-      // TENTATIVA DO VENDEDOR ENTRAR NA ABA ADM LOJA
       if (tipo === 'adminLoja' && conta.perfil === 'vendedor') {
         return alert('⛔ ACESSO NEGADO!\nContas com perfil de Vendedor só podem aceder ao sistema pela aba "🛒 Vendedor".');
       }
@@ -701,11 +807,11 @@
 
     function carregarDadosLoja(lojaId) {
       if (!lojaId) {
-        lojaAtual = { id: 'GLOBAL', nomeLoja: 'Painel Master' };
+        lojaAtual = { id: 'GLOBAL', nomeLoja: 'Painel Master', corTema: 'purple' };
         produtos = []; clientes = []; caixa = { aberto: false }; historicoCaixas = []; vendas = [];
         return;
       }
-      lojaAtual = lojas.find(l => l.id === lojaId) || { id: lojaId, nomeLoja: 'PDV Web' };
+      lojaAtual = lojas.find(l => l.id === lojaId) || { id: lojaId, nomeLoja: 'PDV Web', corTema: 'blue' };
       produtos = JSON.parse(localStorage.getItem(`pdv_produtos_${lojaId}`)) || [];
       clientes = JSON.parse(localStorage.getItem(`pdv_clientes_${lojaId}`)) || [];
       caixa = JSON.parse(localStorage.getItem(`pdv_caixa_${lojaId}`)) || { aberto: false, inicial: 0, entradas: 0, dinheiro: 0, pix: 0, cartao: 0, fiado: 0 };
@@ -742,7 +848,6 @@
         renderizarPainelAdminGeral();
       } else {
         document.querySelectorAll('.admin-geral-only').forEach(el => el.classList.add('hidden'));
-        
         document.querySelectorAll('.admin-only').forEach(el => {
           sessaoAtiva.perfil !== 'admin' ? el.classList.add('hidden') : el.classList.remove('hidden');
         });
@@ -751,6 +856,11 @@
         document.getElementById('labelNomeLojaTopo').innerText = lojaAtual.nomeLoja;
         document.getElementById('labelUsuarioLogado').innerText = `Loja: ${lojaAtual.nomeLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil.toUpperCase()})`;
       }
+
+      // APLICA MODO ESCURO E TEMA DE COR
+      aplicarModoEscuro();
+      aplicarTemaVisualLoja(lojaAtual.corTema || 'blue');
+      atualizarUrlLoja(lojaAtual.nomeLoja);
 
       atualizarTudo();
     }
@@ -765,7 +875,7 @@
       selecionarTipoAcesso('vendedor');
     }
 
-    // RENDERING DO PAINEL ADMIN GERAL (COM TABELA DE UTILIZADORES E VENDEDORES)
+    // RENDERING DO PAINEL ADMIN GERAL
     function renderizarPainelAdminGeral() {
       renderizarCodigosCompra();
       const tbodyLojas = document.getElementById('tabelaLojasAdminGeral');
@@ -786,7 +896,6 @@
           </tr>`;
       });
 
-      // TABELA GLOBAL DE UTILIZADORES E VENDEDORES PARA O ADM MASTER
       const tbodyUsuarios = document.getElementById('tabelaGlobalUsuariosAdminGeral');
       const utilizadoresNormais = contasRegistradas.filter(c => c.perfil !== 'superadmin');
       document.getElementById('qtdGlobalUsuarios').innerText = utilizadoresNormais.length;
@@ -855,6 +964,8 @@
       salvarDadosLoja();
       carregarDadosLoja(idLoja);
       document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${lojaAtual.nomeLoja})`;
+      aplicarTemaVisualLoja(lojaAtual.corTema || 'blue');
+      atualizarUrlLoja(lojaAtual.nomeLoja);
       alert(`Visualizando loja: "${lojaAtual.nomeLoja}"`);
       atualizarTudo();
       alternarAba('frenteCaixa');
@@ -879,13 +990,13 @@
       if (idAba === 'vendas') renderizarTabelaAbaVendas();
       if (idAba === 'produtos') renderizarTabelaProdutos();
       if (idAba === 'clientes') renderizarClientes();
-      if (idAba === 'controleCaixa') { atualizarUICaixa(); renderizarTabelaHistoricoSessoes(); }
+      if (idAba === 'controleCaixa') { atualizarUICaixa(); }
       if (idAba === 'relatorios') { carregarOpcoesMesesRelatorio(); renderizarRelatorios(); }
       if (idAba === 'usuarios') renderizarTabelaUsuarios();
       if (idAba === 'adminGeral') renderizarPainelAdminGeral();
     }
 
-    // UTILIZADORES E VENDEDORES
+    // UTILIZADORES E VENDEDORES DA LOJA
     function renderizarTabelaUsuarios() {
       const tbody = document.getElementById('tabelaAbaUsuarios');
       const usuariosLoja = contasRegistradas.filter(c => c.lojaId === lojaAtual.id);
@@ -1174,12 +1285,12 @@
       const statusTopo = document.getElementById('statusCaixaTopo');
       if (caixa.aberto) {
         statusTopo.innerText = `Caixa: Aberto (${caixa.responsavel || 'Vendedor'})`;
-        statusTopo.className = 'bg-green-600 px-3 py-1 rounded-full text-xs font-bold';
+        statusTopo.className = 'bg-black/20 px-3 py-1 rounded-full text-xs font-bold';
         document.getElementById('formAberturaCaixa').classList.add('hidden');
         document.getElementById('formOperacoesCaixa').classList.remove('hidden');
       } else {
         statusTopo.innerText = 'Caixa: Fechado';
-        statusTopo.className = 'bg-red-600 px-3 py-1 rounded-full text-xs font-bold';
+        statusTopo.className = 'bg-black/20 px-3 py-1 rounded-full text-xs font-bold';
         document.getElementById('formAberturaCaixa').classList.remove('hidden');
         document.getElementById('formOperacoesCaixa').classList.add('hidden');
       }
@@ -1230,6 +1341,7 @@
     }
 
     if (sessaoAtiva) iniciarSessao(sessaoAtiva);
+    else aplicarModoEscuro();
   </script>
 </body>
 </html>
