@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -17,12 +17,10 @@
       color: #f8fafc !important;
     }
 
-    /* Ajuste para o fundo do Login no Modo Escuro */
     body.dark #telaAutenticacao {
       background-color: #0f172a !important;
     }
 
-    /* Cards e Caixas no Modo Escuro */
     body.dark .bg-white {
       background-color: #1e293b !important;
       color: #f8fafc !important;
@@ -41,7 +39,6 @@
       border-color: #475569 !important;
     }
 
-    /* Entradas e Inputs no Modo Escuro */
     body.dark input, body.dark select {
       background-color: #0f172a !important;
       color: #ffffff !important;
@@ -51,11 +48,11 @@
 </head>
 <body id="bodyApp" class="bg-gray-100 font-sans text-gray-800 transition-colors duration-300">
 
-  <!-- TELA DE AUTENTICAÇÃO COM FUNDO LEVE AZUL SUAVE (bg-blue-50) -->
+  <!-- TELA DE AUTENTICAÇÃO COM FUNDO LEVE AZUL SUAVE -->
   <div id="telaAutenticacao" class="min-h-screen flex items-center justify-center bg-blue-50 p-4 transition-colors duration-300">
     <div class="bg-white p-6 md:p-8 rounded-xl shadow-xl border border-blue-100 w-full max-w-lg space-y-6 relative">
       
-      <!-- BOTÃO DE MODO ESCURO NO LOGIN (CANTO SUPERIOR DIREITO) -->
+      <!-- BOTÃO DE MODO ESCURO NO LOGIN -->
       <div class="flex justify-between items-center border-b pb-3">
         <h1 class="text-2xl font-bold text-blue-600">PDV Comercial</h1>
         <button onclick="alternarModoEscuro()" id="btnModoEscuroLogin" class="bg-gray-100 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-full font-semibold shadow-sm transition flex items-center gap-1 border">
@@ -89,7 +86,13 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label>
-          <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+          <!-- CAMPO COM BOTÃO VER SENHA -->
+          <div class="relative">
+            <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500 pr-10">
+            <button type="button" onclick="alternarVisibilidadeSenha('loginSenha', 'btnVerSenhaLogin')" id="btnVerSenhaLogin" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 text-sm font-semibold">
+              👁️
+            </button>
+          </div>
         </div>
         <button type="submit" id="btnSubmitLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">
           Acessar Loja como Vendedor
@@ -132,7 +135,13 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha) <span class="text-red-500">*</span></label>
-          <input type="password" id="cadSenha" required placeholder="Crie uma palavra-passe" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+          <!-- CAMPO COM BOTÃO VER SENHA NO CADASTRO -->
+          <div class="relative">
+            <input type="password" id="cadSenha" required placeholder="Crie uma palavra-passe" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500 pr-10">
+            <button type="button" onclick="alternarVisibilidadeSenha('cadSenha', 'btnVerSenhaCad')" id="btnVerSenhaCad" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 text-sm font-semibold">
+              👁️
+            </button>
+          </div>
         </div>
         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded transition shadow">
           Validar Código e Criar Loja
@@ -151,7 +160,6 @@
           <span id="labelUsuarioLogado" class="text-xs text-blue-200">Sessão: Nenhuma</span>
         </div>
         <div class="flex items-center gap-3">
-          <!-- BOTÃO ALTERNADOR DE MODO ESCURO NA APLICAÇÃO -->
           <button onclick="alternarModoEscuro()" id="btnModoEscuroHeader" class="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow transition flex items-center gap-1">
             🌙 Modo Escuro
           </button>
@@ -649,6 +657,19 @@
   </div>
 
   <script>
+    // FUNÇÃO PARA ALTERNAR A VISIBILIDADE DA PALAVRA-PASSE (VER SENHA)
+    function alternarVisibilidadeSenha(idInput, idBotao) {
+      const input = document.getElementById(idInput);
+      const btn = document.getElementById(idBotao);
+      if (input.type === "password") {
+        input.type = "text";
+        btn.innerText = "🙈";
+      } else {
+        input.type = "password";
+        btn.innerText = "👁️";
+      }
+    }
+
     // LISTA DE CÓDIGOS DE COMPRA VÁLIDOS
     let codigosCompraValidos = JSON.parse(localStorage.getItem('pdv_codigos_compra')) || ['MEUPDV123', 'PDV2026', 'VIPPDV'];
 
@@ -874,8 +895,8 @@
         document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
         document.getElementById('labelUsuarioLogado').innerText = `Acesso Master: ${sessaoAtiva.usuario}`;
         
-        // ATUALIZA A GUIA DO NAVEGADOR
-        document.title = `Master (${nomeFormatadoLoja}) - PDV Web`;
+        // TÍTULO LIMPO NA GUIA DO NAVEGADOR (SEM SUFIXO APÓS O NOME DA LOJA)
+        document.title = nomeFormatadoLoja;
 
         renderizarPainelAdminGeral();
       } else {
@@ -890,8 +911,8 @@
         document.getElementById('labelNomeLojaTopo').innerText = nomeFormatadoLoja;
         document.getElementById('labelUsuarioLogado').innerText = `Loja: ${nomeFormatadoLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil.toUpperCase()})`;
 
-        // ATUALIZA A GUIA DO NAVEGADOR COM O NOME DA LOJA LOGADA
-        document.title = `${nomeFormatadoLoja} - PDV Web`;
+        // TÍTULO LIMPO NA GUIA DO NAVEGADOR APENAS COM O NOME DA LOJA
+        document.title = nomeFormatadoLoja;
       }
 
       aplicarModoEscuro();
@@ -1006,8 +1027,8 @@
       const nomeFormatadoLoja = formatarNomeLojaPDV(lojaAtual.nomeLoja);
       document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
       
-      // ATUALIZA A GUIA DO NAVEGADOR
-      document.title = `${nomeFormatadoLoja} - PDV Web`;
+      // TÍTULO LIMPO NA GUIA DO NAVEGADOR
+      document.title = nomeFormatadoLoja;
 
       aplicarTemaVisualLoja(lojaAtual.corTema || 'blue');
       atualizarUrlLoja(lojaAtual.nomeLoja);
@@ -1199,7 +1220,7 @@
             <td class="p-2">R$ ${prod.venda.toFixed(2)}</td>
             <td class="p-2 font-bold">${prod.estoque} un.</td>
             <td class="p-2 font-bold text-indigo-700">R$ ${custoTotalItem.toFixed(2)}</td>
-            <td class="p-2 font-bold text-emerald-600">R$ ${lucroTotalItem.toFixed(2)}</td>
+            <td class="p-2 text-emerald-700 font-bold">R$ ${lucroTotalItem.toFixed(2)}</td>
             <td class="p-2 text-center"><button onclick="prepararEdicaoProduto(${prod.id})" class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">✏️ Editar</button></td>
           </tr>`;
       });
