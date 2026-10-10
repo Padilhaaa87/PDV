@@ -86,7 +86,6 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label>
-          <!-- CAMPO COM BOTÃO VER SENHA -->
           <div class="relative">
             <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500 pr-10">
             <button type="button" onclick="alternarVisibilidadeSenha('loginSenha', 'btnVerSenhaLogin')" id="btnVerSenhaLogin" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 text-sm font-semibold">
@@ -107,7 +106,7 @@
         </button>
       </form>
 
-      <!-- FORMULÁRIO DE CRIAÇÃO DE NOVA LOJA (COM CAMPO DE E-MAIL) -->
+      <!-- FORMULÁRIO DE CRIAÇÃO DE NOVA LOJA -->
       <form id="formCadastro" onsubmit="cadastrarLojaEUsuario(event)" class="space-y-4 hidden">
         <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 p-4 rounded-lg shadow-sm space-y-2">
           <div class="flex justify-between items-center border-b border-emerald-200 pb-2">
@@ -161,7 +160,7 @@
     </div>
   </div>
 
-  <!-- MODAL DE RECUPERAÇÃO DE PALAVRA-PASSE (SENHA) VIA E-MAIL -->
+  <!-- MODAL DE RECUPERAÇÃO DE PALAVRA-PASSE VIA E-MAIL -->
   <div id="modalRecuperacaoSenha" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl relative">
       <div class="flex justify-between items-center border-b pb-2">
@@ -169,7 +168,7 @@
         <button onclick="alternarModalRecuperacao(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
       </div>
       <p class="text-xs text-gray-600">
-        Informe o e-mail cadastrado do seu utilizador (Vendedor, Adm da Loja ou Master) para instruir a recuperação da sua palavra-passe.
+        Informe o e-mail cadastrado do seu utilizador para receber as instruções de recuperação da sua palavra-passe.
       </p>
       <form onsubmit="processarRecuperacaoSenha(event)" class="space-y-3">
         <div>
@@ -672,9 +671,10 @@
           <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
             <h2 id="tituloFormUsuario" class="text-xl font-bold text-gray-700 border-b pb-2">Cadastrar Vendedor / Utilizador</h2>
             <form id="formEdicaoUsuario" onsubmit="salvarNovoUsuarioLoja(event)" class="space-y-3">
+              <input type="hidden" id="editUsuarioOriginal" value="">
               <div><label class="block text-sm font-medium text-gray-700">Nome do Vendedor / Utilizador</label><input type="text" id="editUsuarioNome" required placeholder="Ex: joao_vendedor" class="w-full p-2 border rounded"></div>
               <div><label class="block text-sm font-medium text-gray-700">E-mail do Utilizador <span class="text-red-500">*</span></label><input type="email" id="editUsuarioEmail" required placeholder="vendedor@exemplo.com" class="w-full p-2 border rounded"></div>
-              <div><label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label><input type="password" id="editUsuarioSenha" required placeholder="••••••••" class="w-full p-2 border rounded"></div>
+              <div><label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label><input type="password" id="editUsuarioSenha" placeholder="Preencha apenas para alterar" class="w-full p-2 border rounded"></div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Perfil de Acesso</label>
                 <select id="editUsuarioPerfil" class="w-full p-2 border rounded">
@@ -682,7 +682,10 @@
                   <option value="admin">🏢 Administrador da Loja (Acesso Total)</option>
                 </select>
               </div>
-              <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded shadow">Cadastrar Vendedor</button>
+              <div class="flex gap-2">
+                <button type="submit" id="btnSalvarUsuarioForm" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded shadow">Cadastrar Vendedor</button>
+                <button type="button" id="btnCancelarEdicaoUsuario" onclick="cancelarEdicaoUsuario()" class="hidden w-1/3 bg-gray-400 hover:bg-gray-500 text-white py-2 rounded font-semibold">Cancelar</button>
+              </div>
             </form>
           </div>
 
@@ -693,7 +696,7 @@
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
-                <thead><tr class="bg-gray-100 border-b text-sm"><th class="p-3">Utilizador</th><th class="p-3">E-mail</th><th class="p-3">Perfil</th><th class="p-3 text-center">Ação</th></tr></thead>
+                <thead><tr class="bg-gray-100 border-b text-sm"><th class="p-3">Utilizador</th><th class="p-3">E-mail</th><th class="p-3">Perfil</th><th class="p-3 text-center">Ações</th></tr></thead>
                 <tbody id="tabelaAbaUsuarios"></tbody>
               </table>
             </div>
@@ -705,7 +708,7 @@
   </div>
 
   <script>
-    // FUNÇÃO PARA ALTERNAR A VISIBILIDADE DA PALAVRA-PASSE (VER SENHA)
+    // ALTERNAR VISIBILIDADE DA PALAVRA-PASSE
     function alternarVisibilidadeSenha(idInput, idBotao) {
       const input = document.getElementById(idInput);
       const btn = document.getElementById(idBotao);
@@ -718,7 +721,7 @@
       }
     }
 
-    // MODAL E LÓGICA DE RECUPERAÇÃO DE PALAVRA-PASSE (SENHA) VIA E-MAIL
+    // MODAL E RECUPERAÇÃO DE PALAVRA-PASSE
     function alternarModalRecuperacao(exibir) {
       const modal = document.getElementById('modalRecuperacaoSenha');
       if (exibir) {
@@ -732,31 +735,39 @@
     function processarRecuperacaoSenha(e) {
       e.preventDefault();
       const emailInformado = document.getElementById('emailRecuperacao').value.trim().toLowerCase();
-      
       const contaEncontrada = contasRegistradas.find(c => c.email && c.email.toLowerCase() === emailInformado);
 
       if (!contaEncontrada) {
         return alert('❌ Nenhum utilizador cadastrado foi encontrado com este e-mail!');
       }
 
-      // SIMULAÇÃO DO ENVIO DE INSTRUÇÕES DE RECUPERAÇÃO PARA O E-MAIL
       const assunto = encodeURIComponent(`Recuperação de Senha - PDV Web`);
-      const corpo = encodeURIComponent(`Olá, ${contaEncontrada.usuario}!\n\nRecebemos uma solicitação de recuperação de senha para a sua conta no PDV Web.\n\nA sua palavra-passe (senha) atual é: ${contaEncontrada.senha}\n\nAtenciosamente,\nEquipe PDV Web.`);
+      const corpo = encodeURIComponent(`Olá, ${contaEncontrada.usuario}!\n\nA sua palavra-passe (senha) atual é: ${contaEncontrada.senha}\n\nAtenciosamente,\nEquipe PDV Web.`);
 
-      // TENTA ABRIR O CLIENTE DE E-MAIL PADRÃO
       window.location.href = `mailto:${contaEncontrada.email}?subject=${assunto}&body=${corpo}`;
-
-      alert(`📧 Instruções enviadas!\n\nSua senha foi recuperada e enviada para o e-mail: ${contaEncontrada.email}\n(Sua senha atual é: ${contaEncontrada.senha})`);
+      alert(`📧 Instruções enviadas!\nSua palavra-passe atual é: ${contaEncontrada.senha}`);
       alternarModalRecuperacao(false);
     }
 
     // LISTA DE CÓDIGOS DE COMPRA VÁLIDOS
     let codigosCompraValidos = JSON.parse(localStorage.getItem('pdv_codigos_compra')) || ['MEUPDV123', 'PDV2026', 'VIPPDV'];
 
-    // CONTA MASTER PADRÃO (INCLUI E-MAIL DEFAULT)
+    // LOJA BASE MASTER PADRÃO
     let lojas = JSON.parse(localStorage.getItem('pdv_lojas')) || [];
+    if (!lojas.some(l => l.id === 'LOJA_MASTER_BASE')) {
+      lojas.unshift({
+        id: 'LOJA_MASTER_BASE',
+        nomeLoja: 'Loja Base Master (Demonstração)',
+        codigoUsado: 'MASTER',
+        corTema: 'purple',
+        dataCriacao: new Date().toISOString()
+      });
+      localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
+    }
+
+    // CONTA MASTER VINCULADA À LOJA BASE MASTER
     let contasRegistradas = JSON.parse(localStorage.getItem('pdv_contas')) || [
-      { usuario: 'master', senha: '123', email: 'master@pdvweb.com', perfil: 'superadmin', lojaId: null }
+      { usuario: 'master', senha: '123', email: 'master@pdvweb.com', perfil: 'superadmin', lojaId: 'LOJA_MASTER_BASE' }
     ];
     let sessaoAtiva = JSON.parse(localStorage.getItem('pdv_sessao_ativa')) || null;
 
@@ -769,7 +780,7 @@
     let vendas = [];
     let carrinho = [];
 
-    // MODO ESCURO (DARK MODE)
+    // MODO ESCURO
     let modoEscuroAtivo = localStorage.getItem('pdv_modo_escuro') === 'true';
 
     function aplicarModoEscuro() {
@@ -794,7 +805,7 @@
       aplicarModoEscuro();
     }
 
-    // ALTERAÇÃO DE PALETA DE COR DA LOJA
+    // TEMAS
     const mapaCores = {
       blue: { header: 'bg-blue-700', nav: 'bg-blue-800' },
       emerald: { header: 'bg-emerald-700', nav: 'bg-emerald-800' },
@@ -814,7 +825,7 @@
     }
 
     function alterarTemaLoja(corKey) {
-      if (!lojaAtual || lojaAtual.id === 'GLOBAL') return;
+      if (!lojaAtual) return;
       lojaAtual.corTema = corKey;
       
       const idx = lojas.findIndex(l => l.id === lojaAtual.id);
@@ -827,19 +838,12 @@
       alert('🎨 Tema de cores da loja atualizado!');
     }
 
-    // ALTERAÇÃO DO NOME DA LOJA PELO ADMINISTRADOR DA LOJA
     function alterarNomeLojaAtual() {
       const input = document.getElementById('inputNovoNomeLoja');
       const novoNome = input.value.trim();
-
-      if (!novoNome) {
-        return alert('Por favor, informe o novo nome da loja!');
-      }
-
-      if (!lojaAtual || lojaAtual.id === 'GLOBAL') return;
+      if (!novoNome || !lojaAtual) return alert('Por favor, informe o novo nome da loja!');
 
       lojaAtual.nomeLoja = novoNome;
-
       const idx = lojas.findIndex(l => l.id === lojaAtual.id);
       if (idx !== -1) {
         lojas[idx].nomeLoja = novoNome;
@@ -852,11 +856,9 @@
 
       document.title = nomeFormatadoLoja;
       atualizarUrlLoja(novoNome);
-
       alert(`✅ Nome da loja atualizado para "${nomeFormatadoLoja}" com sucesso!`);
     }
 
-    // RENOMEAR LOJA PELO USUÁRIO MASTER (SUPER ADMIN)
     function renomearLojaMaster(idLoja) {
       const loja = lojas.find(l => l.id === idLoja);
       if (!loja) return;
@@ -877,7 +879,6 @@
       alert(`✅ Loja renomeada para "${formatarNomeLojaPDV(novoNome.trim())}"!`);
     }
 
-    // ATUALIZAR A BARRA DE URL E O TÍTULO DA GUIA DO NAVEGADOR
     function atualizarUrlLoja(nomeLoja) {
       if (!nomeLoja) return;
       const slug = nomeLoja.toLowerCase().replace(/[^a-z0-9]/g, '-');
@@ -885,7 +886,6 @@
       window.history.pushState({ path: novaUrl }, '', novaUrl);
     }
 
-    // CONTROLADOR DA TELA DE LOGIN CATEGORIZADA
     function selecionarTipoAcesso(tipo) {
       document.getElementById('tipoAcessoSelecionado').value = tipo;
 
@@ -928,7 +928,6 @@
       }
     }
 
-    // REGISTO DE NOVA LOJA COM E-MAIL OBRIGATÓRIO
     function cadastrarLojaEUsuario(e) {
       e.preventDefault();
       const codigoCompraInput = document.getElementById('cadCodigoCompra').value.trim().toUpperCase();
@@ -938,7 +937,7 @@
       const senha = document.getElementById('cadSenha').value;
 
       if (!codigosCompraValidos.includes(codigoCompraInput)) {
-        return alert('❌ Código de Compra inválido! Entre em contato via WhatsApp (42 98869-1426) para adquirir o seu código por R$ 20,00.');
+        return alert('❌ Código de Compra inválido! Entre em contato via WhatsApp (42 98869-1426) para adquirir o seu código.');
       }
 
       if (contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase())) {
@@ -958,7 +957,6 @@
       iniciarSessao(novaConta);
     }
 
-    // VALIDAÇÃO E BLOQUEIO DE ACESSO
     function fazerLogin(e) {
       e.preventDefault();
       const u = document.getElementById('loginUsuario').value.trim();
@@ -973,28 +971,24 @@
       }
 
       if (tipo === 'adminLoja' && conta.perfil === 'vendedor') {
-        return alert('⛔ ACESSO NEGADO!\nContas com perfil de Vendedor só podem aceder ao sistema pela aba "🛒 Vendedor".');
+        return alert('⛔ ACESSO NEGADO!\nContas com perfil de Vendedor só podem aceder pela aba "🛒 Vendedor".');
       }
 
       iniciarSessao(conta);
     }
 
     function carregarDadosLoja(lojaId) {
-      if (!lojaId) {
-        lojaAtual = { id: 'GLOBAL', nomeLoja: 'Painel Master', corTema: 'purple' };
-        produtos = []; clientes = []; caixa = { aberto: false }; historicoCaixas = []; vendas = [];
-        return;
-      }
-      lojaAtual = lojas.find(l => l.id === lojaId) || { id: lojaId, nomeLoja: 'PDV Web', corTema: 'blue' };
-      produtos = JSON.parse(localStorage.getItem(`pdv_produtos_${lojaId}`)) || [];
-      clientes = JSON.parse(localStorage.getItem(`pdv_clientes_${lojaId}`)) || [];
-      caixa = JSON.parse(localStorage.getItem(`pdv_caixa_${lojaId}`)) || { aberto: false, inicial: 0, entradas: 0, dinheiro: 0, pix: 0, cartao: 0, fiado: 0 };
-      historicoCaixas = JSON.parse(localStorage.getItem(`pdv_historico_caixas_${lojaId}`)) || [];
-      vendas = JSON.parse(localStorage.getItem(`pdv_vendas_${lojaId}`)) || [];
+      const idFinal = lojaId || 'LOJA_MASTER_BASE';
+      lojaAtual = lojas.find(l => l.id === idFinal) || { id: idFinal, nomeLoja: 'Loja Base Master', corTema: 'purple' };
+      produtos = JSON.parse(localStorage.getItem(`pdv_produtos_${idFinal}`)) || [];
+      clientes = JSON.parse(localStorage.getItem(`pdv_clientes_${idFinal}`)) || [];
+      caixa = JSON.parse(localStorage.getItem(`pdv_caixa_${idFinal}`)) || { aberto: false, inicial: 0, entradas: 0, dinheiro: 0, pix: 0, cartao: 0, fiado: 0 };
+      historicoCaixas = JSON.parse(localStorage.getItem(`pdv_historico_caixas_${idFinal}`)) || [];
+      vendas = JSON.parse(localStorage.getItem(`pdv_vendas_${idFinal}`)) || [];
     }
 
     function salvarDadosLoja() {
-      if (!lojaAtual || lojaAtual.id === 'GLOBAL') return;
+      if (!lojaAtual) return;
       const id = lojaAtual.id;
       localStorage.setItem(`pdv_produtos_${id}`, JSON.stringify(produtos));
       localStorage.setItem(`pdv_clientes_${id}`, JSON.stringify(clientes));
@@ -1019,15 +1013,13 @@
         document.querySelectorAll('.admin-geral-only').forEach(el => el.classList.remove('hidden'));
         document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
         
-        if (lojas.length > 0 && !lojaAtual) carregarDadosLoja(lojas[0].id);
-        else carregarDadosLoja(sessaoAtiva.lojaId);
+        carregarDadosLoja(sessaoAtiva.lojaId || 'LOJA_MASTER_BASE');
 
         const nomeFormatadoLoja = formatarNomeLojaPDV(lojaAtual.nomeLoja);
         document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
         document.getElementById('labelUsuarioLogado').innerText = `Acesso Master: ${sessaoAtiva.usuario}`;
         
         document.title = "PDV MASTER";
-
         renderizarPainelAdminGeral();
       } else {
         document.querySelectorAll('.admin-geral-only').forEach(el => el.classList.add('hidden'));
@@ -1061,13 +1053,10 @@
       localStorage.removeItem('pdv_sessao_ativa');
       document.getElementById('appPrincipal').classList.add('oculto-autenticacao');
       document.getElementById('telaAutenticacao').classList.remove('hidden');
-      
       document.title = "PDV Web - Autenticação";
-
       selecionarTipoAcesso('vendedor');
     }
 
-    // RENDERING DO PAINEL ADMIN GERAL
     function renderizarPainelAdminGeral() {
       renderizarCodigosCompra();
       const tbodyLojas = document.getElementById('tabelaLojasAdminGeral');
@@ -1159,7 +1148,6 @@
       carregarDadosLoja(idLoja);
       const nomeFormatadoLoja = formatarNomeLojaPDV(lojaAtual.nomeLoja);
       document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
-      
       document.title = nomeFormatadoLoja;
 
       aplicarTemaVisualLoja(lojaAtual.corTema || 'blue');
@@ -1197,7 +1185,7 @@
       }
     }
 
-    // UTILIZADORES E VENDEDORES DA LOJA (COM REGISTO DE E-MAIL)
+    // UTILIZADORES E VENDEDORES DA LOJA (COM EDIÇÃO DE DADOS COMPLETA)
     function renderizarTabelaUsuarios() {
       const tbody = document.getElementById('tabelaAbaUsuarios');
       const usuariosLoja = contasRegistradas.filter(c => c.lojaId === lojaAtual.id);
@@ -1212,26 +1200,67 @@
             <td class="p-3 font-semibold text-gray-800">${conta.usuario}</td>
             <td class="p-3 text-xs text-gray-600">${conta.email || 'Não informado'}</td>
             <td class="p-3">${badgePerfil}</td>
-            <td class="p-3 text-center">
+            <td class="p-3 text-center space-x-2">
+              <button onclick="prepararEdicaoUsuario('${conta.usuario}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-1 rounded text-xs">✏️ Editar</button>
               <button onclick="removerUsuarioLoja('${conta.usuario}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-2 py-1 rounded text-xs">🗑️ Excluir</button>
             </td>
           </tr>`;
       });
     }
 
+    function prepararEdicaoUsuario(nomeUsuario) {
+      const conta = contasRegistradas.find(c => c.usuario === nomeUsuario);
+      if (!conta) return;
+
+      document.getElementById('editUsuarioOriginal').value = conta.usuario;
+      document.getElementById('editUsuarioNome').value = conta.usuario;
+      document.getElementById('editUsuarioEmail').value = conta.email || '';
+      document.getElementById('editUsuarioSenha').value = '';
+      document.getElementById('editUsuarioPerfil').value = conta.perfil;
+
+      document.getElementById('tituloFormUsuario').innerText = "✏️ Editar Utilizador / Vendedor";
+      document.getElementById('btnSalvarUsuarioForm').innerText = "💾 Salvar Alterações";
+      document.getElementById('btnCancelarEdicaoUsuario').classList.remove('hidden');
+    }
+
+    function cancelarEdicaoUsuario() {
+      document.getElementById('editUsuarioOriginal').value = "";
+      document.getElementById('formEdicaoUsuario').reset();
+      document.getElementById('tituloFormUsuario').innerText = "Cadastrar Vendedor / Utilizador";
+      document.getElementById('btnSalvarUsuarioForm').innerText = "Cadastrar Vendedor";
+      document.getElementById('btnCancelarEdicaoUsuario').classList.add('hidden');
+    }
+
     function salvarNovoUsuarioLoja(e) {
       e.preventDefault();
+      const original = document.getElementById('editUsuarioOriginal').value;
       const usuario = document.getElementById('editUsuarioNome').value.trim();
       const email = document.getElementById('editUsuarioEmail').value.trim();
       const senha = document.getElementById('editUsuarioSenha').value;
       const perfil = document.getElementById('editUsuarioPerfil').value;
 
-      if (contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase())) return alert('Este utilizador já existe!');
+      if (original) {
+        // EDIÇÃO DE UTILIZADOR
+        const conta = contasRegistradas.find(c => c.usuario === original);
+        if (conta) {
+          conta.usuario = usuario;
+          conta.email = email;
+          if (senha) conta.senha = senha;
+          conta.perfil = perfil;
+        }
+        alert(`✅ Dados do utilizador "${usuario}" atualizados com sucesso!`);
+      } else {
+        // CADASTRO DE NOVO UTILIZADOR
+        if (!senha) return alert('Por favor, informe a palavra-passe para o novo utilizador!');
+        if (contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase())) {
+          return alert('Este utilizador já existe!');
+        }
+        contasRegistradas.push({ usuario, email, senha, perfil, lojaId: lojaAtual.id });
+        alert(`Vendedor / Utilizador "${usuario}" cadastrado com sucesso!`);
+      }
 
-      contasRegistradas.push({ usuario, email, senha, perfil, lojaId: lojaAtual.id });
       localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
-      alert(`Vendedor / Utilizador "${usuario}" cadastrado com sucesso!`);
-      document.getElementById('formEdicaoUsuario').reset();
+      cancelarEdicaoUsuario();
       renderizarTabelaUsuarios();
     }
 
