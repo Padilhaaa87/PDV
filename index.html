@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Caixa Detalhado com Estorno Automático</title>
+  <title>PDV Web - Cadastro Rápido e Exclusão de Clientes</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -117,9 +117,15 @@
               </div>
 
               <div>
-                <label class="block text-sm font-medium mb-1">
-                  Cliente <span id="labelClienteOpcional" class="text-xs text-gray-400">(Opcional para À Vista)</span>
-                </label>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="block text-sm font-medium">
+                    Cliente <span id="labelClienteOpcional" class="text-xs text-gray-400">(Opcional para À Vista)</span>
+                  </label>
+                  <!-- BOTÃO DE ADICIONAR NOVO CLIENTE DIRETO NA VENDA -->
+                  <button onclick="cadastrarClienteRapido()" class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold px-2 py-0.5 rounded transition">
+                    ➕ Novo Cliente
+                  </button>
+                </div>
                 <select id="selectClienteVenda" class="w-full p-2 border rounded">
                   <option value="">-- Nenhum cliente (Venda Avulsa) --</option>
                 </select>
@@ -162,7 +168,7 @@
         </div>
       </section>
 
-      <!-- ABA 3: CONTROLE DE CAIXA COM RELATÓRIO DETALHADO POR PAGAMENTO -->
+      <!-- ABA 3: CONTROLE DE CAIXA -->
       <section id="controleCaixa" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -184,7 +190,6 @@
             <div class="space-y-3">
               <div class="flex justify-between py-2 border-b"><span>Fundo Inicial (Troco):</span><span class="font-bold">R$ <span id="resumoInicial">0,00</span></span></div>
               
-              <!-- RELATÓRIO DETALHADO POR FORMA DE PAGAMENTO -->
               <div class="bg-gray-50 p-3 rounded-lg border space-y-2 text-sm">
                 <span class="font-bold text-xs uppercase text-gray-500 block mb-1">Entradas por Categoria</span>
                 <div class="flex justify-between text-green-700"><span>💵 Dinheiro:</span><span class="font-bold">R$ <span id="caixaDinheiro">0,00</span></span></div>
@@ -362,7 +367,6 @@
     let produtos = JSON.parse(localStorage.getItem('pdv_produtos')) || [];
     let clientes = JSON.parse(localStorage.getItem('pdv_clientes')) || [];
     
-    // CAIXA ESTRUTURADO COM CATEGORIAS DETALHADAS DE PAGAMENTO
     let caixa = JSON.parse(localStorage.getItem('pdv_caixa')) || { 
       aberto: false, 
       inicial: 0, 
@@ -516,7 +520,7 @@
       document.getElementById('btnSalvarEdicaoUsuario').disabled = true;
     }
 
-    // --- MÓDULO CLIENTES, RELATÓRIO COMPLETO & ESTORNOS ---
+    // --- MÓDULO CLIENTES, CADASTRO RÁPIDO E EXCLUSÃO DE CLIENTES ---
     function alternarCampoLimite(cb) {
       const input = document.getElementById('cliLimite');
       input.value = ''; input.disabled = cb.checked;
@@ -546,6 +550,61 @@
 
       localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
       cancelarEdicaoCliente();
+      renderizarClientes();
+      carregarOpcoesClientesVenda();
+    }
+
+    // CADASTRO RÁPIDO DE CLIENTE DIRETO DA FRENTE DE CAIXA
+    function cadastrarClienteRapido() {
+      const nome = prompt("Digite o NOME COMPLETO do novo cliente:");
+      if (!nome || !nome.trim()) return;
+
+      const telefone = prompt("Digite o TELEFONE de contato (Opcional):") || "Não informado";
+      const limiteStr = prompt("Digite o LIMITE DE CRÉDITO para fiado (R$):\n(Deixe em branco para ilimitado ou sem limite)", "0");
+      
+      let limite = 0;
+      let ilimitado = false;
+
+      if (limiteStr === null) return;
+      if (limiteStr.trim() === "" || parseFloat(limiteStr) === 0) {
+        ilimitado = true;
+      } else {
+        limite = parseFloat(limiteStr) || 0;
+      }
+
+      const novoCliente = {
+        id: Date.now(),
+        nome: nome.trim(),
+        telefone: telefone.trim(),
+        limite: limite,
+        limiteIlimitado: ilimitado,
+        saldoDevedor: 0,
+        historicoTransacoes: []
+      };
+
+      clientes.push(novoCliente);
+      localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
+
+      carregarOpcoesClientesVenda();
+      document.getElementById('selectClienteVenda').value = novoCliente.id;
+      alert(`Cliente "${novoCliente.nome}" cadastrado com sucesso e selecionado para a venda!`);
+    }
+
+    // EXCLUIR CLIENTE DO CADASTRO
+    function excluirCliente(idCliente) {
+      const cli = clientes.find(c => c.id === idCliente);
+      if (!cli) return;
+
+      if (cli.saldoDevedor > 0) {
+        return alert(`Não é possível excluir o cliente "${cli.nome}" pois ele possui um saldo devedor pendente de R$ ${cli.saldoDevedor.toFixed(2)}.\nDê baixa no pagamento ou estorne as compras antes de excluir.`);
+      }
+
+      if (!confirm(`Tem certeza de que deseja excluir o cliente "${cli.nome}" do sistema?`)) return;
+
+      clientes = clientes.filter(c => c.id !== idCliente);
+      localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
+
+      alert(`Cliente "${cli.nome}" removido com sucesso!`);
       renderizarClientes();
       carregarOpcoesClientesVenda();
     }
@@ -632,12 +691,15 @@
             </div>
             ${htmlFiado}
             ${htmlVista}
-            <div class="pt-2 border-t flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div class="pt-2 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
               <div class="flex items-center gap-2 w-full">
                 <input type="number" id="inputAbater_${cli.id}" step="0.01" placeholder="Valor a abater (R$)" class="p-2 border rounded text-sm w-full">
                 <button onclick="receberPagamentoCliente(${cli.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">💵 Dar Baixa</button>
               </div>
-              <button onclick="prepararEdicaoCliente(${cli.id})" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">✏️ Editar Dados</button>
+              <div class="flex items-center gap-2">
+                <button onclick="prepararEdicaoCliente(${cli.id})" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">✏️ Editar</button>
+                <button onclick="excluirCliente(${cli.id})" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">🗑️ Excluir</button>
+              </div>
             </div>
           </div>`;
       });
@@ -653,7 +715,6 @@
       const compra = cli.historicoTransacoes[idxTrans];
       if (!confirm(`Deseja estornar esta compra no valor de R$ ${compra.valor.toFixed(2)} do cliente ${cli.nome}?\n(Produtos voltarão ao estoque e o caixa será ajustado)`)) return;
 
-      // Restaura o estoque
       if (compra.itens && Array.isArray(compra.itens)) {
         compra.itens.forEach(item => {
           const prod = produtos.find(p => p.id === item.id);
@@ -662,13 +723,11 @@
         localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
       }
 
-      // Estorno no caixa e saldo do cliente de acordo com a forma de pagamento
       if (compra.tipo === 'compra') {
         cli.saldoDevedor = Math.max(0, cli.saldoDevedor - compra.valor);
         caixa.fiado = Math.max(0, (caixa.fiado || 0) - compra.valor);
       } else if (compra.tipo === 'compra_vista') {
         caixa.entradas = Math.max(0, caixa.entradas - compra.valor);
-        // Tenta identificar e subtrair das categorias do caixa
         const vendaGeral = vendas.find(v => v.data === dataTransacao);
         if (vendaGeral) {
           if (vendaGeral.tipoPagamento === 'vista_dinheiro') caixa.dinheiro = Math.max(0, (caixa.dinheiro || 0) - compra.valor);
@@ -705,7 +764,7 @@
       cliente.historicoTransacoes.push({ data: new Date().toISOString(), tipo: 'pagamento_fiado', valor: valorAbatido });
 
       caixa.entradas += valorAbatido;
-      caixa.dinheiro = (caixa.dinheiro || 0) + valorAbatido; // Recebimento de fiado soma no caixa dinheiro
+      caixa.dinheiro = (caixa.dinheiro || 0) + valorAbatido;
       localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
       localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
 
@@ -891,7 +950,6 @@
       else { label.innerText = "(Opcional para À Vista)"; label.className = "text-xs text-gray-400"; }
     }
 
-    // PROCESSAMENTO DE VENDAS COM CONTROLE DETALHADO DO CAIXA
     function finalizarVenda() {
       if (carrinho.length === 0) return alert('Carrinho vazio!');
       if (!caixa.aberto) return alert('Caixa fechado!');
@@ -911,7 +969,6 @@
       let detalhe = `${rotuloForma} (Avulsa)`;
       const itensComprados = carrinho.map(i => ({ id: i.id, nome: i.nome, qtd: i.qtd }));
 
-      // 1. SOMA AO CAIXA DE ACORDO COM A FORMA DE PAGAMENTO SELECIONADA
       if (formaSelec === 'vista_dinheiro') {
         caixa.dinheiro = (caixa.dinheiro || 0) + totalVenda;
         caixa.entradas += totalVenda;
@@ -945,7 +1002,6 @@
         localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
       }
 
-      // ABATIMENTO DE ESTOQUE
       carrinho.forEach(item => {
         const prod = produtos.find(p => p.id === item.id);
         if (prod) prod.estoque = Math.max(0, prod.estoque - item.qtd);
@@ -991,14 +1047,12 @@
       });
     }
 
-    // ESTORNO NA ÁREA DE VENDAS - DEDUZ O VALOR DO CAIXA POR CATEGORIA AUTOMATICAMENTE
     function excluirVendaIndividual(idVenda) {
       const venda = vendas.find(v => v.id === idVenda);
       if (!venda) return;
 
       if (!confirm(`Deseja estornar esta venda no valor de R$ ${venda.totalVenda.toFixed(2)}?\n(O valor será descontado do caixa e os produtos devolvidos)`)) return;
 
-      // 1. Devolver produtos ao estoque
       if (venda.itens && Array.isArray(venda.itens)) {
         venda.itens.forEach(item => {
           const prod = produtos.find(p => p.id === item.id);
@@ -1007,7 +1061,6 @@
         localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
       }
 
-      // 2. Deduzir do caixa de acordo com o tipo de pagamento da venda
       if (venda.tipoPagamento === 'vista_dinheiro') {
         caixa.dinheiro = Math.max(0, (caixa.dinheiro || 0) - venda.totalVenda);
         caixa.entradas = Math.max(0, caixa.entradas - venda.totalVenda);
@@ -1022,7 +1075,6 @@
       }
       localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
 
-      // 3. Remover do histórico do cliente
       if (venda.clienteId) {
         const cli = clientes.find(c => c.id === venda.clienteId);
         if (cli && cli.historicoTransacoes) {
@@ -1038,7 +1090,6 @@
         }
       }
 
-      // 4. Remover da lista geral de vendas
       vendas = vendas.filter(v => v.id !== idVenda);
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
@@ -1135,7 +1186,6 @@
         document.getElementById('formAberturaCaixa').classList.remove('hidden'); document.getElementById('formOperacoesCaixa').classList.add('hidden');
       }
 
-      // ATUALIZA OS VALORES POR FORMA DE PAGAMENTO NO PAINEL DO CAIXA
       document.getElementById('resumoInicial').innerText = (caixa.inicial || 0).toFixed(2);
       document.getElementById('caixaDinheiro').innerText = (caixa.dinheiro || 0).toFixed(2);
       document.getElementById('caixaPix').innerText = (caixa.pix || 0).toFixed(2);
