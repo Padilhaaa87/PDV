@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Login Categorizado & Multi-Loja</title>
+  <title>PDV Web - Sistema Multi-Loja & Licenciamento</title>
   <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -22,7 +22,7 @@
         <p class="text-gray-500 text-sm mt-1">Selecione o seu tipo de acesso para entrar</p>
       </div>
 
-      <!-- SELETOR DE PERFIL DE LOGIN -->
+      <!-- SELETOR DE PERFIL DE LOGIN E CADASTRO -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-1 border-b pb-2 text-xs font-bold text-center">
         <button onclick="selecionarTipoAcesso('vendedor')" id="btnAcessoVendedor" class="py-2 px-1 rounded bg-blue-600 text-white shadow">🛒 Vendedor</button>
         <button onclick="selecionarTipoAcesso('adminLoja')" id="btnAcessoAdminLoja" class="py-2 px-1 rounded text-gray-600 hover:bg-gray-100">🏢 Adm Loja</button>
@@ -47,19 +47,39 @@
           <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <button type="submit" id="btnSubmitLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">
-          Acessar como Vendedor
+          Acessar Loja como Vendedor
         </button>
       </form>
 
-      <!-- FORMULÁRIO DE CRIAÇÃO DE NOVA LOJA -->
+      <!-- FORMULÁRIO DE CRIAÇÃO DE NOVA LOJA COM INFORMAÇÃO DE COMPRA E TELEFONE -->
       <form id="formCadastro" onsubmit="cadastrarLojaEUsuario(event)" class="space-y-4 hidden">
-        <div class="bg-emerald-50 p-3 rounded border border-emerald-200 text-xs text-emerald-800 font-semibold">
-          🏪 <strong>Cadastro de Nova Loja:</strong> Informe seu Código de Compra / Licença para registrar a sua loja do zero.
+        
+        <!-- BANNER DE COMPRA DO SISTEMA COM VALOR E TELEFONE -->
+        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 p-4 rounded-lg shadow-sm space-y-2">
+          <div class="flex justify-between items-center border-b border-emerald-200 pb-2">
+            <span class="text-xs font-bold uppercase text-emerald-800">🚀 Adquira o Sistema PDV Web</span>
+            <span class="bg-emerald-600 text-white text-xs font-extrabold px-2.5 py-1 rounded-full shadow">Apenas R$ 20,00</span>
+          </div>
+          <p class="text-xs text-gray-700">
+            Adquira a sua licença de uso para criar a sua loja com acesso ilimitado.
+          </p>
+          <div class="pt-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+              <span class="text-[11px] text-gray-500 block font-semibold">Compre pelo Telefone / WhatsApp:</span>
+              <a href="https://wa.me/5542988691426?text=Ol%C3%A1!%20Gostaria%20de%20comprar%20o%20sistema%20PDV%20Web%20por%20R%24%2020%2C00%20e%20obter%20meu%20C%C3%B3digo%20de%20Compra." target="_blank" class="text-sm font-bold text-emerald-700 hover:text-emerald-900 underline flex items-center gap-1">
+                📱 (42) 98869-1426
+              </a>
+            </div>
+            <a href="https://wa.me/5542988691426?text=Ol%C3%A1!%20Gostaria%20de%20comprar%20o%20sistema%20PDV%20Web%20por%20R%24%2020%2C00%20e%20obter%20meu%20C%C3%B3digo%20de%20Compra." target="_blank" class="w-full sm:w-auto text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded shadow transition">
+              💬 Comprar via WhatsApp
+            </a>
+          </div>
         </div>
+
         <div>
           <label class="block text-sm font-medium text-gray-700">Código de Compra / Licença <span class="text-red-500">*</span></label>
           <input type="text" id="cadCodigoCompra" required placeholder="Ex: MEUPDV123" class="w-full p-3 border rounded font-mono uppercase bg-amber-50 border-amber-300 outline-none focus:ring-2 focus:ring-amber-500">
-          <span class="text-[11px] text-gray-500 mt-0.5 block">Exemplo padrão para testes: <code>MEUPDV123</code></span>
+          <span class="text-[11px] text-gray-500 mt-0.5 block">Informe o código recebido após a compra de R$ 20,00 (Ex para testes: <code>MEUPDV123</code>)</span>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Nome da Sua Loja <span class="text-red-500">*</span></label>
@@ -126,7 +146,7 @@
         <!-- SEÇÃO DE GERAÇÃO DE NOVOS CÓDIGOS DE COMPRA -->
         <div class="bg-white p-6 rounded-lg shadow-md space-y-4 border-l-4 border-amber-500">
           <h3 class="text-lg font-bold text-gray-700">🔑 Gerenciador de Códigos de Compra / Licenças</h3>
-          <p class="text-xs text-gray-500">Crie novos códigos de acesso para fornecer aos seus clientes após a compra do sistema.</p>
+          <p class="text-xs text-gray-500">Crie novos códigos de acesso para fornecer aos seus clientes após a compra de R$ 20,00.</p>
           
           <div class="flex flex-col sm:flex-row gap-2">
             <input type="text" id="novoCodigoCompra" placeholder="Digite um novo código (ex: MEUPDV2026)" class="p-2 border rounded font-mono uppercase w-full">
@@ -559,7 +579,6 @@
       const boxOrientacao = document.getElementById('boxOrientacaoAcesso');
       const btnSubmit = document.getElementById('btnSubmitLogin');
 
-      // RESET DE ESTILOS
       [btnVendedor, btnAdminLoja, btnAdminMaster, btnCadastro].forEach(b => b.className = "py-2 px-1 rounded text-gray-600 hover:bg-gray-100");
 
       if (tipo === 'vendedor') {
@@ -598,7 +617,7 @@
       const senha = document.getElementById('cadSenha').value;
 
       if (!codigosCompraValidos.includes(codigoCompraInput)) {
-        return alert('❌ Código de Compra inválido! Verifique a licença informada.');
+        return alert('❌ Código de Compra inválido! Entre em contato via WhatsApp (42 98869-1426) para adquirir o seu código por R$ 20,00.');
       }
 
       if (contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase())) {
@@ -789,7 +808,7 @@
       const usuariosLoja = contasRegistradas.filter(c => c.lojaId === lojaAtual.id);
       document.getElementById('qtdTotalUsuarios').innerText = usuariosLoja.length;
       tbody.innerHTML = '';
-      usuariosLoja.forEach((conta, idx) => {
+      usuariosLoja.forEach((conta) => {
         const badgePerfil = conta.perfil === 'admin' 
           ? `<span class="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded">👑 Administrador</span>`
           : `<span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">👤 Vendedor</span>`;
