@@ -1,4 +1,4 @@
-\<!DOCTYPE html>
+]<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -895,8 +895,8 @@
         document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
         document.getElementById('labelUsuarioLogado').innerText = `Acesso Master: ${sessaoAtiva.usuario}`;
         
-        // TÍTULO LIMPO NA GUIA DO NAVEGADOR (SEM SUFIXO APÓS O NOME DA LOJA)
-        document.title = nomeFormatadoLoja;
+        // EXIBE ESPECIFICAMENTE "PDV MASTER" NA GUIA DO NAVEGADOR QUANDO O UTILIZADOR É MASTER
+        document.title = "PDV MASTER";
 
         renderizarPainelAdminGeral();
       } else {
@@ -930,7 +930,7 @@
       document.getElementById('appPrincipal').classList.add('oculto-autenticacao');
       document.getElementById('telaAutenticacao').classList.remove('hidden');
       
-      // RESTAURA O TÍTULO PADRÃO DA GUIA DO NAVEGADOR
+      // RESTAURA O TÍTULO PADRÃO DA GUIA DO NAVEGADOR NA TELA DE LOGIN
       document.title = "PDV Web - Autenticação";
 
       selecionarTipoAcesso('vendedor');
@@ -1027,7 +1027,7 @@
       const nomeFormatadoLoja = formatarNomeLojaPDV(lojaAtual.nomeLoja);
       document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
       
-      // TÍTULO LIMPO NA GUIA DO NAVEGADOR
+      // AO VISUALIZAR UMA LOJA ESPECÍFICA NO MODO MASTER, ATUALIZA PARA O NOME DA LOJA
       document.title = nomeFormatadoLoja;
 
       aplicarTemaVisualLoja(lojaAtual.corTema || 'blue');
@@ -1059,7 +1059,11 @@
       if (idAba === 'controleCaixa') { atualizarUICaixa(); }
       if (idAba === 'relatorios') { carregarOpcoesMesesRelatorio(); renderizarRelatorios(); }
       if (idAba === 'usuarios') renderizarTabelaUsuarios();
-      if (idAba === 'adminGeral') renderizarPainelAdminGeral();
+      if (idAba === 'adminGeral') {
+        renderizarPainelAdminGeral();
+        // AO RETORNAR PARA A ABA MASTER, ATUALIZA A GUIA PARA "PDV MASTER"
+        if (sessaoAtiva && sessaoAtiva.perfil === 'superadmin') document.title = "PDV MASTER";
+      }
     }
 
     // UTILIZADORES E VENDEDORES DA LOJA
