@@ -124,3 +124,6 @@ if (venda.tipoPagamento === 'vista_dinheiro') {
   caixa.dinheiro = Math.max(0, caixa.dinheiro - venda.totalVenda);
   caixa.entradas = Math.max(0, caixa.entradas - venda.totalVenda);
 }
+  let contasRegistradas = JSON.parse(localStorage.getItem('pdv_contas')) || [
+  { usuario: 'master', senha: '123', perfil: 'superadmin', lojaId: null }
+];
