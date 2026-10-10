@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Estorno com Devolução Automática ao Estoque</title>
+  <title>PDV Web - Sincronização de Estornos e Relatório de Clientes</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -137,7 +137,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-4">
             <div>
               <h2 class="text-xl font-bold text-gray-700">Registro Geral de Vendas</h2>
-              <p class="text-xs text-gray-500">Consulte todas as vendas realizadas e estorne registos individuais com devolução de estoque</p>
+              <p class="text-xs text-gray-500">Ao estornar uma venda aqui, ela será removida do estoque, caixa e da ficha do cliente automaticamente!</p>
             </div>
             <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
               Total Registrado: <span id="qtdTotalVendas">0</span> vendas
@@ -243,7 +243,7 @@
         </div>
       </section>
 
-      <!-- ABA 5: CLIENTES & FIADOS -->
+      <!-- ABA 5: CLIENTES & RELATÓRIO DE COMPRAS (FIADO E À VISTA) -->
       <section id="clientes" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -265,7 +265,7 @@
           </div>
 
           <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Controle de Fiados e Histórico de Compras</h2>
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Gestão de Clientes e Relatório Detalhado de Compras</h2>
             <div id="listaClientes" class="space-y-4"></div>
           </div>
         </div>
@@ -429,7 +429,7 @@
       if (idAba === 'usuarios') renderizarTabelaUsuarios();
     }
 
-    // --- MÓDULO EXCLUSIVO: GESTÃO E EDIÇÃO DE UTILIZADORES ---
+    // --- MÓDULO DE GESTÃO DE UTILIZADORES ---
     function renderizarTabelaUsuarios() {
       const tbody = document.getElementById('tabelaAbaUsuarios');
       document.getElementById('qtdTotalUsuarios').innerText = contasRegistradas.length;
@@ -495,7 +495,7 @@
       document.getElementById('btnSalvarEdicaoUsuario').disabled = true;
     }
 
-    // --- MÓDULO CLIENTES, EDIÇÃO & CANCELAMENTO DE COMPRAS ---
+    // --- MÓDULO CLIENTES, RELATÓRIO COMPLETO & ESTORNOS SINCRONIZADOS ---
     function alternarCampoLimite(cb) {
       const input = document.getElementById('cliLimite');
       input.value = ''; input.disabled = cb.checked;
@@ -553,6 +553,7 @@
       document.getElementById('btnCancelarEdicaoCliente').classList.add('hidden');
     }
 
+    // RENDERIZA A FICHA E RELATÓRIO COMPLETO (FIADO E À VISTA) DE CADA CLIENTE
     function renderizarClientes() {
       const lista = document.getElementById('listaClientes');
       lista.innerHTML = clientes.length === 0 ? '<p class="text-gray-500 text-sm">Nenhum cliente cadastrado.</p>' : '';
@@ -560,26 +561,45 @@
       clientes.forEach(cli => {
         const limiteTexto = cli.limiteIlimitado ? "Ilimitado" : `R$ ${cli.limite.toFixed(2)}`;
         const disp = cli.limiteIlimitado ? "Ilimitado" : `R$ ${(cli.limite - cli.saldoDevedor).toFixed(2)} / ${limiteTexto}`;
-        const comprasFiadas = (cli.historicoTransacoes || []).filter(t => t.tipo === 'compra');
+        
+        const transacoes = cli.historicoTransacoes || [];
+        const comprasFiadas = transacoes.filter(t => t.tipo === 'compra');
+        const comprasVista = transacoes.filter(t => t.tipo === 'compra_vista');
 
-        let htmlHistoricoCompras = '';
+        // MONTAGEM DO RELATÓRIO DE FIADOS
+        let htmlFiado = '';
         if (comprasFiadas.length > 0) {
-          htmlHistoricoCompras = `
+          htmlFiado = `
             <div class="mt-2 border-t pt-2">
-              <span class="text-xs font-bold text-gray-600 block mb-1">Compras em Fiado Realizadas:</span>
-              <div class="space-y-1 max-h-32 overflow-y-auto">`;
-          
-          comprasFiadas.forEach((trans) => {
+              <span class="text-xs font-bold text-amber-700 block mb-1">📋 Compras em Fiado (Saldo Pendente):</span>
+              <div class="space-y-1 max-h-28 overflow-y-auto">`;
+          comprasFiadas.forEach(trans => {
             const dataFmt = new Date(trans.data).toLocaleDateString() + ' ' + new Date(trans.data).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            htmlHistoricoCompras += `
-              <div class="flex justify-between items-center text-xs bg-white p-1.5 rounded border">
+            htmlFiado += `
+              <div class="flex justify-between items-center text-xs bg-amber-50 p-1.5 rounded border border-amber-200">
                 <span>📅 ${dataFmt} - <strong class="text-red-600">R$ ${trans.valor.toFixed(2)}</strong></span>
-                <button onclick="excluirCompraCliente(${cli.id}, '${trans.data}')" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-0.5 rounded font-bold transition">
-                  🗑️ Estornar
-                </button>
+                <button onclick="excluirCompraCliente(${cli.id}, '${trans.data}')" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-0.5 rounded font-bold">🗑️ Estornar</button>
               </div>`;
           });
-          htmlHistoricoCompras += `</div></div>`;
+          htmlFiado += `</div></div>`;
+        }
+
+        // MONTAGEM DO RELATÓRIO À VISTA
+        let htmlVista = '';
+        if (comprasVista.length > 0) {
+          htmlVista = `
+            <div class="mt-2 border-t pt-2">
+              <span class="text-xs font-bold text-emerald-700 block mb-1">💵 Histórico de Compras À Vista (Pagas):</span>
+              <div class="space-y-1 max-h-28 overflow-y-auto">`;
+          comprasVista.forEach(trans => {
+            const dataFmt = new Date(trans.data).toLocaleDateString() + ' ' + new Date(trans.data).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            htmlVista += `
+              <div class="flex justify-between items-center text-xs bg-emerald-50 p-1.5 rounded border border-emerald-200">
+                <span>📅 ${dataFmt} - <strong class="text-emerald-700">R$ ${trans.valor.toFixed(2)}</strong></span>
+                <button onclick="excluirCompraCliente(${cli.id}, '${trans.data}')" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-0.5 rounded font-bold">🗑️ Estornar</button>
+              </div>`;
+          });
+          htmlVista += `</div></div>`;
         }
 
         lista.innerHTML += `
@@ -592,7 +612,8 @@
               <div><span class="text-gray-500 block">Crédito Disp.:</span><span class="font-bold text-green-600">${disp}</span></div>
               <div><span class="text-gray-500 block">Status:</span><span class="font-bold ${cli.saldoDevedor > 0 ? 'text-amber-600' : 'text-blue-600'}">${cli.saldoDevedor > 0 ? 'Com Débito' : 'Em Dia'}</span></div>
             </div>
-            ${htmlHistoricoCompras}
+            ${htmlFiado}
+            ${htmlVista}
             <div class="pt-2 border-t flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <div class="flex items-center gap-2 w-full">
                 <input type="number" id="inputAbater_${cli.id}" step="0.01" placeholder="Valor a abater (R$)" class="p-2 border rounded text-sm w-full">
@@ -604,7 +625,7 @@
       });
     }
 
-    // ESTORNO DE COMPRA FIADA COM DEVOLUÇÃO AO ESTOQUE
+    // ESTORNO NA ÁREA DO CLIENTE
     function excluirCompraCliente(idCliente, dataTransacao) {
       const cli = clientes.find(c => c.id === idCliente);
       if (!cli) return;
@@ -613,37 +634,37 @@
       if (idxTrans === -1) return;
 
       const compra = cli.historicoTransacoes[idxTrans];
-      if (!confirm(`Deseja cancelar/estornar a compra no valor de R$ ${compra.valor.toFixed(2)} do cliente ${cli.nome}?\n(Os produtos serão devolvidos ao estoque)`)) return;
+      if (!confirm(`Deseja estornar esta compra no valor de R$ ${compra.valor.toFixed(2)} do cliente ${cli.nome}?\n(Os produtos retornarão ao estoque)`)) return;
 
-      // 1. Devolver os produtos comprados de volta ao estoque
+      // 1. Devolver produtos ao estoque
       if (compra.itens && Array.isArray(compra.itens)) {
         compra.itens.forEach(item => {
           const prod = produtos.find(p => p.id === item.id);
-          if (prod) {
-            prod.estoque += item.qtd;
-          }
+          if (prod) prod.estoque += item.qtd;
         });
         localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
       }
 
-      // 2. Abater valor do saldo devedor
-      cli.saldoDevedor = Math.max(0, cli.saldoDevedor - compra.valor);
+      // 2. Se for fiado, reduz o saldo devedor
+      if (compra.tipo === 'compra') {
+        cli.saldoDevedor = Math.max(0, cli.saldoDevedor - compra.valor);
+      } 
+      // Se for à vista, desconta das entradas do caixa
+      else if (compra.tipo === 'compra_vista') {
+        caixa.entradas = Math.max(0, caixa.entradas - compra.valor);
+        localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
+      }
 
-      // 3. Remover do histórico de vendas geral
-      vendas = vendas.filter(v => !(v.data === dataTransacao && v.totalVenda === compra.valor));
+      // 3. Remover da lista geral de vendas
+      vendas = vendas.filter(v => !(v.data === dataTransacao && Math.abs(v.totalVenda - compra.valor) < 0.01));
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
-      // 4. Remover do histórico individual do cliente
+      // 4. Remover do histórico do cliente
       cli.historicoTransacoes.splice(idxTrans, 1);
       localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
 
-      alert(`Compra estornada com sucesso!\n- R$ ${compra.valor.toFixed(2)} abatidos do saldo devedor de ${cli.nome}.\n- Produtos devolvidos ao estoque.`);
-
-      renderizarClientes();
-      renderizarTabelaProdutos();
-      renderizarGridProdutos();
-      carregarOpcoesClientesVenda();
-      renderizarRelatorios();
+      alert('Compra estornada com sucesso!');
+      atualizarTudo();
     }
 
     function receberPagamentoCliente(idCliente) {
@@ -667,9 +688,7 @@
       localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
 
       alert(`Pagamento de R$ ${valorAbatido.toFixed(2)} recebido com sucesso!`);
-      renderizarClientes();
-      atualizarUICaixa();
-      carregarOpcoesClientesVenda();
+      atualizarTudo();
     }
 
     function carregarOpcoesClientesVenda() {
@@ -890,29 +909,31 @@
         detalhe = `Fiado (${cli.nome})`;
       }
 
-      // ABATIMENTO DO ESTOQUE DADOS OS ITENS VENDIDOS
+      // ABATIMENTO DO ESTOQUE
       carrinho.forEach(item => {
         const prod = produtos.find(p => p.id === item.id);
         if (prod) prod.estoque = Math.max(0, prod.estoque - item.qtd);
       });
       localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
 
-      const novaVenda = { id: Date.now(), data: dataIso, formaPagamento: detalhe, totalVenda, totalCusto, lucroObtido: lucro, itens: itensComprados };
+      const novaVenda = { 
+        id: Date.now(), 
+        data: dataIso, 
+        formaPagamento: detalhe, 
+        totalVenda, 
+        totalCusto, 
+        lucroObtido: lucro, 
+        itens: itensComprados,
+        clienteId: cli ? cli.id : null
+      };
       vendas.push(novaVenda);
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
-
-      fetch('http://localhost:8080/api/vendas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(novaVenda)
-      }).catch(err => console.log('Servidor Java offline.'));
 
       alert('Venda realizada e estoque atualizado!');
       carrinho = [];
       document.getElementById('selectClienteVenda').value = "";
       renderizarCarrinho();
-      renderizarGridProdutos();
-      atualizarUICaixa();
+      atualizarTudo();
     }
 
     function renderizarTabelaAbaVendas() {
@@ -933,35 +954,59 @@
       });
     }
 
-    // EXCLUIR VENDA GERAL E DEVOLVER PRODUTOS AO ESTOQUE
+    // ESTORNO NA ÁREA VENDAS - REMOVE DO CLIENTE (FIADO OU À VISTA) E CAIXA AUTOMATICAMENTE
     function excluirVendaIndividual(idVenda) {
       const venda = vendas.find(v => v.id === idVenda);
       if (!venda) return;
 
-      if (!confirm(`Deseja estornar esta venda no valor de R$ ${venda.totalVenda.toFixed(2)}?\n(Os produtos serão devolvidos ao estoque)`)) return;
+      if (!confirm(`Deseja estornar esta venda no valor de R$ ${venda.totalVenda.toFixed(2)}?\n(Estoque, caixa e histórico do cliente serão sincronizados)`)) return;
 
-      // 1. Restaura o estoque de todos os produtos envolvidos na venda
+      // 1. Devolver produtos ao estoque
       if (venda.itens && Array.isArray(venda.itens)) {
         venda.itens.forEach(item => {
           const prod = produtos.find(p => p.id === item.id);
-          if (prod) {
-            prod.estoque += item.qtd;
-          }
+          if (prod) prod.estoque += item.qtd;
         });
         localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
       }
 
-      // 2. Remove da lista de vendas
+      // 2. Se a venda tinha cliente, sincroniza com o cliente
+      if (venda.clienteId) {
+        const cli = clientes.find(c => c.id === venda.clienteId);
+        if (cli && cli.historicoTransacoes) {
+          const idxTrans = cli.historicoTransacoes.findIndex(t => t.data === venda.data);
+          if (idxTrans !== -1) {
+            const trans = cli.historicoTransacoes[idxTrans];
+            if (trans.tipo === 'compra') {
+              cli.saldoDevedor = Math.max(0, cli.saldoDevedor - trans.valor);
+            }
+            cli.historicoTransacoes.splice(idxTrans, 1);
+            localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
+          }
+        }
+      }
+
+      // 3. Se foi à vista, remove do caixa do dia
+      if (!venda.formaPagamento.startsWith('Fiado')) {
+        caixa.entradas = Math.max(0, caixa.entradas - venda.totalVenda);
+        localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
+      }
+
+      // 4. Remove a venda do registro
       vendas = vendas.filter(v => v.id !== idVenda);
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
-      fetch(`http://localhost:8080/api/vendas/${idVenda}`, { method: 'DELETE' })
-        .catch(err => console.log('Servidor Java offline.'));
+      alert('Venda estornada! Estoque, caixa e cliente atualizados com sucesso.');
+      atualizarTudo();
+    }
 
-      alert('Venda estornada com sucesso e produtos devolvidos ao estoque!');
-      renderizarTabelaAbaVendas();
-      renderizarTabelaProdutos();
+    function atualizarTudo() {
       renderizarGridProdutos();
+      renderizarTabelaProdutos();
+      renderizarTabelaAbaVendas();
+      renderizarClientes();
+      carregarOpcoesClientesVenda();
+      atualizarUICaixa();
       carregarOpcoesMesesRelatorio();
       renderizarRelatorios();
     }
@@ -971,9 +1016,7 @@
       vendas = [];
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
       alert('Histórico apagado com sucesso!');
-      renderizarTabelaAbaVendas();
-      carregarOpcoesMesesRelatorio();
-      renderizarRelatorios();
+      atualizarTudo();
     }
 
     function carregarOpcoesMesesRelatorio() {
