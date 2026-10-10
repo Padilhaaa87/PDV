@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Gestão Comercial Multi-Loja & Super Admin</title>
+  <title>PDV Web - Sistema Multi-Loja com Código de Compra</title>
   <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -31,7 +31,7 @@
       <form id="formLogin" onsubmit="fazerLogin(event)" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700">Utilizador</label>
-          <input type="text" id="loginUsuario" required placeholder="Digite o seu utilizador (ex: master ou seu usuario)" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+          <input type="text" id="loginUsuario" required placeholder="Digite o seu utilizador" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label>
@@ -40,10 +40,15 @@
         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">Entrar na Loja</button>
       </form>
 
-      <!-- FORMULÁRIO DE CRIAÇÃO DE UMA NOVA LOJA -->
+      <!-- FORMULÁRIO DE CRIAÇÃO DE UMA NOVA LOJA COM CÓDIGO DE COMPRA -->
       <form id="formCadastro" onsubmit="cadastrarLojaEUsuario(event)" class="space-y-4 hidden">
         <div class="bg-blue-50 p-3 rounded border border-blue-200">
-          <p class="text-xs text-blue-800 font-semibold">🏪 Cadastre a sua nova loja do zero. Você será registrado como Administrador da sua loja.</p>
+          <p class="text-xs text-blue-800 font-semibold">🏪 Cadastre a sua nova loja do zero. É necessário informar o seu Código de Compra / Licença.</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Código de Compra / Licença <span class="text-red-500">*</span></label>
+          <input type="text" id="cadCodigoCompra" required placeholder="Ex: meupdv123" class="w-full p-3 border rounded font-mono uppercase bg-amber-50 border-amber-300 outline-none focus:ring-2 focus:ring-amber-500">
+          <span class="text-[11px] text-gray-500 mt-0.5 block">Código recebido ao adquirir o sistema (Ex padrão: meupdv123)</span>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Nome da Sua Loja <span class="text-red-500">*</span></label>
@@ -57,7 +62,7 @@
           <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha) <span class="text-red-500">*</span></label>
           <input type="password" id="cadSenha" required placeholder="Crie uma palavra-passe" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
-        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded transition shadow">Criar Minha Loja e Entrar</button>
+        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded transition shadow">Validar Código e Criar Loja</button>
       </form>
     </div>
   </div>
@@ -97,11 +102,29 @@
         <div class="bg-purple-900 text-white p-6 rounded-lg shadow-md flex justify-between items-center">
           <div>
             <h2 class="text-2xl font-bold text-amber-300">👑 Painel do Administrador Geral</h2>
-            <p class="text-sm text-purple-200 mt-1">Gerencie todas as lojas ativas, acesse o estoque de qualquer cliente e gerencie seus acessos.</p>
+            <p class="text-sm text-purple-200 mt-1">Gerencie todas as lojas ativas, crie novos códigos de compra e acesse o sistema dos clientes.</p>
           </div>
           <div class="bg-purple-800 px-4 py-2 rounded-lg border border-purple-600 text-center">
             <span class="text-xs font-bold text-purple-200 block uppercase">Total de Lojas</span>
             <span id="qtdLojasGeral" class="text-2xl font-bold text-amber-300">0</span>
+          </div>
+        </div>
+
+        <!-- SEÇÃO DE GERAÇÃO DE NOVOS CÓDIGOS DE COMPRA (LICENÇAS) -->
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-4 border-l-4 border-amber-500">
+          <h3 class="text-lg font-bold text-gray-700">🔑 Gerenciador de Códigos de Compra / Licenças</h3>
+          <p class="text-xs text-gray-500">Crie novos códigos de acesso para fornecer aos seus clientes após a compra do sistema.</p>
+          
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input type="text" id="novoCodigoCompra" placeholder="Digite um novo código (ex: MEUPDV2026)" class="p-2 border rounded font-mono uppercase w-full">
+            <button onclick="adicionarCodigoCompra()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 rounded text-sm shadow transition whitespace-nowrap">
+              ➕ Cadastrar Código
+            </button>
+          </div>
+
+          <div class="pt-2">
+            <span class="text-xs font-bold text-gray-600 block mb-1">Códigos de Compra Ativos:</span>
+            <div id="listaCodigosCompraAtivos" class="flex flex-wrap gap-2"></div>
           </div>
         </div>
 
@@ -483,7 +506,10 @@
   </div>
 
   <script>
-    // --- CONTA PADRÃO SUPER ADMIN (MASTER) ---
+    // LISTA DE CÓDIGOS DE COMPRA / LICENÇAS VÁLIDAS
+    let codigosCompraValidos = JSON.parse(localStorage.getItem('pdv_codigos_compra')) || ['MEUPDV123', 'PDV2026', 'VIPPDV'];
+
+    // CONTA PADRÃO SUPER ADMIN (MASTER)
     let lojas = JSON.parse(localStorage.getItem('pdv_lojas')) || [];
     let contasRegistradas = JSON.parse(localStorage.getItem('pdv_contas')) || [
       { usuario: 'master', senha: '123', perfil: 'superadmin', lojaId: null }
@@ -517,19 +543,25 @@
       }
     }
 
-    // CRIAÇÃO DE NOVA LOJA PELO CLIENTE
+    // CRIAÇÃO DE NOVA LOJA VALIDADAS PELO CÓDIGO DE COMPRA
     function cadastrarLojaEUsuario(e) {
       e.preventDefault();
+      const codigoCompraInput = document.getElementById('cadCodigoCompra').value.trim().toUpperCase();
       const nomeLoja = document.getElementById('cadNomeLoja').value.trim();
       const usuario = document.getElementById('cadUsuario').value.trim();
       const senha = document.getElementById('cadSenha').value;
+
+      // VALIDAR SE O CÓDIGO DE COMPRA É VÁLIDO
+      if (!codigosCompraValidos.includes(codigoCompraInput)) {
+        return alert('❌ Código de Compra / Licença inválido! Verifique o código digitado ou entre em contato com o suporte.');
+      }
 
       if (contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase())) {
         return alert('Este nome de utilizador já está em uso!');
       }
 
       const idLoja = 'LOJA_' + Date.now();
-      const novaLoja = { id: idLoja, nomeLoja: nomeLoja, dataCriacao: new Date().toISOString() };
+      const novaLoja = { id: idLoja, nomeLoja: nomeLoja, codigoUsado: codigoCompraInput, dataCriacao: new Date().toISOString() };
       lojas.push(novaLoja);
       localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
 
@@ -537,8 +569,42 @@
       contasRegistradas.push(novaConta);
       localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
 
-      alert(`🎉 Parabéns! A loja "${nomeLoja}" foi criada com sucesso!`);
+      alert(`🎉 Código validado! A loja "${nomeLoja}" foi criada com sucesso!`);
       iniciarSessao(novaConta);
+    }
+
+    // GESTÃO DE CÓDIGOS DE COMPRA PELO SUPER ADMIN
+    function renderizarCodigosCompra() {
+      const container = document.getElementById('listaCodigosCompraAtivos');
+      if (!container) return;
+      container.innerHTML = '';
+      codigosCompraValidos.forEach((cod, idx) => {
+        container.innerHTML += `
+          <span class="bg-amber-100 text-amber-900 border border-amber-300 font-mono text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+            🔑 ${cod}
+            <button onclick="removerCodigoCompra(${idx})" class="text-red-600 hover:text-red-800 font-bold ml-1">✕</button>
+          </span>`;
+      });
+    }
+
+    function adicionarCodigoCompra() {
+      const input = document.getElementById('novoCodigoCompra');
+      const cod = input.value.trim().toUpperCase();
+      if (!cod) return alert('Digite um código válido!');
+      if (codigosCompraValidos.includes(cod)) return alert('Este código já está na lista!');
+
+      codigosCompraValidos.push(cod);
+      localStorage.setItem('pdv_codigos_compra', JSON.stringify(codigosCompraValidos));
+      input.value = '';
+      renderizarCodigosCompra();
+      alert(`Código "${cod}" adicionado com sucesso!`);
+    }
+
+    function removerCodigoCompra(idx) {
+      if (!confirm('Deseja remover este código de compra da lista de licenças?')) return;
+      codigosCompraValidos.splice(idx, 1);
+      localStorage.setItem('pdv_codigos_compra', JSON.stringify(codigosCompraValidos));
+      renderizarCodigosCompra();
     }
 
     function fazerLogin(e) {
@@ -612,8 +678,8 @@
       document.getElementById('telaAutenticacao').classList.remove('hidden');
     }
 
-    // PAINEL DO ADMINISTRADOR GERAL (SUPER ADMIN)
     function renderizarPainelAdminGeral() {
+      renderizarCodigosCompra();
       const tbody = document.getElementById('tabelaLojasAdminGeral');
       document.getElementById('qtdLojasGeral').innerText = lojas.length;
       tbody.innerHTML = lojas.length === 0 ? '<tr><td colspan="4" class="p-4 text-center text-gray-500">Nenhuma loja cadastrada no sistema.</td></tr>' : '';
@@ -649,7 +715,7 @@
     function excluirLojaGeral(idLoja) {
       const l = lojas.find(item => item.id === idLoja);
       if (!l) return;
-      if (!confirm(`⚠️ ATENÇÃO SUPER ADMIN: Deseja apagar definitivamente a loja "${l.nomeLoja}" e todos os seus produtos, vendas e clientes?`)) return;
+      if (!confirm(`⚠️ ATENÇÃO SUPER ADMIN: Deseja apagar definitivamente a loja "${l.nomeLoja}"?`)) return;
 
       lojas = lojas.filter(item => item.id !== idLoja);
       contasRegistradas = contasRegistradas.filter(c => c.lojaId !== idLoja);
