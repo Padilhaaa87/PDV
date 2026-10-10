@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Sistema Multi-Loja com Código de Compra</title>
+  <title>PDV Web - Login Categorizado & Multi-Loja</title>
   <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -14,21 +14,30 @@
 </head>
 <body class="bg-gray-100 font-sans text-gray-800">
 
-  <!-- TELA DE AUTENTICAÇÃO E CRIAÇÃO DE NOVA LOJA -->
+  <!-- TELA DE AUTENTICAÇÃO COM LOGIN CATEGORIZADO -->
   <div id="telaAutenticacao" class="min-h-screen flex items-center justify-center bg-blue-900 p-4">
-    <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-md space-y-6">
+    <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-lg space-y-6">
       <div class="text-center">
         <h1 class="text-3xl font-bold text-blue-700">PDV Comercial</h1>
-        <p class="text-gray-500 text-sm mt-1">Plataforma Multi-Loja de Gestão de Vendas</p>
+        <p class="text-gray-500 text-sm mt-1">Selecione o seu tipo de acesso para entrar</p>
       </div>
 
-      <div class="flex border-b">
-        <button onclick="alternarFormAutenticacao('login')" id="btnAbaLogin" class="w-1/2 py-2 font-bold text-center text-blue-600 border-b-2 border-blue-600">Entrar</button>
-        <button onclick="alternarFormAutenticacao('cadastro')" id="btnAbaCadastro" class="w-1/2 py-2 font-bold text-center text-gray-500 hover:text-blue-600">Criar Nova Loja</button>
+      <!-- SELETOR DE PERFIL DE LOGIN -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-1 border-b pb-2 text-xs font-bold text-center">
+        <button onclick="selecionarTipoAcesso('vendedor')" id="btnAcessoVendedor" class="py-2 px-1 rounded bg-blue-600 text-white shadow">🛒 Vendedor</button>
+        <button onclick="selecionarTipoAcesso('adminLoja')" id="btnAcessoAdminLoja" class="py-2 px-1 rounded text-gray-600 hover:bg-gray-100">🏢 Adm Loja</button>
+        <button onclick="selecionarTipoAcesso('adminMaster')" id="btnAcessoAdminMaster" class="py-2 px-1 rounded text-purple-700 hover:bg-purple-50">👑 Adm Master</button>
+        <button onclick="selecionarTipoAcesso('cadastro')" id="btnAcessoCadastro" class="py-2 px-1 rounded text-emerald-700 hover:bg-emerald-50">➕ Nova Loja</button>
       </div>
 
-      <!-- FORMULÁRIO DE LOGIN DE UTILIZADORES -->
+      <!-- PAINEL ORIENTATIVO DO ACESSO SELECIONADO -->
+      <div id="boxOrientacaoAcesso" class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded text-xs font-semibold">
+        🛒 <strong>Acesso Vendedor:</strong> Entre com seu utilizador de vendedor para operar o caixa e realizar vendas.
+      </div>
+
+      <!-- FORMULÁRIO UNIFICADO DE LOGIN DE UTILIZADORES -->
       <form id="formLogin" onsubmit="fazerLogin(event)" class="space-y-4">
+        <input type="hidden" id="tipoAcessoSelecionado" value="vendedor">
         <div>
           <label class="block text-sm font-medium text-gray-700">Utilizador</label>
           <input type="text" id="loginUsuario" required placeholder="Digite o seu utilizador" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
@@ -37,32 +46,36 @@
           <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label>
           <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">Entrar na Loja</button>
+        <button type="submit" id="btnSubmitLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">
+          Acessar como Vendedor
+        </button>
       </form>
 
-      <!-- FORMULÁRIO DE CRIAÇÃO DE UMA NOVA LOJA COM CÓDIGO DE COMPRA -->
+      <!-- FORMULÁRIO DE CRIAÇÃO DE NOVA LOJA -->
       <form id="formCadastro" onsubmit="cadastrarLojaEUsuario(event)" class="space-y-4 hidden">
-        <div class="bg-blue-50 p-3 rounded border border-blue-200">
-          <p class="text-xs text-blue-800 font-semibold">🏪 Cadastre a sua nova loja do zero. É necessário informar o seu Código de Compra / Licença.</p>
+        <div class="bg-emerald-50 p-3 rounded border border-emerald-200 text-xs text-emerald-800 font-semibold">
+          🏪 <strong>Cadastro de Nova Loja:</strong> Informe seu Código de Compra / Licença para registrar a sua loja do zero.
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Código de Compra / Licença <span class="text-red-500">*</span></label>
-          <input type="text" id="cadCodigoCompra" required placeholder="Ex: meupdv123" class="w-full p-3 border rounded font-mono uppercase bg-amber-50 border-amber-300 outline-none focus:ring-2 focus:ring-amber-500">
-          <span class="text-[11px] text-gray-500 mt-0.5 block">Código recebido ao adquirir o sistema (Ex padrão: meupdv123)</span>
+          <input type="text" id="cadCodigoCompra" required placeholder="Ex: MEUPDV123" class="w-full p-3 border rounded font-mono uppercase bg-amber-50 border-amber-300 outline-none focus:ring-2 focus:ring-amber-500">
+          <span class="text-[11px] text-gray-500 mt-0.5 block">Exemplo padrão para testes: <code>MEUPDV123</code></span>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Nome da Sua Loja <span class="text-red-500">*</span></label>
           <input type="text" id="cadNomeLoja" required placeholder="Ex: Mercado Silva, Boutique Elegância" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">Nome do Administrador / Utilizador <span class="text-red-500">*</span></label>
-          <input type="text" id="cadUsuario" required placeholder="Escolha um nome de utilizador" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-sm font-medium text-gray-700">Nome do Administrador da Loja <span class="text-red-500">*</span></label>
+          <input type="text" id="cadUsuario" required placeholder="Escolha um nome de utilizador para o dono" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha) <span class="text-red-500">*</span></label>
           <input type="password" id="cadSenha" required placeholder="Crie uma palavra-passe" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
-        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded transition shadow">Validar Código e Criar Loja</button>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded transition shadow">
+          Validar Código e Criar Loja
+        </button>
       </form>
     </div>
   </div>
@@ -110,7 +123,7 @@
           </div>
         </div>
 
-        <!-- SEÇÃO DE GERAÇÃO DE NOVOS CÓDIGOS DE COMPRA (LICENÇAS) -->
+        <!-- SEÇÃO DE GERAÇÃO DE NOVOS CÓDIGOS DE COMPRA -->
         <div class="bg-white p-6 rounded-lg shadow-md space-y-4 border-l-4 border-amber-500">
           <h3 class="text-lg font-bold text-gray-700">🔑 Gerenciador de Códigos de Compra / Licenças</h3>
           <p class="text-xs text-gray-500">Crie novos códigos de acesso para fornecer aos seus clientes após a compra do sistema.</p>
@@ -326,7 +339,6 @@
           </div>
 
           <div class="md:col-span-2 space-y-4">
-            <!-- PAINEL DE METRICAS GERAIS DO ESTOQUE DA LOJA -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-indigo-600">
                 <span class="text-xs font-bold text-gray-500 uppercase block">Custo Total em Estoque (Geral)</span>
@@ -474,27 +486,33 @@
         </div>
       </section>
 
-      <!-- ABA 7: GESTÃO DE UTILIZADORES DA LOJA (ADMIN) -->
+      <!-- ABA 7: GESTÃO DE VENDEDORES E UTILIZADORES DA LOJA (ADMIN LOJA) -->
       <section id="usuarios" class="aba-conteudo admin-only">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
-            <h2 id="tituloFormUsuario" class="text-xl font-bold text-gray-700 border-b pb-2">Novo Utilizador para esta Loja</h2>
+            <h2 id="tituloFormUsuario" class="text-xl font-bold text-gray-700 border-b pb-2">Cadastrar Vendedor / Utilizador</h2>
             <form id="formEdicaoUsuario" onsubmit="salvarNovoUsuarioLoja(event)" class="space-y-3">
-              <div><label class="block text-sm font-medium text-gray-700">Nome de Utilizador</label><input type="text" id="editUsuarioNome" required class="w-full p-2 border rounded"></div>
-              <div><label class="block text-sm font-medium text-gray-700">Palavra-passe</label><input type="password" id="editUsuarioSenha" required class="w-full p-2 border rounded"></div>
-              <div><label class="block text-sm font-medium text-gray-700">Perfil de Acesso</label><select id="editUsuarioPerfil" class="w-full p-2 border rounded"><option value="vendedor">👤 Vendedor</option><option value="admin">👑 Administrador</option></select></div>
-              <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded">Adicionar Utilizador</button>
+              <div><label class="block text-sm font-medium text-gray-700">Nome do Vendedor / Utilizador</label><input type="text" id="editUsuarioNome" required placeholder="Ex: joao_vendedor" class="w-full p-2 border rounded"></div>
+              <div><label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label><input type="password" id="editUsuarioSenha" required placeholder="••••••••" class="w-full p-2 border rounded"></div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Perfil de Acesso</label>
+                <select id="editUsuarioPerfil" class="w-full p-2 border rounded">
+                  <option value="vendedor">👤 Vendedor (Operador de Caixa)</option>
+                  <option value="admin">🏢 Administrador da Loja (Acesso Total)</option>
+                </select>
+              </div>
+              <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded shadow">Cadastrar Vendedor</button>
             </form>
           </div>
 
           <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md space-y-4">
             <div class="flex justify-between items-center border-b pb-4">
-              <h2 class="text-xl font-bold text-gray-700">Utilizadores Cadastrados na Loja</h2>
+              <h2 class="text-xl font-bold text-gray-700">Equipe de Vendedores da Loja</h2>
               <span class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full">Total: <span id="qtdTotalUsuarios">0</span></span>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
-                <thead><tr class="bg-gray-100 border-b text-sm"><th class="p-3">Utilizador</th><th class="p-3">Perfil</th></tr></thead>
+                <thead><tr class="bg-gray-100 border-b text-sm"><th class="p-3">Utilizador</th><th class="p-3">Perfil</th><th class="p-3 text-center">Ação</th></tr></thead>
                 <tbody id="tabelaAbaUsuarios"></tbody>
               </table>
             </div>
@@ -506,10 +524,10 @@
   </div>
 
   <script>
-    // LISTA DE CÓDIGOS DE COMPRA / LICENÇAS VÁLIDAS
+    // LISTA DE CÓDIGOS DE COMPRA VÁLIDOS
     let codigosCompraValidos = JSON.parse(localStorage.getItem('pdv_codigos_compra')) || ['MEUPDV123', 'PDV2026', 'VIPPDV'];
 
-    // CONTA PADRÃO SUPER ADMIN (MASTER)
+    // CONTA MASTER PADRÃO
     let lojas = JSON.parse(localStorage.getItem('pdv_lojas')) || [];
     let contasRegistradas = JSON.parse(localStorage.getItem('pdv_contas')) || [
       { usuario: 'master', senha: '123', perfil: 'superadmin', lojaId: null }
@@ -527,23 +545,51 @@
 
     const nomesMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
-    function alternarFormAutenticacao(modo) {
+    // CONTROLADOR DA TELA DE LOGIN CATEGORIZADA
+    function selecionarTipoAcesso(tipo) {
+      document.getElementById('tipoAcessoSelecionado').value = tipo;
+
+      const btnVendedor = document.getElementById('btnAcessoVendedor');
+      const btnAdminLoja = document.getElementById('btnAcessoAdminLoja');
+      const btnAdminMaster = document.getElementById('btnAcessoAdminMaster');
+      const btnCadastro = document.getElementById('btnAcessoCadastro');
+
       const formLogin = document.getElementById('formLogin');
       const formCadastro = document.getElementById('formCadastro');
-      const btnLogin = document.getElementById('btnAbaLogin');
-      const btnCadastro = document.getElementById('btnAbaCadastro');
-      if (modo === 'login') {
+      const boxOrientacao = document.getElementById('boxOrientacaoAcesso');
+      const btnSubmit = document.getElementById('btnSubmitLogin');
+
+      // RESET DE ESTILOS
+      [btnVendedor, btnAdminLoja, btnAdminMaster, btnCadastro].forEach(b => b.className = "py-2 px-1 rounded text-gray-600 hover:bg-gray-100");
+
+      if (tipo === 'vendedor') {
+        btnVendedor.className = "py-2 px-1 rounded bg-blue-600 text-white shadow";
         formLogin.classList.remove('hidden'); formCadastro.classList.add('hidden');
-        btnLogin.className = "w-1/2 py-2 font-bold text-center text-blue-600 border-b-2 border-blue-600";
-        btnCadastro.className = "w-1/2 py-2 font-bold text-center text-gray-500 hover:text-blue-600";
-      } else {
+        boxOrientacao.className = "bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded text-xs font-semibold";
+        boxOrientacao.innerHTML = "🛒 <strong>Acesso Vendedor:</strong> Entre com seu utilizador de vendedor para operar o caixa e realizar vendas.";
+        btnSubmit.innerText = "Acessar Loja como Vendedor";
+        btnSubmit.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow";
+      } else if (tipo === 'adminLoja') {
+        btnAdminLoja.className = "py-2 px-1 rounded bg-blue-800 text-white shadow";
+        formLogin.classList.remove('hidden'); formCadastro.classList.add('hidden');
+        boxOrientacao.className = "bg-blue-100 border border-blue-300 text-blue-900 p-3 rounded text-xs font-semibold";
+        boxOrientacao.innerHTML = "🏢 <strong>Acesso Adm da Loja:</strong> Entre como proprietário para gerir estoque, relatórios e vendedores.";
+        btnSubmit.innerText = "Acessar Gestão da Loja";
+        btnSubmit.className = "w-full bg-blue-800 hover:bg-blue-900 text-white font-bold py-3 rounded transition shadow";
+      } else if (tipo === 'adminMaster') {
+        btnAdminMaster.className = "py-2 px-1 rounded bg-purple-900 text-amber-300 shadow font-bold";
+        formLogin.classList.remove('hidden'); formCadastro.classList.add('hidden');
+        boxOrientacao.className = "bg-purple-100 border border-purple-300 text-purple-900 p-3 rounded text-xs font-semibold";
+        boxOrientacao.innerHTML = "👑 <strong>Acesso Adm Master:</strong> Painel global para gerenciar todas as lojas e códigos de licença.";
+        btnSubmit.innerText = "Acessar Painel Master";
+        btnSubmit.className = "w-full bg-purple-900 hover:bg-purple-950 text-amber-300 font-bold py-3 rounded transition shadow";
+      } else if (tipo === 'cadastro') {
+        btnCadastro.className = "py-2 px-1 rounded bg-emerald-600 text-white shadow";
         formLogin.classList.add('hidden'); formCadastro.classList.remove('hidden');
-        btnCadastro.className = "w-1/2 py-2 font-bold text-center text-blue-600 border-b-2 border-blue-600";
-        btnLogin.className = "w-1/2 py-2 font-bold text-center text-gray-500 hover:text-blue-600";
       }
     }
 
-    // CRIAÇÃO DE NOVA LOJA VALIDADAS PELO CÓDIGO DE COMPRA
+    // REGISTO DE NOVA LOJA
     function cadastrarLojaEUsuario(e) {
       e.preventDefault();
       const codigoCompraInput = document.getElementById('cadCodigoCompra').value.trim().toUpperCase();
@@ -551,9 +597,8 @@
       const usuario = document.getElementById('cadUsuario').value.trim();
       const senha = document.getElementById('cadSenha').value;
 
-      // VALIDAR SE O CÓDIGO DE COMPRA É VÁLIDO
       if (!codigosCompraValidos.includes(codigoCompraInput)) {
-        return alert('❌ Código de Compra / Licença inválido! Verifique o código digitado ou entre em contato com o suporte.');
+        return alert('❌ Código de Compra inválido! Verifique a licença informada.');
       }
 
       if (contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase())) {
@@ -569,50 +614,23 @@
       contasRegistradas.push(novaConta);
       localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
 
-      alert(`🎉 Código validado! A loja "${nomeLoja}" foi criada com sucesso!`);
+      alert(`🎉 Loja "${nomeLoja}" criada com sucesso!`);
       iniciarSessao(novaConta);
-    }
-
-    // GESTÃO DE CÓDIGOS DE COMPRA PELO SUPER ADMIN
-    function renderizarCodigosCompra() {
-      const container = document.getElementById('listaCodigosCompraAtivos');
-      if (!container) return;
-      container.innerHTML = '';
-      codigosCompraValidos.forEach((cod, idx) => {
-        container.innerHTML += `
-          <span class="bg-amber-100 text-amber-900 border border-amber-300 font-mono text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
-            🔑 ${cod}
-            <button onclick="removerCodigoCompra(${idx})" class="text-red-600 hover:text-red-800 font-bold ml-1">✕</button>
-          </span>`;
-      });
-    }
-
-    function adicionarCodigoCompra() {
-      const input = document.getElementById('novoCodigoCompra');
-      const cod = input.value.trim().toUpperCase();
-      if (!cod) return alert('Digite um código válido!');
-      if (codigosCompraValidos.includes(cod)) return alert('Este código já está na lista!');
-
-      codigosCompraValidos.push(cod);
-      localStorage.setItem('pdv_codigos_compra', JSON.stringify(codigosCompraValidos));
-      input.value = '';
-      renderizarCodigosCompra();
-      alert(`Código "${cod}" adicionado com sucesso!`);
-    }
-
-    function removerCodigoCompra(idx) {
-      if (!confirm('Deseja remover este código de compra da lista de licenças?')) return;
-      codigosCompraValidos.splice(idx, 1);
-      localStorage.setItem('pdv_codigos_compra', JSON.stringify(codigosCompraValidos));
-      renderizarCodigosCompra();
     }
 
     function fazerLogin(e) {
       e.preventDefault();
       const u = document.getElementById('loginUsuario').value.trim();
       const s = document.getElementById('loginSenha').value;
+      const tipo = document.getElementById('tipoAcessoSelecionado').value;
+
       const conta = contasRegistradas.find(c => c.usuario.toLowerCase() === u.toLowerCase() && c.senha === s);
       if (!conta) return alert('Utilizador ou palavra-passe incorretos!');
+
+      if (tipo === 'adminMaster' && conta.perfil !== 'superadmin') {
+        return alert('Acesso Negado! Esta conta não possui privilégios de Adm Master.');
+      }
+
       iniciarSessao(conta);
     }
 
@@ -663,7 +681,7 @@
         
         carregarDadosLoja(conta.lojaId);
         document.getElementById('labelNomeLojaTopo').innerText = lojaAtual.nomeLoja;
-        document.getElementById('labelUsuarioLogado').innerText = `Loja: ${lojaAtual.nomeLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil})`;
+        document.getElementById('labelUsuarioLogado').innerText = `Loja: ${lojaAtual.nomeLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil.toUpperCase()})`;
       }
 
       atualizarTudo();
@@ -676,6 +694,7 @@
       localStorage.removeItem('pdv_sessao_ativa');
       document.getElementById('appPrincipal').classList.add('oculto-autenticacao');
       document.getElementById('telaAutenticacao').classList.remove('hidden');
+      selecionarTipoAcesso('vendedor');
     }
 
     function renderizarPainelAdminGeral() {
@@ -692,44 +711,60 @@
             <td class="p-3 text-xs text-gray-500">${l.id}</td>
             <td class="p-3 text-xs text-gray-600">${d}</td>
             <td class="p-3 text-center space-x-2">
-              <button onclick="mudarParaLoja('${l.id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded text-xs transition">
-                🔍 Acessar esta Loja
-              </button>
-              <button onclick="excluirLojaGeral('${l.id}')" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded text-xs transition">
-                🗑️ Excluir Loja
-              </button>
+              <button onclick="mudarParaLoja('${l.id}')" class="bg-blue-600 text-white font-bold px-3 py-1.5 rounded text-xs">🔍 Acessar</button>
+              <button onclick="excluirLojaGeral('${l.id}')" class="bg-red-600 text-white font-bold px-3 py-1.5 rounded text-xs">🗑️ Excluir</button>
             </td>
           </tr>`;
       });
+    }
+
+    function renderizarCodigosCompra() {
+      const container = document.getElementById('listaCodigosCompraAtivos');
+      if (!container) return;
+      container.innerHTML = '';
+      codigosCompraValidos.forEach((cod, idx) => {
+        container.innerHTML += `
+          <span class="bg-amber-100 text-amber-900 border border-amber-300 font-mono text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+            🔑 ${cod}
+            <button onclick="removerCodigoCompra(${idx})" class="text-red-600 font-bold ml-1">✕</button>
+          </span>`;
+      });
+    }
+
+    function adicionarCodigoCompra() {
+      const input = document.getElementById('novoCodigoCompra');
+      const cod = input.value.trim().toUpperCase();
+      if (!cod) return alert('Digite um código válido!');
+      if (codigosCompraValidos.includes(cod)) return alert('Este código já existe!');
+      codigosCompraValidos.push(cod);
+      localStorage.setItem('pdv_codigos_compra', JSON.stringify(codigosCompraValidos));
+      input.value = '';
+      renderizarCodigosCompra();
+    }
+
+    function removerCodigoCompra(idx) {
+      if (!confirm('Deseja remover este código?')) return;
+      codigosCompraValidos.splice(idx, 1);
+      localStorage.setItem('pdv_codigos_compra', JSON.stringify(codigosCompraValidos));
+      renderizarCodigosCompra();
     }
 
     function mudarParaLoja(idLoja) {
       salvarDadosLoja();
       carregarDadosLoja(idLoja);
       document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${lojaAtual.nomeLoja})`;
-      alert(`Você agora está visualizando os dados da loja: "${lojaAtual.nomeLoja}"`);
+      alert(`Visualizando loja: "${lojaAtual.nomeLoja}"`);
       atualizarTudo();
       alternarAba('frenteCaixa');
     }
 
     function excluirLojaGeral(idLoja) {
       const l = lojas.find(item => item.id === idLoja);
-      if (!l) return;
-      if (!confirm(`⚠️ ATENÇÃO SUPER ADMIN: Deseja apagar definitivamente a loja "${l.nomeLoja}"?`)) return;
-
+      if (!l || !confirm(`Deseja apagar a loja "${l.nomeLoja}"?`)) return;
       lojas = lojas.filter(item => item.id !== idLoja);
       contasRegistradas = contasRegistradas.filter(c => c.lojaId !== idLoja);
-      
       localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
       localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
-
-      localStorage.removeItem(`pdv_produtos_${idLoja}`);
-      localStorage.removeItem(`pdv_clientes_${idLoja}`);
-      localStorage.removeItem(`pdv_caixa_${idLoja}`);
-      localStorage.removeItem(`pdv_historico_caixas_${idLoja}`);
-      localStorage.removeItem(`pdv_vendas_${idLoja}`);
-
-      alert(`Loja "${l.nomeLoja}" removida com sucesso!`);
       renderizarPainelAdminGeral();
     }
 
@@ -748,17 +783,24 @@
       if (idAba === 'adminGeral') renderizarPainelAdminGeral();
     }
 
-    // UTILIZADORES
+    // UTILIZADORES E VENDEDORES
     function renderizarTabelaUsuarios() {
       const tbody = document.getElementById('tabelaAbaUsuarios');
       const usuariosLoja = contasRegistradas.filter(c => c.lojaId === lojaAtual.id);
       document.getElementById('qtdTotalUsuarios').innerText = usuariosLoja.length;
       tbody.innerHTML = '';
-      usuariosLoja.forEach(conta => {
+      usuariosLoja.forEach((conta, idx) => {
         const badgePerfil = conta.perfil === 'admin' 
           ? `<span class="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded">👑 Administrador</span>`
           : `<span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">👤 Vendedor</span>`;
-        tbody.innerHTML += `<tr class="border-b text-sm hover:bg-gray-50"><td class="p-3 font-semibold text-gray-800">${conta.usuario}</td><td class="p-3">${badgePerfil}</td></tr>`;
+        tbody.innerHTML += `
+          <tr class="border-b text-sm hover:bg-gray-50">
+            <td class="p-3 font-semibold text-gray-800">${conta.usuario}</td>
+            <td class="p-3">${badgePerfil}</td>
+            <td class="p-3 text-center">
+              <button onclick="removerUsuarioLoja('${conta.usuario}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-2 py-1 rounded text-xs">🗑️ Excluir</button>
+            </td>
+          </tr>`;
       });
     }
 
@@ -772,8 +814,17 @@
 
       contasRegistradas.push({ usuario, senha, perfil, lojaId: lojaAtual.id });
       localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
-      alert(`Utilizador "${usuario}" adicionado com sucesso!`);
+      alert(`Vendedor / Utilizador "${usuario}" cadastrado com sucesso!`);
       document.getElementById('formEdicaoUsuario').reset();
+      renderizarTabelaUsuarios();
+    }
+
+    function removerUsuarioLoja(nomeUsuario) {
+      if (sessaoAtiva && sessaoAtiva.usuario === nomeUsuario) return alert('Você não pode excluir a sua própria conta ativa!');
+      if (!confirm(`Deseja excluir o utilizador "${nomeUsuario}" desta loja?`)) return;
+
+      contasRegistradas = contasRegistradas.filter(c => c.usuario !== nomeUsuario);
+      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
       renderizarTabelaUsuarios();
     }
 
@@ -809,9 +860,8 @@
     function cadastrarClienteRapido() {
       const nome = prompt("Digite o NOME COMPLETO do novo cliente:");
       if (!nome || !nome.trim()) return;
-
       const telefone = prompt("Digite o TELEFONE de contato (Opcional):") || "Não informado";
-      const limiteStr = prompt("Digite o LIMITE DE CRÉDITO para fiado (R$):\n(Deixe em branco para ilimitado)", "0");
+      const limiteStr = prompt("Digite o LIMITE DE CRÉDITO para fiado (R$):", "0");
       
       let limite = 0, ilimitado = false;
       if (limiteStr === null) return;
@@ -821,31 +871,9 @@
       const novoCliente = { id: Date.now(), nome: nome.trim(), telefone: telefone.trim(), limite, limiteIlimitado: ilimitado, saldoDevedor: 0, historicoTransacoes: [] };
       clientes.push(novoCliente);
       salvarDadosLoja();
-
       carregarOpcoesClientesVenda();
       document.getElementById('selectClienteVenda').value = novoCliente.id;
       alert(`Cliente "${novoCliente.nome}" cadastrado com sucesso!`);
-    }
-
-    function enviarExtratoWhatsApp(idCliente) {
-      const cli = clientes.find(c => c.id === idCliente);
-      if (!cli || cli.telefone === "Não informado") return alert('Telefone não cadastrado!');
-      let numTel = cli.telefone.replace(/\D/g, '');
-      if (numTel.length <= 11) numTel = '55' + numTel;
-
-      const comprasFiadas = (cli.historicoTransacoes || []).filter(t => t.tipo === 'compra');
-      let msg = `*EXTRATO DE DÉBITOS - ${lojaAtual.nomeLoja.toUpperCase()}*\n\nOlá, *${cli.nome}*!\n\n`;
-      comprasFiadas.forEach(t => { msg += `• ${new Date(t.data).toLocaleDateString()} - R$ ${t.valor.toFixed(2)}\n`; });
-      msg += `\n🔴 *SALDO DEVEDOR ATUAL:* R$ ${cli.saldoDevedor.toFixed(2)}\nAgradecemos a sua preferência!`;
-      window.open(`https://api.whatsapp.com/send?phone=${numTel}&text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
-    function imprimirExtratoCliente(idCliente) {
-      const cli = clientes.find(c => c.id === idCliente);
-      if (!cli) return;
-      const win = window.open('', '', 'width=600,height=700');
-      win.document.write(`<html><head><title>Extrato - ${cli.nome}</title></head><body style="font-family:monospace; padding:20px;"><h2 style="text-align:center;">${lojaAtual.nomeLoja.toUpperCase()}</h2><h3 style="text-align:center;">EXTRATO DE CLIENTE</h3><p><strong>Cliente:</strong> ${cli.nome}</p><p><strong>Dívida Total:</strong> R$ ${cli.saldoDevedor.toFixed(2)}</p></body></html>`);
-      win.document.close(); win.print();
     }
 
     function renderizarClientes() {
@@ -857,10 +885,6 @@
             <div class="flex justify-between">
               <div><h3 class="font-bold text-gray-800">${cli.nome}</h3><p class="text-xs text-gray-500">${cli.telefone}</p></div>
               <div class="text-right"><span class="text-xs text-gray-500">Dívida Fiado</span><p class="text-lg font-bold text-red-600">R$ ${cli.saldoDevedor.toFixed(2)}</p></div>
-            </div>
-            <div class="flex gap-2 pt-2">
-              <button onclick="enviarExtratoWhatsApp(${cli.id})" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs font-bold">📱 WhatsApp</button>
-              <button onclick="imprimirExtratoCliente(${cli.id})" class="bg-gray-700 text-white px-3 py-1 rounded text-xs font-bold">📄 Extrato</button>
             </div>
           </div>`;
       });
