@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Edição de Utilizadores e Palavra-passe</title>
+  <title>PDV Web - Edição de Clientes e Estorno de Compras</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -190,7 +190,7 @@
         </div>
       </section>
 
-      <!-- ABA 4: PRODUTOS, ESTOQUE, EDIÇÃO E UPLOAD DE PLANILHA -->
+      <!-- ABA 4: PRODUTOS & ESTOQUE -->
       <section id="produtos" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md space-y-6">
@@ -243,12 +243,13 @@
         </div>
       </section>
 
-      <!-- ABA 5: CLIENTES & BAIXA DE FIADOS -->
+      <!-- ABA 5: CLIENTES, EDIÇÃO DE DADOS & CANCELAMENTO DE COMPRA -->
       <section id="clientes" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Cadastrar Cliente</h2>
+            <h2 id="tituloFormCliente" class="text-xl font-bold mb-4 text-gray-700">Cadastrar Cliente</h2>
             <form id="formCliente" onsubmit="salvarCliente(event)" class="space-y-3">
+              <input type="hidden" id="cliIdEdicao" value="">
               <div><label class="block text-sm font-medium">Nome Completo <span class="text-red-500">*</span></label><input type="text" id="cliNome" required placeholder="Nome do cliente" class="w-full p-2 border rounded"></div>
               <div><label class="block text-sm font-medium">Telefone <span class="text-xs text-gray-400">(Opcional)</span></label><input type="text" id="cliTelefone" placeholder="(00) 00000-0000" class="w-full p-2 border rounded"></div>
               <div><label class="block text-sm font-medium">Limite Fiado (R$) <span class="text-xs text-gray-400">(Opcional)</span></label><input type="number" id="cliLimite" step="0.01" class="w-full p-2 border rounded" placeholder="0.00"></div>
@@ -256,12 +257,15 @@
                 <input type="checkbox" id="cliIlimitado" onchange="alternarCampoLimite(this)" class="w-4 h-4 text-blue-600 rounded">
                 <label for="cliIlimitado" class="text-sm font-semibold text-gray-700 cursor-pointer">Limite de Crédito Ilimitado</label>
               </div>
-              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2">Salvar Cliente</button>
+              <div class="flex gap-2">
+                <button type="submit" id="btnSalvarCliente" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2">Salvar Cliente</button>
+                <button type="button" id="btnCancelarEdicaoCliente" onclick="cancelarEdicaoCliente()" class="hidden w-1/3 bg-gray-400 hover:bg-gray-500 text-white py-2 rounded font-semibold mt-2">Cancelar</button>
+              </div>
             </form>
           </div>
 
           <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Controle de Fiados e Dar Baixa em Pagamentos</h2>
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Controle de Fiados e Histórico de Compras</h2>
             <div id="listaClientes" class="space-y-4"></div>
           </div>
         </div>
@@ -313,8 +317,6 @@
       <!-- ABA 7: GESTÃO E EDIÇÃO DE UTILIZADORES (APENAS ADMINISTRADOR) -->
       <section id="usuarios" class="aba-conteudo admin-only">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          <!-- FORMULÁRIO DE EDIÇÃO / EDIÇÃO DE PALAVRA-PASSE DE UTILIZADOR -->
           <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
             <h2 id="tituloFormUsuario" class="text-xl font-bold text-gray-700 border-b pb-2">Editar Utilizador</h2>
             <p class="text-xs text-gray-500 mb-2">Selecione um utilizador na tabela ao lado para alterar os seus dados ou criar uma nova palavra-passe.</p>
@@ -352,7 +354,6 @@
             </form>
           </div>
 
-          <!-- TABELA DE UTILIZADORES CADASTRADOS -->
           <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md space-y-4">
             <div class="flex justify-between items-center border-b pb-4">
               <div>
@@ -377,7 +378,6 @@
               </table>
             </div>
           </div>
-
         </div>
       </section>
 
@@ -494,7 +494,6 @@
       });
     }
 
-    // CARREGA OS DADOS DO UTILIZADOR NO FORMULÁRIO DE EDIÇÃO
     function prepararEdicaoUsuario(indice) {
       const conta = contasRegistradas[indice];
       if (!conta) return;
@@ -508,7 +507,6 @@
       document.getElementById('btnSalvarEdicaoUsuario').disabled = false;
     }
 
-    // SALVA AS ALTERAÇÕES OU NOVA SENHA DO UTILIZADOR
     function salvarEdicaoUsuario(e) {
       e.preventDefault();
       const idx = document.getElementById('editUsuarioIndiceOriginal').value;
@@ -519,13 +517,11 @@
       const novaSenha = document.getElementById('editUsuarioSenha').value;
       const novoPerfil = document.getElementById('editUsuarioPerfil').value;
 
-      // Validação de nome duplicado (com exceção do próprio registro)
       const nomeExistente = contasRegistradas.some((c, i) => i !== indice && c.usuario.toLowerCase() === novoNome.toLowerCase());
       if (nomeExistente) return alert('Já existe outro utilizador com este nome!');
 
       const nomeAntigo = contasRegistradas[indice].usuario;
 
-      // Atualiza os dados do utilizador
       contasRegistradas[indice].usuario = novoNome;
       contasRegistradas[indice].perfil = novoPerfil;
       if (novaSenha.trim() !== "") {
@@ -534,7 +530,6 @@
 
       localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
 
-      // Se o administrador editou a própria conta logada, atualiza a sessão ativa
       if (sessaoAtiva && sessaoAtiva.usuario === nomeAntigo) {
         sessaoAtiva.usuario = novoNome;
         sessaoAtiva.perfil = novoPerfil;
@@ -547,7 +542,6 @@
       renderizarTabelaUsuarios();
     }
 
-    // LIMPA O FORMULÁRIO DE EDIÇÃO
     function cancelarEdicaoUsuario() {
       document.getElementById('editUsuarioIndiceOriginal').value = "";
       document.getElementById('formEdicaoUsuario').reset();
@@ -555,7 +549,216 @@
       document.getElementById('btnSalvarEdicaoUsuario').disabled = true;
     }
 
-    // --- MÓDULO DE PRODUTOS, ESTOQUE E EDIÇÃO ---
+    // --- MÓDULO CLIENTES, EDIÇÃO & CANCELAMENTO DE COMPRAS ---
+    function alternarCampoLimite(cb) {
+      const input = document.getElementById('cliLimite');
+      input.value = ''; input.disabled = cb.checked;
+      cb.checked ? input.classList.add('bg-gray-100') : input.classList.remove('bg-gray-100');
+    }
+
+    function salvarCliente(e) {
+      e.preventDefault();
+      const idEdicao = document.getElementById('cliIdEdicao').value;
+      const nome = document.getElementById('cliNome').value.trim();
+      const tel = document.getElementById('cliTelefone').value.trim() || "Não informado";
+      const ilim = document.getElementById('cliIlimitado').checked;
+      const limVal = document.getElementById('cliLimite').value;
+      const limite = ilim ? 0 : (limVal !== "" ? parseFloat(limVal) : 0);
+
+      if (idEdicao) {
+        // EDIÇÃO DE CLIENTE EXISTENTE
+        const idNum = parseInt(idEdicao);
+        const cli = clientes.find(c => c.id === idNum);
+        if (cli) {
+          cli.nome = nome;
+          cli.telefone = tel;
+          cli.limite = limite;
+          cli.limiteIlimitado = ilim;
+          alert(`Dados do cliente "${nome}" atualizados com sucesso!`);
+        }
+      } else {
+        // CADASTRO DE NOVO CLIENTE
+        clientes.push({ id: Date.now(), nome, telefone: tel, limite, limiteIlimitado: ilim, saldoDevedor: 0, historicoTransacoes: [] });
+        alert('Cliente cadastrado com sucesso!');
+      }
+
+      localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
+      cancelarEdicaoCliente();
+      renderizarClientes();
+      carregarOpcoesClientesVenda();
+    }
+
+    function prepararEdicaoCliente(idCliente) {
+      const cli = clientes.find(c => c.id === idCliente);
+      if (!cli) return;
+
+      document.getElementById('cliIdEdicao').value = cli.id;
+      document.getElementById('cliNome').value = cli.nome;
+      document.getElementById('cliTelefone').value = cli.telefone === "Não informado" ? "" : cli.telefone;
+      
+      const cbIlim = document.getElementById('cliIlimitado');
+      cbIlim.checked = cli.limiteIlimitado;
+      alternarCampoLimite(cbIlim);
+      
+      if (!cli.limiteIlimitado) {
+        document.getElementById('cliLimite').value = cli.limite;
+      }
+
+      document.getElementById('tituloFormCliente').innerText = "Editar Cliente";
+      document.getElementById('btnSalvarCliente').innerText = "Salvar Alterações";
+      document.getElementById('btnCancelarEdicaoCliente').classList.remove('hidden');
+    }
+
+    function cancelarEdicaoCliente() {
+      document.getElementById('cliIdEdicao').value = "";
+      document.getElementById('formCliente').reset();
+      const cbIlim = document.getElementById('cliIlimitado');
+      cbIlim.checked = false;
+      alternarCampoLimite(cbIlim);
+      document.getElementById('tituloFormCliente').innerText = "Cadastrar Cliente";
+      document.getElementById('btnSalvarCliente').innerText = "Salvar Cliente";
+      document.getElementById('btnCancelarEdicaoCliente').classList.add('hidden');
+    }
+
+    function renderizarClientes() {
+      const lista = document.getElementById('listaClientes');
+      lista.innerHTML = clientes.length === 0 ? '<p class="text-gray-500 text-sm">Nenhum cliente cadastrado.</p>' : '';
+      
+      clientes.forEach(cli => {
+        const limiteTexto = cli.limiteIlimitado ? "Ilimitado" : `R$ ${cli.limite.toFixed(2)}`;
+        const disp = cli.limiteIlimitado ? "Ilimitado" : `R$ ${(cli.limite - cli.saldoDevedor).toFixed(2)} / ${limiteTexto}`;
+        
+        // FILTRAR APENAS AS COMPRAS FIADAS NO HISTÓRICO
+        const comprasFiadas = (cli.historicoTransacoes || []).filter(t => t.tipo === 'compra');
+
+        let htmlHistoricoCompras = '';
+        if (comprasFiadas.length > 0) {
+          htmlHistoricoCompras = `
+            <div class="mt-2 border-t pt-2">
+              <span class="text-xs font-bold text-gray-600 block mb-1">Compras em Fiado Realizadas:</span>
+              <div class="space-y-1 max-h-32 overflow-y-auto">`;
+          
+          comprasFiadas.forEach((trans, idx) => {
+            const dataFmt = new Date(trans.data).toLocaleDateString() + ' ' + new Date(trans.data).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            htmlHistoricoCompras += `
+              <div class="flex justify-between items-center text-xs bg-white p-1.5 rounded border">
+                <span>📅 ${dataFmt} - <strong class="text-red-600">R$ ${trans.valor.toFixed(2)}</strong></span>
+                <button onclick="excluirCompraCliente(${cli.id}, '${trans.data}')" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-0.5 rounded font-bold transition">
+                  🗑️ Estornar
+                </button>
+              </div>`;
+          });
+
+          htmlHistoricoCompras += `</div></div>`;
+        }
+
+        lista.innerHTML += `
+          <div class="border p-4 rounded-lg bg-gray-50 space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-bold text-gray-800 text-base">${cli.nome}</h3>
+                <p class="text-xs text-gray-500">Contato: ${cli.telefone}</p>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-gray-500 block">Dívida Atual (Fiado)</span>
+                <span class="text-lg font-bold text-red-600">R$ ${cli.saldoDevedor.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs bg-white p-2 rounded border">
+              <div><span class="text-gray-500 block">Crédito Disp.:</span><span class="font-bold text-green-600">${disp}</span></div>
+              <div><span class="text-gray-500 block">Status:</span><span class="font-bold ${cli.saldoDevedor > 0 ? 'text-amber-600' : 'text-blue-600'}">${cli.saldoDevedor > 0 ? 'Com Débito' : 'Em Dia'}</span></div>
+            </div>
+
+            ${htmlHistoricoCompras}
+
+            <div class="pt-2 border-t flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div class="flex items-center gap-2 w-full">
+                <input type="number" id="inputAbater_${cli.id}" step="0.01" placeholder="Valor a abater (R$)" class="p-2 border rounded text-sm w-full">
+                <button onclick="receberPagamentoCliente(${cli.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">
+                  💵 Dar Baixa
+                </button>
+              </div>
+              <button onclick="prepararEdicaoCliente(${cli.id})" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">
+                ✏️ Editar Dados
+              </button>
+            </div>
+          </div>`;
+      });
+    }
+
+    // EXCLUIR/ESTORNAR UMA COMPRA FIADA DO CLIENTE E RECALCULAR O SALDO DEVEDOR
+    function excluirCompraCliente(idCliente, dataTransacao) {
+      const cli = clientes.find(c => c.id === idCliente);
+      if (!cli) return;
+
+      const idxTrans = (cli.historicoTransacoes || []).findIndex(t => t.data === dataTransacao);
+      if (idxTrans === -1) return;
+
+      const compra = cli.historicoTransacoes[idxTrans];
+      if (!confirm(`Deseja cancelar/estornar a compra no valor de R$ ${compra.valor.toFixed(2)} do cliente ${cli.nome}?`)) return;
+
+      // Abate o valor do saldo devedor do cliente
+      cli.saldoDevedor = Math.max(0, cli.saldoDevedor - compra.valor);
+
+      // Remove a transação do histórico do cliente
+      cli.historicoTransacoes.splice(idxTrans, 1);
+
+      localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
+      alert(`Compra estornada! R$ ${compra.valor.toFixed(2)} foram abatidos do saldo devedor de ${cli.nome}.`);
+
+      renderizarClientes();
+      carregarOpcoesClientesVenda();
+      renderizarRelatorios();
+    }
+
+    function receberPagamentoCliente(idCliente) {
+      if (!caixa.aberto) return alert('Por favor, abra o Caixa antes de receber pagamentos!');
+
+      const input = document.getElementById(`inputAbater_${idCliente}`);
+      const valor = parseFloat(input.value);
+
+      if (!valor || valor <= 0) return alert('Digite um valor válido para abater!');
+
+      const cliente = clientes.find(c => c.id === idCliente);
+      if (!cliente) return;
+
+      if (cliente.saldoDevedor <= 0) {
+        return alert(`O cliente ${cliente.nome} não possui saldo devedor pendente!`);
+      }
+
+      const valorAbatido = Math.min(cliente.saldoDevedor, valor);
+      cliente.saldoDevedor = Math.max(0, cliente.saldoDevedor - valorAbatido);
+
+      if (!cliente.historicoTransacoes) cliente.historicoTransacoes = [];
+      cliente.historicoTransacoes.push({
+        data: new Date().toISOString(),
+        tipo: 'pagamento_fiado',
+        valor: valorAbatido
+      });
+
+      caixa.entradas += valorAbatido;
+
+      localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
+      localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
+
+      alert(`Pagamento de R$ ${valorAbatido.toFixed(2)} recebido com sucesso! O saldo devedor de ${cliente.nome} foi atualizado.`);
+      
+      renderizarClientes();
+      atualizarUICaixa();
+      carregarOpcoesClientesVenda();
+    }
+
+    function carregarOpcoesClientesVenda() {
+      const select = document.getElementById('selectClienteVenda');
+      select.innerHTML = '<option value="">-- Nenhum cliente (Venda Avulsa) --</option>';
+      clientes.forEach(cli => {
+        const disp = cli.limiteIlimitado ? "Ilimitado" : `R$ ${(cli.limite - cli.saldoDevedor).toFixed(2)}`;
+        select.innerHTML += `<option value="${cli.id}">${cli.nome} (Disp. Fiado: ${disp})</option>`;
+      });
+    }
+
+    // --- MÓDULO DE PRODUTOS E ESTOQUE ---
     function calcularMargemLucro() {
       const c = parseFloat(document.getElementById('prodCusto').value) || 0;
       const v = parseFloat(document.getElementById('prodVenda').value) || 0;
@@ -691,103 +894,6 @@
               </button>
             </td>
           </tr>`;
-      });
-    }
-
-    // --- MÓDULO CLIENTES & DAR BAIXA EM FIADOS ---
-    function alternarCampoLimite(cb) {
-      const input = document.getElementById('cliLimite');
-      input.value = ''; input.disabled = cb.checked;
-      cb.checked ? input.classList.add('bg-gray-100') : input.classList.remove('bg-gray-100');
-    }
-
-    function salvarCliente(e) {
-      e.preventDefault();
-      const nome = document.getElementById('cliNome').value.trim();
-      const tel = document.getElementById('cliTelefone').value.trim() || "Não informado";
-      const ilim = document.getElementById('cliIlimitado').checked;
-      const limVal = document.getElementById('cliLimite').value;
-      const limite = ilim ? 0 : (limVal !== "" ? parseFloat(limVal) : 0);
-
-      clientes.push({ id: Date.now(), nome, telefone: tel, limite, limiteIlimitado: ilim, saldoDevedor: 0, historicoTransacoes: [] });
-      localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
-      document.getElementById('formCliente').reset();
-      renderizarClientes();
-      carregarOpcoesClientesVenda();
-      alert('Cliente cadastrado com sucesso!');
-    }
-
-    function renderizarClientes() {
-      const lista = document.getElementById('listaClientes');
-      lista.innerHTML = clientes.length === 0 ? '<p class="text-gray-500 text-sm">Nenhum cliente cadastrado.</p>' : '';
-      clientes.forEach(cli => {
-        const limiteTexto = cli.limiteIlimitado ? "Ilimitado" : `R$ ${cli.limite.toFixed(2)}`;
-        const disp = cli.limiteIlimitado ? "Ilimitado" : `R$ ${(cli.limite - cli.saldoDevedor).toFixed(2)} / ${limiteTexto}`;
-        
-        lista.innerHTML += `
-          <div class="border p-4 rounded-lg bg-gray-50 space-y-3">
-            <div class="flex justify-between items-start">
-              <div><h3 class="font-bold text-gray-800">${cli.nome}</h3><p class="text-xs text-gray-500">Contato: ${cli.telefone}</p></div>
-              <div class="text-right"><span class="text-xs text-gray-500 block">Dívida Atual (Fiado)</span><span class="text-lg font-bold text-red-600">R$ ${cli.saldoDevedor.toFixed(2)}</span></div>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-xs bg-white p-2 rounded border">
-              <div><span class="text-gray-500 block">Crédito Disp.:</span><span class="font-bold text-green-600">${disp}</span></div>
-              <div><span class="text-gray-500 block">Status:</span><span class="font-bold ${cli.saldoDevedor > 0 ? 'text-amber-600' : 'text-blue-600'}">${cli.saldoDevedor > 0 ? 'Com Débito' : 'Em Dia'}</span></div>
-            </div>
-
-            <div class="pt-2 border-t flex items-center gap-2">
-              <input type="number" id="inputAbater_${cli.id}" step="0.01" placeholder="Valor a abater (R$)" class="p-2 border rounded text-sm w-full">
-              <button onclick="receberPagamentoCliente(${cli.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-4 py-2 rounded shadow transition whitespace-nowrap">
-                💵 Dar Baixa
-              </button>
-            </div>
-          </div>`;
-      });
-    }
-
-    function receberPagamentoCliente(idCliente) {
-      if (!caixa.aberto) return alert('Por favor, abra o Caixa antes de receber pagamentos!');
-
-      const input = document.getElementById(`inputAbater_${idCliente}`);
-      const valor = parseFloat(input.value);
-
-      if (!valor || valor <= 0) return alert('Digite um valor válido para abater!');
-
-      const cliente = clientes.find(c => c.id === idCliente);
-      if (!cliente) return;
-
-      if (cliente.saldoDevedor <= 0) {
-        return alert(`O cliente ${cliente.nome} não possui saldo devedor pendente!`);
-      }
-
-      const valorAbatido = Math.min(cliente.saldoDevedor, valor);
-      cliente.saldoDevedor = Math.max(0, cliente.saldoDevedor - valorAbatido);
-
-      if (!cliente.historicoTransacoes) cliente.historicoTransacoes = [];
-      cliente.historicoTransacoes.push({
-        data: new Date().toISOString(),
-        tipo: 'pagamento_fiado',
-        valor: valorAbatido
-      });
-
-      caixa.entradas += valorAbatido;
-
-      localStorage.setItem('pdv_clientes', JSON.stringify(clientes));
-      localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
-
-      alert(`Pagamento de R$ ${valorAbatido.toFixed(2)} recebido com sucesso! O saldo devedor de ${cliente.nome} foi atualizado.`);
-      
-      renderizarClientes();
-      atualizarUICaixa();
-      carregarOpcoesClientesVenda();
-    }
-
-    function carregarOpcoesClientesVenda() {
-      const select = document.getElementById('selectClienteVenda');
-      select.innerHTML = '<option value="">-- Nenhum cliente (Venda Avulsa) --</option>';
-      clientes.forEach(cli => {
-        const disp = cli.limiteIlimitado ? "Ilimitado" : `R$ ${(cli.limite - cli.saldoDevedor).toFixed(2)}`;
-        select.innerHTML += `<option value="${cli.id}">${cli.nome} (Disp. Fiado: ${disp})</option>`;
       });
     }
 
