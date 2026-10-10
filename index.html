@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Cadastro Rápido e Exclusão de Clientes</title>
+  <title>PDV Web - Emissão de Recibo e Extrato de Débitos</title>
   <!-- Tailwind CSS para estilização visual rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -121,7 +121,6 @@
                   <label class="block text-sm font-medium">
                     Cliente <span id="labelClienteOpcional" class="text-xs text-gray-400">(Opcional para À Vista)</span>
                   </label>
-                  <!-- BOTÃO DE ADICIONAR NOVO CLIENTE DIRETO NA VENDA -->
                   <button onclick="cadastrarClienteRapido()" class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold px-2 py-0.5 rounded transition">
                     ➕ Novo Cliente
                   </button>
@@ -143,7 +142,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-4">
             <div>
               <h2 class="text-xl font-bold text-gray-700">Registro Geral de Vendas</h2>
-              <p class="text-xs text-gray-500">Ao estornar uma venda, o valor é deduzido do caixa e do histórico do cliente automaticamente!</p>
+              <p class="text-xs text-gray-500">Consulte vendas, emita recibos ou estorne transações</p>
             </div>
             <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
               Total Registrado: <span id="qtdTotalVendas">0</span> vendas
@@ -159,7 +158,7 @@
                   <th class="p-3">Valor Total</th>
                   <th class="p-3">Custo Total</th>
                   <th class="p-3">Lucro Obtido</th>
-                  <th class="p-3 text-center">Ação</th>
+                  <th class="p-3 text-center">Ações</th>
                 </tr>
               </thead>
               <tbody id="tabelaAbaVendas"></tbody>
@@ -280,7 +279,7 @@
           </div>
 
           <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Gestão de Clientes e Relatório Detalhado de Compras</h2>
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Gestão de Clientes e Envios de Extrato</h2>
             <div id="listaClientes" class="space-y-4"></div>
           </div>
         </div>
@@ -520,7 +519,7 @@
       document.getElementById('btnSalvarEdicaoUsuario').disabled = true;
     }
 
-    // --- MÓDULO CLIENTES, CADASTRO RÁPIDO E EXCLUSÃO DE CLIENTES ---
+    // --- MÓDULO CLIENTES, CADASTRO RÁPIDO, EXCLUSÃO & EXTRATOS ---
     function alternarCampoLimite(cb) {
       const input = document.getElementById('cliLimite');
       input.value = ''; input.disabled = cb.checked;
@@ -554,7 +553,6 @@
       carregarOpcoesClientesVenda();
     }
 
-    // CADASTRO RÁPIDO DE CLIENTE DIRETO DA FRENTE DE CAIXA
     function cadastrarClienteRapido() {
       const nome = prompt("Digite o NOME COMPLETO do novo cliente:");
       if (!nome || !nome.trim()) return;
@@ -590,13 +588,12 @@
       alert(`Cliente "${novoCliente.nome}" cadastrado com sucesso e selecionado para a venda!`);
     }
 
-    // EXCLUIR CLIENTE DO CADASTRO
     function excluirCliente(idCliente) {
       const cli = clientes.find(c => c.id === idCliente);
       if (!cli) return;
 
       if (cli.saldoDevedor > 0) {
-        return alert(`Não é possível excluir o cliente "${cli.nome}" pois ele possui um saldo devedor pendente de R$ ${cli.saldoDevedor.toFixed(2)}.\nDê baixa no pagamento ou estorne as compras antes de excluir.`);
+        return alert(`Não é possível excluir o cliente "${cli.nome}" pois ele possui um saldo devedor pendente de R$ ${cli.saldoDevedor.toFixed(2)}.`);
       }
 
       if (!confirm(`Tem certeza de que deseja excluir o cliente "${cli.nome}" do sistema?`)) return;
@@ -607,6 +604,95 @@
       alert(`Cliente "${cli.nome}" removido com sucesso!`);
       renderizarClientes();
       carregarOpcoesClientesVenda();
+    }
+
+    // ENVIAR EXTRATO DE DÉBITOS PELO WHATSAPP
+    function enviarExtratoWhatsApp(idCliente) {
+      const cli = clientes.find(c => c.id === idCliente);
+      if (!cli) return;
+
+      if (cli.telefone === "Não informado" || !cli.telefone.trim()) {
+        return alert(`O cliente ${cli.nome} não possui telefone cadastrado! Edite o cadastro para informar o número.`);
+      }
+
+      // Limpa caracteres especiais do telefone para o link do WhatsApp
+      let numTel = cli.telefone.replace(/\D/g, '');
+      if (numTel.length <= 11) numTel = '55' + numTel; // Adiciona DDD/País padrão se necessário
+
+      const comprasFiadas = (cli.historicoTransacoes || []).filter(t => t.tipo === 'compra');
+      
+      let msg = `*EXTRATO DE DÉBITOS - PDV WEB*\n\n`;
+      msg += `Olá, *${cli.nome}*!\nSegue o resumo da sua conta:\n\n`;
+
+      if (comprasFiadas.length === 0) {
+        msg += `✅ *Nenhuma compra pendente no momento!*\n`;
+      } else {
+        msg += `📋 *Compras em Fiado Realizadas:*\n`;
+        comprasFiadas.forEach(t => {
+          const d = new Date(t.data).toLocaleDateString();
+          msg += `• ${d} - R$ ${t.valor.toFixed(2)}\n`;
+        });
+      }
+
+      msg += `\n🔴 *SALDO DEVEDOR ATUAL:* R$ ${cli.saldoDevedor.toFixed(2)}\n`;
+      msg += `\nAgradecemos a sua preferência!`;
+
+      const url = `https://api.whatsapp.com/send?phone=${numTel}&text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
+    }
+
+    // IMPRIMIR EXTRATO FORMATADO DO CLIENTE
+    function imprimirExtratoCliente(idCliente) {
+      const cli = clientes.find(c => c.id === idCliente);
+      if (!cli) return;
+
+      const comprasFiadas = (cli.historicoTransacoes || []).filter(t => t.tipo === 'compra');
+      const pagamentos = (cli.historicoTransacoes || []).filter(t => t.tipo === 'pagamento_fiado');
+
+      let itensHtml = '';
+      comprasFiadas.forEach(t => {
+        const d = new Date(t.data).toLocaleDateString() + ' ' + new Date(t.data).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        itensHtml += `<tr><td style="padding:4px;">${d}</td><td style="padding:4px;">Compra Fiada</td><td style="padding:4px; text-align:right;">R$ ${t.valor.toFixed(2)}</td></tr>`;
+      });
+
+      pagamentos.forEach(t => {
+        const d = new Date(t.data).toLocaleDateString() + ' ' + new Date(t.data).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        itensHtml += `<tr><td style="padding:4px;">${d}</td><td style="padding:4px;">Baixa/Pagamento</td><td style="padding:4px; text-align:right; color:green;">- R$ ${t.valor.toFixed(2)}</td></tr>`;
+      });
+
+      const win = window.open('', '', 'width=600,height=700');
+      win.document.write(`
+        <html>
+          <head>
+            <title>Extrato de Conta - ${cli.nome}</title>
+            <style>
+              body { font-family: monospace; padding: 20px; font-size: 13px; }
+              h2, h3 { text-align: center; margin: 4px 0; }
+              table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+              th { border-bottom: 1px dashed #000; text-align: left; padding: 4px; }
+              .total { border-top: 1px dashed #000; font-weight: bold; font-size: 15px; margin-top: 15px; pt-2; text-align: right; }
+            </style>
+          </head>
+          <body>
+            <h2>PDV COMERCIAL</h2>
+            <h3>EXTRATO DE CONTA CLIENTE</h3>
+            <hr style="border-top: 1px dashed #000;"/>
+            <p><strong>Cliente:</strong> ${cli.nome}<br/><strong>Contato:</strong> ${cli.telefone}</p>
+            <table>
+              <thead>
+                <tr><th>Data</th><th>Descrição</th><th style="text-align:right;">Valor</th></tr>
+              </thead>
+              <tbody>
+                ${itensHtml || '<tr><td colspan="3">Nenhum registro.</td></tr>'}
+              </tbody>
+            </table>
+            <div class="total">SALDO DEVEDOR: R$ ${cli.saldoDevedor.toFixed(2)}</div>
+            <p style="text-align:center; margin-top:30px;">___________________________________<br/>Assinatura do Cliente</p>
+          </body>
+        </html>
+      `);
+      win.document.close();
+      win.print();
     }
 
     function prepararEdicaoCliente(idCliente) {
@@ -691,14 +777,27 @@
             </div>
             ${htmlFiado}
             ${htmlVista}
-            <div class="pt-2 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-              <div class="flex items-center gap-2 w-full">
-                <input type="number" id="inputAbater_${cli.id}" step="0.01" placeholder="Valor a abater (R$)" class="p-2 border rounded text-sm w-full">
-                <button onclick="receberPagamentoCliente(${cli.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">💵 Dar Baixa</button>
-              </div>
+            
+            <!-- AÇÕES DE EXTRATO E PAGAMENTO DO CLIENTE -->
+            <div class="pt-2 border-t space-y-2">
               <div class="flex items-center gap-2">
-                <button onclick="prepararEdicaoCliente(${cli.id})" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">✏️ Editar</button>
-                <button onclick="excluirCliente(${cli.id})" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">🗑️ Excluir</button>
+                <button onclick="enviarExtratoWhatsApp(${cli.id})" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 rounded shadow transition">
+                  📱 Enviar WhatsApp
+                </button>
+                <button onclick="imprimirExtratoCliente(${cli.id})" class="w-1/2 bg-gray-700 hover:bg-gray-800 text-white font-bold text-xs py-2 rounded shadow transition">
+                  📄 Imprimir Extrato
+                </button>
+              </div>
+
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1">
+                <div class="flex items-center gap-2 w-full">
+                  <input type="number" id="inputAbater_${cli.id}" step="0.01" placeholder="Valor a abater (R$)" class="p-2 border rounded text-sm w-full">
+                  <button onclick="receberPagamentoCliente(${cli.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">💵 Dar Baixa</button>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="prepararEdicaoCliente(${cli.id})" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">✏️ Editar</button>
+                  <button onclick="excluirCliente(${cli.id})" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition whitespace-nowrap">🗑️ Excluir</button>
+                </div>
               </div>
             </div>
           </div>`;
@@ -713,7 +812,7 @@
       if (idxTrans === -1) return;
 
       const compra = cli.historicoTransacoes[idxTrans];
-      if (!confirm(`Deseja estornar esta compra no valor de R$ ${compra.valor.toFixed(2)} do cliente ${cli.nome}?\n(Produtos voltarão ao estoque e o caixa será ajustado)`)) return;
+      if (!confirm(`Deseja estornar esta compra no valor de R$ ${compra.valor.toFixed(2)} do cliente ${cli.nome}?`)) return;
 
       if (compra.itens && Array.isArray(compra.itens)) {
         compra.itens.forEach(item => {
@@ -967,7 +1066,7 @@
       if (formaSelec === 'vista_cartao') rotuloForma = 'À Vista (Cartão)';
 
       let detalhe = `${rotuloForma} (Avulsa)`;
-      const itensComprados = carrinho.map(i => ({ id: i.id, nome: i.nome, qtd: i.qtd }));
+      const itensComprados = carrinho.map(i => ({ id: i.id, nome: i.nome, venda: i.venda, qtd: i.qtd }));
 
       if (formaSelec === 'vista_dinheiro') {
         caixa.dinheiro = (caixa.dinheiro || 0) + totalVenda;
@@ -1017,16 +1116,85 @@
         totalCusto, 
         lucroObtido: lucro, 
         itens: itensComprados,
-        clienteId: cli ? cli.id : null
+        clienteId: cli ? cli.id : null,
+        clienteNome: cli ? cli.nome : 'Cliente Avulso'
       };
       vendas.push(novaVenda);
       localStorage.setItem('pdv_vendas', JSON.stringify(vendas));
 
-      alert('Venda realizada e registrada no caixa!');
+      // IMPRIMIR RECIBO DA VENDA ACABADA DE REALIZAR
+      if (confirm('Venda realizada com sucesso!\nDeseja imprimir o recibo para o cliente?')) {
+        imprimirReciboVenda(novaVenda.id);
+      }
+
       carrinho = [];
       document.getElementById('selectClienteVenda').value = "";
       renderizarCarrinho();
       atualizarTudo();
+    }
+
+    // IMPRESSÃO DE RECIBO DE VENDA
+    function imprimirReciboVenda(idVenda) {
+      const v = vendas.find(item => item.id === idVenda);
+      if (!v) return;
+
+      const dataFmt = new Date(v.data).toLocaleDateString() + ' ' + new Date(v.data).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+      let itensHtml = '';
+      if (v.itens && Array.isArray(v.itens)) {
+        v.itens.forEach(i => {
+          itensHtml += `
+            <tr>
+              <td style="padding: 2px 0;">${i.qtd}x ${i.nome}</td>
+              <td style="text-align: right; padding: 2px 0;">R$ ${(i.venda * i.qtd).toFixed(2)}</td>
+            </tr>`;
+        });
+      }
+
+      const win = window.open('', '', 'width=400,height=600');
+      win.document.write(`
+        <html>
+          <head>
+            <title>Recibo de Venda - #${v.id}</title>
+            <style>
+              body { font-family: monospace; padding: 10px; font-size: 12px; }
+              .center { text-align: center; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+              .line { border-top: 1px dashed #000; margin: 8px 0; }
+              .total { font-weight: bold; font-size: 14px; text-align: right; margin-top: 8px; }
+            </style>
+          </head>
+          <body>
+            <div class="center">
+              <h3 style="margin:2px 0;">PDV COMERCIAL</h3>
+              <p style="margin:2px 0;">Comprovante de Venda</p>
+            </div>
+            <div class="line"></div>
+            <p style="margin:2px 0;"><strong>Nº Venda:</strong> ${v.id}</p>
+            <p style="margin:2px 0;"><strong>Data:</strong> ${dataFmt}</p>
+            <p style="margin:2px 0;"><strong>Cliente:</strong> ${v.clienteNome || 'Avulso'}</p>
+            <p style="margin:2px 0;"><strong>Pagamento:</strong> ${v.formaPagamento}</p>
+            <div class="line"></div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Item</th>
+                  <th style="text-align:right;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itensHtml || '<tr><td colspan="2">Itens não detalhados</td></tr>'}
+              </tbody>
+            </table>
+            <div class="line"></div>
+            <div class="total">TOTAL: R$ ${v.totalVenda.toFixed(2)}</div>
+            <div class="line"></div>
+            <p class="center" style="margin-top:15px;">Obrigado pela preferência!</p>
+          </body>
+        </html>
+      `);
+      win.document.close();
+      win.print();
     }
 
     function renderizarTabelaAbaVendas() {
@@ -1042,7 +1210,10 @@
             <td class="p-3 font-bold text-gray-800">R$ ${v.totalVenda.toFixed(2)}</td>
             <td class="p-3 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td>
             <td class="p-3 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
-            <td class="p-3 text-center"><button onclick="excluirVendaIndividual(${v.id})" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-xs font-bold transition">🗑️ Estornar</button></td>
+            <td class="p-3 text-center space-x-1">
+              <button onclick="imprimirReciboVenda(${v.id})" class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs font-bold transition">🧾 Recibo</button>
+              <button onclick="excluirVendaIndividual(${v.id})" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded text-xs font-bold transition">🗑️ Estornar</button>
+            </td>
           </tr>`;
       });
     }
@@ -1148,7 +1319,10 @@
                 <td class="p-2">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
                 <td class="p-2">${v.formaPagamento}</td><td class="p-2 font-bold">R$ ${v.totalVenda.toFixed(2)}</td>
                 <td class="p-2 text-gray-600">R$ ${v.totalCusto.toFixed(2)}</td><td class="p-2 font-bold text-green-600">R$ ${v.lucroObtido.toFixed(2)}</td>
-                <td class="p-2 text-center"><button onclick="excluirVendaIndividual(${v.id})" class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">🗑️ Estornar</button></td>
+                <td class="p-2 text-center space-x-1">
+                  <button onclick="imprimirReciboVenda(${v.id})" class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs font-bold transition">🧾 Recibo</button>
+                  <button onclick="excluirVendaIndividual(${v.id})" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded text-xs font-bold transition">🗑️ Estornar</button>
+                </td>
               </tr>`;
           }
         });
