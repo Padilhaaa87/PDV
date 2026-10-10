@@ -4,14 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PDV Web - Autenticação</title>
-  <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .aba-conteudo { display: none; }
     .aba-conteudo.ativa { display: block; }
     .oculto-autenticacao { display: none !important; }
 
-    /* MODO ESCURO CUSTOMIZADO */
     body.dark {
       background-color: #0f172a !important;
       color: #f8fafc !important;
@@ -41,7 +39,6 @@
         <p class="text-gray-500 text-sm">Selecione o seu tipo de acesso para entrar no sistema</p>
       </div>
 
-      <!-- SELETOR DE PERFIL -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-1 border-b pb-2 text-xs font-bold text-center">
         <button onclick="selecionarTipoAcesso('vendedor')" id="btnAcessoVendedor" class="py-2 px-1 rounded bg-blue-600 text-white shadow">🛒 Vendedor</button>
         <button onclick="selecionarTipoAcesso('adminLoja')" id="btnAcessoAdminLoja" class="py-2 px-1 rounded text-gray-600 hover:bg-gray-100">🏢 Adm Loja</button>
@@ -64,7 +61,7 @@
           <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label>
           <div class="relative">
             <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500 pr-10">
-            <button type="button" onclick="alternarVisibilidadeSenha('loginSenha')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 text-sm font-semibold">
+            <button type="button" onclick="alternarVisibilidadeSenha('loginSenha', 'btnVerSenhaLogin')" id="btnVerSenhaLogin" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 text-sm font-semibold">
               👁️
             </button>
           </div>
@@ -84,8 +81,16 @@
         </button>
       </form>
 
-      <!-- FORMULÁRIO DE CADASTRO DE NOVA LOJA -->
+      <!-- FORMULÁRIO DE NOVA LOJA -->
       <form id="formCadastro" onsubmit="cadastrarLojaEUsuario(event)" class="space-y-4 hidden">
+        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 p-4 rounded-lg shadow-sm space-y-2">
+          <div class="flex justify-between items-center border-b border-emerald-200 pb-2">
+            <span class="text-xs font-bold uppercase text-emerald-800">🚀 Adquira o Sistema PDV Web</span>
+            <span class="bg-emerald-600 text-white text-xs font-extrabold px-2.5 py-1 rounded-full shadow">Apenas R$ 20,00</span>
+          </div>
+          <p class="text-xs text-gray-700">Adquira a sua licença de uso para criar a sua loja com acesso ilimitado.</p>
+        </div>
+
         <div>
           <label class="block text-sm font-medium text-gray-700">Código de Compra / Licença <span class="text-red-500">*</span></label>
           <input type="text" id="cadCodigoCompra" required placeholder="Ex: MEUPDV123" class="w-full p-3 border rounded font-mono uppercase bg-amber-50 border-amber-300 outline-none focus:ring-2 focus:ring-amber-500">
@@ -117,7 +122,7 @@
     </div>
   </div>
 
-  <!-- MODAL DE SOLICITAÇÃO DE RECUPERAÇÃO -->
+  <!-- MODAL DE RECUPERAÇÃO -->
   <div id="modalRecuperacaoSenha" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl relative">
       <div class="flex justify-between items-center border-b pb-2">
@@ -125,7 +130,7 @@
         <button onclick="alternarModalRecuperacao(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
       </div>
       <p class="text-xs text-gray-600">
-        Informe o seu e-mail cadastrado. A palavra-passe antiga será <strong>bloqueada imediatamente</strong> e o código de redefinição será enviado para o seu e-mail e telemóvel/WhatsApp.
+        Informe o seu e-mail cadastrado. A palavra-passe antiga será <strong>bloqueada imediatamente</strong> e o código de redefinição será enviado.
       </p>
       <form onsubmit="processarRecuperacaoSenha(event)" class="space-y-3">
         <div>
@@ -133,10 +138,10 @@
           <input type="email" id="emailRecuperacao" required placeholder="digite.seu.email@exemplo.com" class="w-full p-2.5 border rounded outline-none focus:ring-2 focus:ring-blue-500 text-sm">
         </div>
         <div>
-          <label class="block text-xs font-bold text-gray-700 mb-1">Canal Principal de Envio:</label>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Enviar Código Via:</label>
           <select id="meioEnvioCodigo" class="w-full p-2.5 border rounded text-sm bg-gray-50 font-semibold">
-            <option value="email">📧 Enviar via E-mail</option>
-            <option value="whatsapp">📱 Enviar via WhatsApp</option>
+            <option value="email">📧 E-mail</option>
+            <option value="whatsapp">📱 WhatsApp</option>
           </select>
         </div>
         <div class="flex justify-end gap-2 pt-2">
@@ -155,7 +160,7 @@
         <button onclick="alternarModalConfirmacaoToken(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
       </div>
       <p class="text-xs text-gray-600">
-        Insira o código de confirmação recebido no seu e-mail/WhatsApp para redefinir a palavra-passe e reativar a sua conta.
+        Insira o código enviado e escolha uma nova palavra-passe.
       </p>
       <form onsubmit="confirmarERedefinirSenha(event)" class="space-y-3">
         <div>
@@ -197,19 +202,33 @@
         <button onclick="alternarAba('controleCaixa')" id="btn-controleCaixa" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm">Caixa</button>
         <button onclick="alternarAba('produtos')" id="btn-produtos" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm">Produtos & Estoque</button>
         <button onclick="alternarAba('clientes')" id="btn-clientes" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm">Clientes & Fiado</button>
+        <button onclick="alternarAba('relatorios')" id="btn-relatorios" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm admin-only">Relatórios & Lucros</button>
         <button onclick="alternarAba('usuarios')" id="btn-usuarios" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm admin-only">👥 Utilizadores & Tema</button>
+        <button onclick="alternarAba('adminGeral')" id="btn-adminGeral" class="py-3 px-5 bg-purple-900 font-bold text-amber-300 text-sm admin-geral-only hidden">👑 PAINEL ADM GERAL</button>
       </div>
     </nav>
 
     <main class="max-w-7xl mx-auto p-4 md:p-6 flex-grow w-full">
       <section id="frenteCaixa" class="aba-conteudo ativa">
-        <div class="bg-white p-6 rounded-lg shadow-md">
-          <h2 class="text-xl font-bold mb-4 text-gray-700">Frente de Caixa</h2>
-          <p class="text-sm text-gray-500">Painel operacional de caixa ativo.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Selecione os Produtos</h2>
+            <div id="gridProdutosVenda" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow-md flex flex-col justify-between">
+            <div>
+              <h2 class="text-xl font-bold mb-4 text-gray-700">Carrinho</h2>
+              <div id="itensCarrinho" class="space-y-2 border-b pb-4 mb-4">
+                <p class="text-gray-500 text-sm">Nenhum item selecionado.</p>
+              </div>
+              <div class="text-right text-xl font-bold text-gray-800">Total: R$ <span id="totalCarrinho">0,00</span></div>
+            </div>
+            <button onclick="finalizarVenda()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded shadow mt-4">Finalizar Venda</button>
+          </div>
         </div>
       </section>
 
-      <!-- GESTÃO DE UTILIZADORES -->
+      <!-- UTILIZADORES -->
       <section id="usuarios" class="aba-conteudo admin-only space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
@@ -244,7 +263,7 @@
   </div>
 
   <script>
-    function alternarVisibilidadeSenha(idInput) {
+    function alternarVisibilidadeSenha(idInput, idBotao) {
       const input = document.getElementById(idInput);
       input.type = input.type === "password" ? "text" : "password";
     }
@@ -265,7 +284,7 @@
     let sessaoAtiva = JSON.parse(localStorage.getItem('pdv_sessao_ativa')) || null;
     let lojaAtual = null;
 
-    // SOLICITAÇÃO E ENVIO DE CÓDIGO (SEM MOSTRAR O CÓDIGO NA TELA)
+    // SOLICITAÇÃO E ENVIO DE CÓDIGO (SEM MOSTRAR NA TELA)
     function processarRecuperacaoSenha(e) {
       e.preventDefault();
       const email = document.getElementById('emailRecuperacao').value.trim().toLowerCase();
@@ -275,16 +294,14 @@
 
       if (!conta) return alert('❌ Nenhum utilizador cadastrado foi encontrado com este e-mail!');
 
-      // GERAÇÃO INTERNA DO TOKEN DE SEGURANÇA E BLOQUEIO DA SENHA ANTIGA
       const token = Math.floor(100000 + Math.random() * 900000).toString();
       conta.bloqueadoPorRecuperacao = true;
       conta.tokenRecuperacao = token;
 
       localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
 
-      const mensagem = `Olá, ${conta.usuario}! O seu código de recuperação de senha no PDV Web é: ${token}`;
+      const mensagem = `Olá, ${conta.usuario}! O seu código de recuperação do PDV Web é: ${token}`;
 
-      // DISPARO SEGURO SEM EXIBIÇÃO DIRETA DO CÓDIGO NO ECRÃ
       if (meio === 'whatsapp' && conta.telefone) {
         const numApenasDigitos = conta.telefone.replace(/\D/g, '');
         window.open(`https://wa.me/55${numApenasDigitos}?text=${encodeURIComponent(mensagem)}`, '_blank');
@@ -292,8 +309,8 @@
         window.location.href = `mailto:${conta.email}?subject=${encodeURIComponent("Código de Recuperação PDV")}&body=${encodeURIComponent(mensagem)}`;
       }
 
-      // MENSAGEM INFORMATIVA DE CONFIRMAÇÃO (SEM EXIBIR O CÓDIGO)
-      alert('📩 Foi enviado um novo código para o seu e-mail e telemóvel/WhatsApp cadastrados.\n\nA sua palavra-passe antiga foi bloqueada por segurança. Insira o código recebido para redefinir a senha.');
+      // MENSAGEM GENÉRICA DE CONFIRMAÇÃO (SEM EXIBIR O CÓDIGO)
+      alert('📧 Foi enviado um novo código para o seu e-mail / WhatsApp.\n\nA sua palavra-passe antiga foi bloqueada por segurança. Insira o código recebido para criar a nova senha.');
 
       alternarModalRecuperacao(false);
       alternarModalConfirmacaoToken(true);
@@ -327,7 +344,7 @@
       if (!conta) return alert('Utilizador ou palavra-passe incorretos!');
 
       if (conta.bloqueadoPorRecuperacao) {
-        return alert('⛔ ACESSO BLOQUEADO!\nFoi solicitada uma redefinição de senha para esta conta. Confirme o código enviado para o seu e-mail/WhatsApp cadastrados para criar a nova senha.');
+        return alert('⛔ ACESSO BLOQUEADO!\nUma redefinição de senha foi solicitada para esta conta. Por favor, confirme o código enviado para o seu e-mail/WhatsApp para criar a nova senha.');
       }
 
       if (conta.senha !== s) return alert('Utilizador ou palavra-passe incorretos!');
@@ -383,7 +400,6 @@
 
     function renderizarTabelaUsuarios() {
       const tbody = document.getElementById('tabelaAbaUsuarios');
-      if (!tbody) return;
       tbody.innerHTML = '';
       contasRegistradas.filter(c => c.lojaId === lojaAtual.id).forEach((conta) => {
         tbody.innerHTML += `
