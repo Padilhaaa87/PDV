@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Gestão Completa de Custos e Caixa</title>
-  <!-- Tailwind CSS para estilização moderna e responsiva -->
+  <title>PDV Web - Custo e Lucro Futuro de Estoque</title>
+  <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .aba-conteudo { display: none; }
@@ -167,7 +167,7 @@
         </div>
       </section>
 
-      <!-- ABA 3: CONTROLE DE CAIXA E DETALHAMENTO COMPLETO DAS FORMAS DE PAGAMENTO -->
+      <!-- ABA 3: CONTROLE DE CAIXA -->
       <section id="controleCaixa" class="aba-conteudo space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -203,7 +203,6 @@
           </div>
         </div>
 
-        <!-- RELATÓRIO DE SESSÕES COM DISCRIMINAÇÃO COMPLETA DE PAGAMENTOS -->
         <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
           <div class="flex justify-between items-center border-b pb-3">
             <div>
@@ -236,7 +235,7 @@
         </div>
       </section>
 
-      <!-- ABA 4: PRODUTOS & ESTOQUE COM VALOR TOTAL DO ESTOQUE EM CUSTO -->
+      <!-- ABA 4: PRODUTOS & ESTOQUE COM CUSTO TOTAL E LUCRO FUTURO -->
       <section id="produtos" class="aba-conteudo">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white p-6 rounded-lg shadow-md space-y-6">
@@ -269,13 +268,19 @@
           </div>
 
           <div class="md:col-span-2 space-y-4">
-            <!-- INDICADOR DE VALOR INVESTIDO NO ESTOQUE (CUSTO TOTAL) -->
-            <div class="bg-white p-4 rounded-lg shadow-md flex justify-between items-center border-l-4 border-indigo-600">
-              <div>
-                <span class="text-xs font-bold text-gray-500 uppercase block">Custo Total Investido no Estoque</span>
-                <span class="text-xs text-gray-400">Soma do preço de custo × quantidade disponível</span>
+            <!-- PAINEL DE METRICAS DE ESTOQUE (CUSTO TOTAL E LUCRO FUTURO) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-indigo-600">
+                <span class="text-xs font-bold text-gray-500 uppercase block">Custo Total do Estoque</span>
+                <span class="text-xs text-gray-400 block mb-1">Valor total investido armazenado</span>
+                <span class="text-xl md:text-2xl font-bold text-indigo-700">R$ <span id="valorCustoEstoqueTotal">0,00</span></span>
               </div>
-              <span class="text-xl md:text-2xl font-bold text-indigo-700">R$ <span id="valorCustoEstoqueTotal">0,00</span></span>
+
+              <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-emerald-500">
+                <span class="text-xs font-bold text-gray-500 uppercase block">Lucro Futuro em Estoque</span>
+                <span class="text-xs text-gray-400 block mb-1">Ganho potencial com venda total</span>
+                <span class="text-xl md:text-2xl font-bold text-emerald-600">R$ <span id="valorLucroFuturoEstoque">0,00</span></span>
+              </div>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-md">
@@ -328,24 +333,47 @@
         </div>
       </section>
 
-      <!-- ABA 6: RELATÓRIOS FINANCEIROS COM CUSTOS DIÁRIO, SEMANAL E MENSAL -->
+      <!-- ABA 6: RELATÓRIOS FINANCEIROS COM CUSTO TOTAL E LUCRO FUTURO EM ESTOQUE -->
       <section id="relatorios" class="aba-conteudo">
         <div class="space-y-6">
-          <div class="bg-white p-4 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h2 class="text-lg font-bold text-gray-700">Filtro e Gestão de Período</h2>
-              <p class="text-xs text-gray-500">Selecione o mês desejado para análise das vendas e custos</p>
-            </div>
-            <div class="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <div class="flex items-center gap-2">
-                <label class="text-sm font-semibold text-gray-600 whitespace-nowrap">Mês:</label>
-                <select id="selectFiltroMes" onchange="renderizarRelatorios()" class="p-2 border rounded font-semibold bg-gray-50 text-blue-700 outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"></select>
+          
+          <!-- FILTRO DE PERÍODO E CARDS DE VISÃO DE ESTOQUE ATUAL -->
+          <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4">
+              <div>
+                <h2 class="text-lg font-bold text-gray-700">Filtro e Gestão de Período</h2>
+                <p class="text-xs text-gray-500">Selecione o mês desejado para análise das vendas e custos</p>
               </div>
-              <button onclick="limparTodoHistoricoVendas()" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2.5 rounded shadow transition whitespace-nowrap">🗑️ Zerar Todo o Histórico</button>
+              <div class="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div class="flex items-center gap-2">
+                  <label class="text-sm font-semibold text-gray-600 whitespace-nowrap">Mês:</label>
+                  <select id="selectFiltroMes" onchange="renderizarRelatorios()" class="p-2 border rounded font-semibold bg-gray-50 text-blue-700 outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"></select>
+                </div>
+                <button onclick="limparTodoHistoricoVendas()" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2.5 rounded shadow transition whitespace-nowrap">🗑️ Zerar Todo o Histórico</button>
+              </div>
+            </div>
+
+            <!-- PROJEÇÃO DE CUSTO E LUCRO FUTURO NO PAINEL DE RELATÓRIOS -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-lg flex justify-between items-center">
+                <div>
+                  <span class="text-xs font-bold text-indigo-900 block uppercase">📦 Custo Total em Estoque Hoje</span>
+                  <span class="text-xs text-indigo-600">Capital investido retido nas mercadorias</span>
+                </div>
+                <span class="text-lg md:text-xl font-bold text-indigo-800">R$ <span id="relCustoEstoqueFuturo">0,00</span></span>
+              </div>
+
+              <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg flex justify-between items-center">
+                <div>
+                  <span class="text-xs font-bold text-emerald-900 block uppercase">📈 Lucro Futuro Estimado em Estoque</span>
+                  <span class="text-xs text-emerald-600">Lucro projetado ao liquidar o estoque</span>
+                </div>
+                <span class="text-lg md:text-xl font-bold text-emerald-700">R$ <span id="relLucroEstoqueFuturo">0,00</span></span>
+              </div>
             </div>
           </div>
 
-          <!-- CARDS DE MÉTRICAS FINANCEIRAS COM CUSTO TOTAL DIÁRIO, SEMANAL E MENSAL -->
+          <!-- CARDS DE MÉTRICAS FINANCEIRAS DIÁRIAS, SEMANAIS E MENSAIS -->
           <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4">
             <!-- HOJE -->
             <div class="bg-white p-3 rounded-lg shadow border-l-4 border-amber-500">
@@ -944,7 +972,24 @@
       });
     }
 
-    // --- MÓDULO DE PRODUTOS E CÁLCULO DE CUSTO TOTAL DE ESTOQUE ---
+    // --- FUNÇÃO AUXILIAR PARA CÁLCULO DE CUSTO E LUCRO FUTURO EM ESTOQUE ---
+    function calcularTotaisEstoque() {
+      let custoTotal = 0;
+      let lucroFuturoTotal = 0;
+
+      produtos.forEach(prod => {
+        const qtd = prod.estoque || 0;
+        const custoUnit = prod.custo || 0;
+        const vendaUnit = prod.venda || 0;
+
+        custoTotal += (custoUnit * qtd);
+        lucroFuturoTotal += ((vendaUnit - custoUnit) * qtd);
+      });
+
+      return { custoTotal, lucroFuturoTotal };
+    }
+
+    // --- MÓDULO DE PRODUTOS E ESTOQUE ---
     function calcularMargemLucro() {
       const c = parseFloat(document.getElementById('prodCusto').value) || 0;
       const v = parseFloat(document.getElementById('prodVenda').value) || 0;
@@ -974,6 +1019,7 @@
       localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
       cancelarEdicaoProduto();
       renderizarTabelaProdutos();
+      renderizarRelatorios();
     }
 
     function prepararEdicaoProduto(idProduto) {
@@ -1012,6 +1058,7 @@
       prod.estoque += qtdEntrada;
       localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
       renderizarTabelaProdutos();
+      renderizarRelatorios();
       alert(`Sucesso! Foram adicionadas ${qtdEntrada} unidades ao estoque.`);
     }
 
@@ -1040,6 +1087,7 @@
 
         localStorage.setItem('pdv_produtos', JSON.stringify(produtos));
         renderizarTabelaProdutos();
+        renderizarRelatorios();
         input.value = '';
         alert(`Sucesso! ${adicionados} produtos foram importados.`);
       };
@@ -1049,14 +1097,10 @@
     function renderizarTabelaProdutos() {
       const tbody = document.getElementById('tabelaProdutos');
       tbody.innerHTML = '';
-      
-      let custoTotalEstoque = 0;
 
       produtos.forEach(prod => {
         const margem = prod.custo > 0 ? (((prod.venda - prod.custo) / prod.custo) * 100).toFixed(2) : '0.00';
         const corEstoque = prod.estoque <= 2 ? 'text-red-600 font-bold' : 'text-gray-800 font-semibold';
-        
-        custoTotalEstoque += (prod.custo * prod.estoque);
 
         tbody.innerHTML += `
           <tr class="border-b text-sm">
@@ -1072,7 +1116,9 @@
           </tr>`;
       });
 
-      document.getElementById('valorCustoEstoqueTotal').innerText = custoTotalEstoque.toFixed(2);
+      const { custoTotal, lucroFuturoTotal } = calcularTotaisEstoque();
+      document.getElementById('valorCustoEstoqueTotal').innerText = custoTotal.toFixed(2);
+      document.getElementById('valorLucroFuturoEstoque').innerText = lucroFuturoTotal.toFixed(2);
     }
 
     function renderizarGridProdutos() {
@@ -1370,7 +1416,7 @@
       if (opAnt && Array.from(select.options).some(o => o.value === opAnt)) select.value = opAnt;
     }
 
-    // RELATÓRIOS MENSAL, SEMANAL E DIÁRIO COM CUSTO TOTAL INTEGRADO
+    // RELATÓRIOS MENSAL, SEMANAL, DIÁRIO E PROJEÇÃO DE CUSTO/LUCRO FUTURO EM ESTOQUE
     function renderizarRelatorios() {
       const agora = new Date();
       const selectMes = document.getElementById('selectFiltroMes');
@@ -1392,21 +1438,18 @@
         [...vendas].reverse().forEach(v => {
           const d = new Date(v.data);
           
-          // HOJE
           if (d.getDate() === agora.getDate() && d.getMonth() === agora.getMonth() && d.getFullYear() === agora.getFullYear()) { 
             vHoje += v.totalVenda; 
             cHoje += (v.totalCusto || 0);
             lHoje += v.lucroObtido; 
           }
 
-          // SEMANA
           if (d >= inicioSemana) {
             vSemana += v.totalVenda;
             cSemana += (v.totalCusto || 0);
             lSemana += v.lucroObtido;
           }
 
-          // MÊS SELECIONADO
           if (d.getMonth() === mSel && d.getFullYear() === aSel) {
             vMes += v.totalVenda; 
             cMes += (v.totalCusto || 0);
@@ -1427,6 +1470,11 @@
           }
         });
       }
+
+      // METRICAS DE ESTOQUE PROJETADO PARA O PAINEL DE RELATÓRIOS
+      const { custoTotal, lucroFuturoTotal } = calcularTotaisEstoque();
+      document.getElementById('relCustoEstoqueFuturo').innerText = custoTotal.toFixed(2);
+      document.getElementById('relLucroEstoqueFuturo').innerText = lucroFuturoTotal.toFixed(2);
 
       const totalAReceber = clientes.reduce((acc, cli) => acc + (cli.saldoDevedor || 0), 0);
       document.getElementById('relTotalAReceber').innerText = totalAReceber.toFixed(2);
@@ -1478,7 +1526,6 @@
       alert(`Caixa aberto com sucesso por ${resp}!`);
     }
 
-    // RELATÓRIO DO FECHO DO CAIXA DISCRIMINANDO CADA FORMA DE PAGAMENTO
     function fecharCaixa() {
       const totalFinal = (caixa.inicial || 0) + (caixa.entradas || 0);
       const dataIsoFecho = new Date().toISOString();
@@ -1544,7 +1591,6 @@
       renderizarTabelaHistoricoSessoes();
     }
 
-    // EXIBIÇÃO DETALHADA DAS FORMAS DE PAGAMENTO NO HISTÓRICO DE SESSÕES
     function renderizarTabelaHistoricoSessoes() {
       const tbody = document.getElementById('tabelaHistoricoSessoesCaixa');
       if (!tbody) return;
@@ -1568,7 +1614,6 @@
         let vCart = sessao.cartao || 0;
         let vFia = sessao.fiado || 0;
 
-        // SE O CAIXA ESTIVER ABERTO, CALCULA EM TEMPO REAL OS VALORES DAS VENDAS
         vendas.forEach(v => {
           const dVenda = new Date(v.data);
           if (dVenda >= dAbertura && (!sessao.dataFecho || dVenda <= dFechoObj)) {
