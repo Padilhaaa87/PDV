@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Login Grafite & Modo Escuro</title>
+  <title>PDV Web - Personalizado por Loja</title>
   <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -143,7 +143,7 @@
 
   <!-- APLICAÇÃO PRINCIPAL DA LOJA -->
   <div id="appPrincipal" class="oculto-autenticacao min-h-screen flex flex-col">
-    <!-- HEADER DINÂMICO COM COR DO TEMA -->
+    <!-- HEADER DINÂMICO COM O NOME DA LOJA (PDV [Nome da Loja]) -->
     <header id="headerLoja" class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50 transition-colors duration-300">
       <div class="max-w-7xl mx-auto flex justify-between items-center">
         <div>
@@ -851,6 +851,11 @@
       localStorage.setItem(`pdv_vendas_${id}`, JSON.stringify(vendas));
     }
 
+    function formatarNomeLojaPDV(nome) {
+      if (!nome) return 'PDV Web';
+      return nome.toUpperCase().startsWith('PDV') ? nome : `PDV ${nome}`;
+    }
+
     function iniciarSessao(conta) {
       sessaoAtiva = conta;
       localStorage.setItem('pdv_sessao_ativa', JSON.stringify(sessaoAtiva));
@@ -865,7 +870,8 @@
         if (lojas.length > 0 && !lojaAtual) carregarDadosLoja(lojas[0].id);
         else carregarDadosLoja(sessaoAtiva.lojaId);
 
-        document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${lojaAtual.nomeLoja})`;
+        const nomeFormatadoLoja = formatarNomeLojaPDV(lojaAtual.nomeLoja);
+        document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
         document.getElementById('labelUsuarioLogado').innerText = `Acesso Master: ${sessaoAtiva.usuario}`;
         renderizarPainelAdminGeral();
       } else {
@@ -875,8 +881,11 @@
         });
         
         carregarDadosLoja(conta.lojaId);
-        document.getElementById('labelNomeLojaTopo').innerText = lojaAtual.nomeLoja;
-        document.getElementById('labelUsuarioLogado').innerText = `Loja: ${lojaAtual.nomeLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil.toUpperCase()})`;
+        
+        // FORMATAR FORMATO PDV [NOME DA LOJA]
+        const nomeFormatadoLoja = formatarNomeLojaPDV(lojaAtual.nomeLoja);
+        document.getElementById('labelNomeLojaTopo').innerText = nomeFormatadoLoja;
+        document.getElementById('labelUsuarioLogado').innerText = `Loja: ${nomeFormatadoLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil.toUpperCase()})`;
       }
 
       aplicarModoEscuro();
@@ -907,7 +916,7 @@
         const d = new Date(l.dataCriacao).toLocaleDateString();
         tbodyLojas.innerHTML += `
           <tr class="border-b hover:bg-gray-50">
-            <td class="p-3 font-bold text-purple-900">${l.nomeLoja}</td>
+            <td class="p-3 font-bold text-purple-900">${formatarNomeLojaPDV(l.nomeLoja)}</td>
             <td class="p-3 text-xs text-gray-500">${l.id}</td>
             <td class="p-3 text-xs text-gray-600">${d}</td>
             <td class="p-3 text-center space-x-2">
@@ -925,7 +934,7 @@
 
       utilizadoresNormais.forEach(conta => {
         const loja = lojas.find(l => l.id === conta.lojaId);
-        const nomeLoja = loja ? loja.nomeLoja : 'Sem Loja';
+        const nomeLoja = loja ? formatarNomeLojaPDV(loja.nomeLoja) : 'Sem Loja';
 
         const badgePerfil = conta.perfil === 'admin'
           ? `<span class="bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-1 rounded-full">🏢 Adm Loja</span>`
@@ -984,10 +993,11 @@
     function mudarParaLoja(idLoja) {
       salvarDadosLoja();
       carregarDadosLoja(idLoja);
-      document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${lojaAtual.nomeLoja})`;
+      const nomeFormatadoLoja = formatarNomeLojaPDV(lojaAtual.nomeLoja);
+      document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${nomeFormatadoLoja})`;
       aplicarTemaVisualLoja(lojaAtual.corTema || 'blue');
       atualizarUrlLoja(lojaAtual.nomeLoja);
-      alert(`Visualizando loja: "${lojaAtual.nomeLoja}"`);
+      alert(`Visualizando loja: "${nomeFormatadoLoja}"`);
       atualizarTudo();
       alternarAba('frenteCaixa');
     }
@@ -1298,7 +1308,7 @@
       const v = vendas.find(item => item.id === idVenda);
       if (!v) return;
       const win = window.open('', '', 'width=400,height=600');
-      win.document.write(`<html><head><title>Recibo - ${lojaAtual.nomeLoja}</title></head><body style="font-family:monospace; padding:10px; text-align:center;"><h3>${lojaAtual.nomeLoja.toUpperCase()}</h3><p>Comprovante de Venda - Nº ${v.id}</p><hr/><p style="text-align:right; font-weight:bold;">TOTAL: R$ ${v.totalVenda.toFixed(2)}</p></body></html>`);
+      win.document.write(`<html><head><title>Recibo - ${formatarNomeLojaPDV(lojaAtual.nomeLoja)}</title></head><body style="font-family:monospace; padding:10px; text-align:center;"><h3>${formatarNomeLojaPDV(lojaAtual.nomeLoja).toUpperCase()}</h3><p>Comprovante de Venda - Nº ${v.id}</p><hr/><p style="text-align:right; font-weight:bold;">TOTAL: R$ ${v.totalVenda.toFixed(2)}</p></body></html>`);
       win.document.close(); win.print();
     }
 
@@ -1334,7 +1344,7 @@
     }
 
     function fecharCaixa() {
-      alert(`📋 FECHAMENTO DE CAIXA - ${lojaAtual.nomeLoja.toUpperCase()}\nDinheiro Final: R$ ${((caixa.inicial || 0) + (caixa.entradas || 0)).toFixed(2)}`);
+      alert(`📋 FECHAMENTO DE CAIXA - ${formatarNomeLojaPDV(lojaAtual.nomeLoja).toUpperCase()}\nDinheiro Final: R$ ${((caixa.inicial || 0) + (caixa.entradas || 0)).toFixed(2)}`);
       caixa = { aberto: false, inicial: 0, entradas: 0, dinheiro: 0, pix: 0, cartao: 0, fiado: 0 };
       salvarDadosLoja();
       atualizarUICaixa();
