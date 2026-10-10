@@ -144,6 +144,10 @@
           <input type="email" id="cadEmail" required placeholder="seuemail@exemplo.com" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
+          <label class="block text-sm font-medium text-gray-700">Telefone / WhatsApp <span class="text-red-500">*</span></label>
+          <input type="tel" id="cadTelefone" required placeholder="(00) 00000-0000" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
           <label class="block text-sm font-medium text-gray-700">Nome do Administrador da Loja <span class="text-red-500">*</span></label>
           <input type="text" id="cadUsuario" required placeholder="Escolha um nome de utilizador para o dono" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
@@ -167,7 +171,7 @@
   <div id="modalRecuperacaoSenha" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl relative">
       <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="text-lg font-bold text-gray-800">🔒 Solagitar Redefinição de Senha</h3>
+        <h3 class="text-lg font-bold text-gray-800">🔒 Solicitar Redefinição de Senha</h3>
         <button onclick="alternarModalRecuperacao(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
       </div>
       <p class="text-xs text-gray-600">
@@ -312,6 +316,7 @@
                 <tr class="bg-gray-100 border-b">
                   <th class="p-3">Utilizador</th>
                   <th class="p-3">E-mail</th>
+                  <th class="p-3">Telefone</th>
                   <th class="p-3">Perfil de Acesso</th>
                   <th class="p-3">Loja Associada</th>
                   <th class="p-3 text-center">Ações</th>
@@ -704,6 +709,7 @@
               <input type="hidden" id="editUsuarioOriginal" value="">
               <div><label class="block text-sm font-medium text-gray-700">Nome do Vendedor / Utilizador</label><input type="text" id="editUsuarioNome" required placeholder="Ex: joao_vendedor" class="w-full p-2 border rounded"></div>
               <div><label class="block text-sm font-medium text-gray-700">E-mail do Utilizador <span class="text-red-500">*</span></label><input type="email" id="editUsuarioEmail" required placeholder="vendedor@exemplo.com" class="w-full p-2 border rounded"></div>
+              <div><label class="block text-sm font-medium text-gray-700">Telefone / WhatsApp <span class="text-red-500">*</span></label><input type="tel" id="editUsuarioTelefone" required placeholder="(00) 00000-0000" class="w-full p-2 border rounded"></div>
               <div><label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label><input type="password" id="editUsuarioSenha" placeholder="Preencha apenas para alterar" class="w-full p-2 border rounded"></div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Perfil de Acesso</label>
@@ -726,7 +732,7 @@
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
-                <thead><tr class="bg-gray-100 border-b text-sm"><th class="p-3">Utilizador</th><th class="p-3">E-mail</th><th class="p-3">Perfil</th><th class="p-3 text-center">Ações</th></tr></thead>
+                <thead><tr class="bg-gray-100 border-b text-sm"><th class="p-3">Utilizador</th><th class="p-3">E-mail</th><th class="p-3">Telefone</th><th class="p-3">Perfil</th><th class="p-3 text-center">Ações</th></tr></thead>
                 <tbody id="tabelaAbaUsuarios"></tbody>
               </table>
             </div>
@@ -843,7 +849,7 @@
 
     // CONTA MASTER VINCULADA À LOJA BASE MASTER
     let contasRegistradas = JSON.parse(localStorage.getItem('pdv_contas')) || [
-      { usuario: 'master', senha: '123', email: 'master@pdvweb.com', perfil: 'superadmin', lojaId: 'LOJA_MASTER_BASE', bloqueadoPorRecuperacao: false }
+      { usuario: 'master', senha: '123', email: 'master@pdvweb.com', telefone: '(42) 98869-1426', perfil: 'superadmin', lojaId: 'LOJA_MASTER_BASE', bloqueadoPorRecuperacao: false }
     ];
     let sessaoAtiva = JSON.parse(localStorage.getItem('pdv_sessao_ativa')) || null;
 
@@ -1009,6 +1015,7 @@
       const codigoCompraInput = document.getElementById('cadCodigoCompra').value.trim().toUpperCase();
       const nomeLoja = document.getElementById('cadNomeLoja').value.trim();
       const email = document.getElementById('cadEmail').value.trim();
+      const telefone = document.getElementById('cadTelefone').value.trim();
       const usuario = document.getElementById('cadUsuario').value.trim();
       const senha = document.getElementById('cadSenha').value;
 
@@ -1025,7 +1032,7 @@
       lojas.push(novaLoja);
       localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
 
-      const novaConta = { usuario, senha, email, perfil: 'admin', lojaId: idLoja, bloqueadoPorRecuperacao: false };
+      const novaConta = { usuario, senha, email, telefone, perfil: 'admin', lojaId: idLoja, bloqueadoPorRecuperacao: false };
       contasRegistradas.push(novaConta);
       localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
 
@@ -1044,7 +1051,6 @@
 
       if (!conta) return alert('Utilizador ou palavra-passe incorretos!');
 
-      // VERIFICA SE A CONTA ESTÁ BLOQUEADA POR SOLICITAÇÃO DE RECUPERAÇÃO
       if (conta.bloqueadoPorRecuperacao) {
         return alert('⛔ ACESSO BLOQUEADO!\n\nFoi solicitada uma redefinição de palavra-passe para esta conta.\nA palavra-passe antiga foi desativada por segurança.\n\nPor favor, consulte o seu e-mail e utilize a opção "Tenho um código de confirmação" para redefinir a sua senha e desbloquear o acesso.');
       }
@@ -1167,7 +1173,7 @@
       const utilizadoresNormais = contasRegistradas.filter(c => c.perfil !== 'superadmin');
       document.getElementById('qtdGlobalUsuarios').innerText = utilizadoresNormais.length;
 
-      tbodyUsuarios.innerHTML = utilizadoresNormais.length === 0 ? '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum utilizador ou vendedor cadastrado.</td></tr>' : '';
+      tbodyUsuarios.innerHTML = utilizadoresNormais.length === 0 ? '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum utilizador ou vendedor cadastrado.</td></tr>' : '';
 
       utilizadoresNormais.forEach(conta => {
         const loja = lojas.find(l => l.id === conta.lojaId);
@@ -1185,6 +1191,7 @@
           <tr class="border-b text-sm hover:bg-gray-50">
             <td class="p-3 font-bold text-gray-800">${conta.usuario} ${badgeStatus}</td>
             <td class="p-3 text-xs text-gray-600">${conta.email || 'Não informado'}</td>
+            <td class="p-3 text-xs text-gray-600">${conta.telefone || 'Não informado'}</td>
             <td class="p-3">${badgePerfil}</td>
             <td class="p-3 font-semibold text-purple-900">${nomeLoja}</td>
             <td class="p-3 text-center">
@@ -1293,6 +1300,7 @@
           <tr class="border-b text-sm hover:bg-gray-50">
             <td class="p-3 font-semibold text-gray-800">${conta.usuario} ${badgeStatus}</td>
             <td class="p-3 text-xs text-gray-600">${conta.email || 'Não informado'}</td>
+            <td class="p-3 text-xs text-gray-600">${conta.telefone || 'Não informado'}</td>
             <td class="p-3">${badgePerfil}</td>
             <td class="p-3 text-center space-x-2">
               <button onclick="prepararEdicaoUsuario('${conta.usuario}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-1 rounded text-xs">✏️ Editar</button>
@@ -1309,6 +1317,7 @@
       document.getElementById('editUsuarioOriginal').value = conta.usuario;
       document.getElementById('editUsuarioNome').value = conta.usuario;
       document.getElementById('editUsuarioEmail').value = conta.email || '';
+      document.getElementById('editUsuarioTelefone').value = conta.telefone || '';
       document.getElementById('editUsuarioSenha').value = '';
       document.getElementById('editUsuarioPerfil').value = conta.perfil;
 
@@ -1330,6 +1339,7 @@
       const original = document.getElementById('editUsuarioOriginal').value;
       const usuario = document.getElementById('editUsuarioNome').value.trim();
       const email = document.getElementById('editUsuarioEmail').value.trim();
+      const telefone = document.getElementById('editUsuarioTelefone').value.trim();
       const senha = document.getElementById('editUsuarioSenha').value;
       const perfil = document.getElementById('editUsuarioPerfil').value;
 
@@ -1338,9 +1348,10 @@
         if (conta) {
           conta.usuario = usuario;
           conta.email = email;
+          conta.telefone = telefone;
           if (senha) {
             conta.senha = senha;
-            conta.bloqueadoPorRecuperacao = false; // DESBLOQUEIA AO ALTERAR A SENHA DIRETO PELO ADM
+            conta.bloqueadoPorRecuperacao = false;
           }
           conta.perfil = perfil;
         }
@@ -1350,7 +1361,7 @@
         if (contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase())) {
           return alert('Este utilizador já existe!');
         }
-        contasRegistradas.push({ usuario, email, senha, perfil, lojaId: lojaAtual.id, bloqueadoPorRecuperacao: false });
+        contasRegistradas.push({ usuario, email, telefone, senha, perfil, lojaId: lojaAtual.id, bloqueadoPorRecuperacao: false });
         alert(`Vendedor / Utilizador "${usuario}" cadastrado com sucesso!`);
       }
 
