@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Sistema Multi-Loja</title>
+  <title>PDV Web - Gestão Comercial Multi-Loja & Super Admin</title>
   <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -31,7 +31,7 @@
       <form id="formLogin" onsubmit="fazerLogin(event)" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700">Utilizador</label>
-          <input type="text" id="loginUsuario" required placeholder="Digite o seu utilizador" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+          <input type="text" id="loginUsuario" required placeholder="Digite o seu utilizador (ex: master ou seu usuario)" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label>
@@ -40,7 +40,7 @@
         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">Entrar na Loja</button>
       </form>
 
-      <!-- FORMULÁRIO DE CRIAÇÃO DE UMA NOVA LOJA E PRIMEIRO UTILIZADOR -->
+      <!-- FORMULÁRIO DE CRIAÇÃO DE UMA NOVA LOJA -->
       <form id="formCadastro" onsubmit="cadastrarLojaEUsuario(event)" class="space-y-4 hidden">
         <div class="bg-blue-50 p-3 rounded border border-blue-200">
           <p class="text-xs text-blue-800 font-semibold">🏪 Cadastre a sua nova loja do zero. Você será registrado como Administrador da sua loja.</p>
@@ -86,10 +86,43 @@
         <button onclick="alternarAba('clientes')" id="btn-clientes" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base">Clientes & Fiado</button>
         <button onclick="alternarAba('relatorios')" id="btn-relatorios" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base admin-only">Relatórios & Lucros</button>
         <button onclick="alternarAba('usuarios')" id="btn-usuarios" class="py-3 px-5 hover:bg-blue-700 font-semibold text-sm md:text-base admin-only">👥 Utilizadores</button>
+        <button onclick="alternarAba('adminGeral')" id="btn-adminGeral" class="py-3 px-5 bg-purple-900 hover:bg-purple-800 font-bold text-amber-300 text-sm md:text-base admin-geral-only hidden">👑 PAINEL ADM GERAL</button>
       </div>
     </nav>
 
     <main class="max-w-6xl mx-auto p-4 flex-grow w-full">
+
+      <!-- ABA EXCLUSIVA DO ADM GERAL DO SISTEMA (SUPER ADMIN) -->
+      <section id="adminGeral" class="aba-conteudo space-y-6">
+        <div class="bg-purple-900 text-white p-6 rounded-lg shadow-md flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-bold text-amber-300">👑 Painel do Administrador Geral</h2>
+            <p class="text-sm text-purple-200 mt-1">Gerencie todas as lojas ativas, acesse o estoque de qualquer cliente e gerencie seus acessos.</p>
+          </div>
+          <div class="bg-purple-800 px-4 py-2 rounded-lg border border-purple-600 text-center">
+            <span class="text-xs font-bold text-purple-200 block uppercase">Total de Lojas</span>
+            <span id="qtdLojasGeral" class="text-2xl font-bold text-amber-300">0</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
+          <h3 class="text-lg font-bold text-gray-700">Lista de Lojas Cadastradas no Sistema</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-gray-100 border-b">
+                  <th class="p-3">Nome da Loja</th>
+                  <th class="p-3">ID da Loja</th>
+                  <th class="p-3">Data de Criação</th>
+                  <th class="p-3 text-center">Ações de Gestão</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaLojasAdminGeral"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- ABA 1: FRENTE DE CAIXA -->
       <section id="frenteCaixa" class="aba-conteudo ativa">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -450,9 +483,11 @@
   </div>
 
   <script>
-    // --- GERENCIAMENTO GLOBAL MULTI-LOJA ---
+    // --- CONTA PADRÃO SUPER ADMIN (MASTER) ---
     let lojas = JSON.parse(localStorage.getItem('pdv_lojas')) || [];
-    let contasRegistradas = JSON.parse(localStorage.getItem('pdv_contas')) || [];
+    let contasRegistradas = JSON.parse(localStorage.getItem('pdv_contas')) || [
+      { usuario: 'master', senha: '123', perfil: 'superadmin', lojaId: null }
+    ];
     let sessaoAtiva = JSON.parse(localStorage.getItem('pdv_sessao_ativa')) || null;
 
     // VARIÁVEIS DA LOJA ATIVA
@@ -482,7 +517,7 @@
       }
     }
 
-    // CRIAÇÃO DA LOJA E PRIMEIRO UTILIZADOR ADMINISTRADOR
+    // CRIAÇÃO DE NOVA LOJA PELO CLIENTE
     function cadastrarLojaEUsuario(e) {
       e.preventDefault();
       const nomeLoja = document.getElementById('cadNomeLoja').value.trim();
@@ -490,7 +525,7 @@
       const senha = document.getElementById('cadSenha').value;
 
       if (contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase())) {
-        return alert('Este nome de utilizador já está em uso no sistema!');
+        return alert('Este nome de utilizador já está em uso!');
       }
 
       const idLoja = 'LOJA_' + Date.now();
@@ -516,6 +551,11 @@
     }
 
     function carregarDadosLoja(lojaId) {
+      if (!lojaId) {
+        lojaAtual = { id: 'GLOBAL', nomeLoja: 'Painel Master' };
+        produtos = []; clientes = []; caixa = { aberto: false }; historicoCaixas = []; vendas = [];
+        return;
+      }
       lojaAtual = lojas.find(l => l.id === lojaId) || { id: lojaId, nomeLoja: 'PDV Web' };
       produtos = JSON.parse(localStorage.getItem(`pdv_produtos_${lojaId}`)) || [];
       clientes = JSON.parse(localStorage.getItem(`pdv_clientes_${lojaId}`)) || [];
@@ -525,7 +565,7 @@
     }
 
     function salvarDadosLoja() {
-      if (!lojaAtual) return;
+      if (!lojaAtual || lojaAtual.id === 'GLOBAL') return;
       const id = lojaAtual.id;
       localStorage.setItem(`pdv_produtos_${id}`, JSON.stringify(produtos));
       localStorage.setItem(`pdv_clientes_${id}`, JSON.stringify(clientes));
@@ -537,14 +577,29 @@
     function iniciarSessao(conta) {
       sessaoAtiva = conta;
       localStorage.setItem('pdv_sessao_ativa', JSON.stringify(sessaoAtiva));
-      carregarDadosLoja(conta.lojaId);
 
       document.getElementById('telaAutenticacao').classList.add('hidden');
       document.getElementById('appPrincipal').classList.remove('oculto-autenticacao');
-      document.getElementById('labelNomeLojaTopo').innerText = lojaAtual.nomeLoja;
-      document.getElementById('labelUsuarioLogado').innerText = `Loja: ${lojaAtual.nomeLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil})`;
-      
-      document.querySelectorAll('.admin-only').forEach(btn => sessaoAtiva.perfil !== 'admin' ? btn.classList.add('hidden') : btn.classList.remove('hidden'));
+
+      if (sessaoAtiva.perfil === 'superadmin') {
+        document.querySelectorAll('.admin-geral-only').forEach(el => el.classList.remove('hidden'));
+        document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+        
+        if (lojas.length > 0 && !lojaAtual) carregarDadosLoja(lojas[0].id);
+        else carregarDadosLoja(sessaoAtiva.lojaId);
+
+        document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${lojaAtual.nomeLoja})`;
+        document.getElementById('labelUsuarioLogado').innerText = `Acesso Master: ${sessaoAtiva.usuario}`;
+        renderizarPainelAdminGeral();
+      } else {
+        document.querySelectorAll('.admin-geral-only').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.admin-only').forEach(el => sessaoAtiva.perfil !== 'admin' ? el.classList.add('hidden') : el.classList.remove('hidden'));
+        
+        carregarDadosLoja(conta.lojaId);
+        document.getElementById('labelNomeLojaTopo').innerText = lojaAtual.nomeLoja;
+        document.getElementById('labelUsuarioLogado').innerText = `Loja: ${lojaAtual.nomeLoja} | Operador: ${sessaoAtiva.usuario} (${sessaoAtiva.perfil})`;
+      }
+
       atualizarTudo();
     }
 
@@ -555,6 +610,61 @@
       localStorage.removeItem('pdv_sessao_ativa');
       document.getElementById('appPrincipal').classList.add('oculto-autenticacao');
       document.getElementById('telaAutenticacao').classList.remove('hidden');
+    }
+
+    // PAINEL DO ADMINISTRADOR GERAL (SUPER ADMIN)
+    function renderizarPainelAdminGeral() {
+      const tbody = document.getElementById('tabelaLojasAdminGeral');
+      document.getElementById('qtdLojasGeral').innerText = lojas.length;
+      tbody.innerHTML = lojas.length === 0 ? '<tr><td colspan="4" class="p-4 text-center text-gray-500">Nenhuma loja cadastrada no sistema.</td></tr>' : '';
+
+      lojas.forEach(l => {
+        const d = new Date(l.dataCriacao).toLocaleDateString();
+        tbody.innerHTML += `
+          <tr class="border-b hover:bg-gray-50">
+            <td class="p-3 font-bold text-purple-900">${l.nomeLoja}</td>
+            <td class="p-3 text-xs text-gray-500">${l.id}</td>
+            <td class="p-3 text-xs text-gray-600">${d}</td>
+            <td class="p-3 text-center space-x-2">
+              <button onclick="mudarParaLoja('${l.id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded text-xs transition">
+                🔍 Acessar esta Loja
+              </button>
+              <button onclick="excluirLojaGeral('${l.id}')" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded text-xs transition">
+                🗑️ Excluir Loja
+              </button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    function mudarParaLoja(idLoja) {
+      salvarDadosLoja();
+      carregarDadosLoja(idLoja);
+      document.getElementById('labelNomeLojaTopo').innerText = `👑 SUPER ADMIN MASTER (${lojaAtual.nomeLoja})`;
+      alert(`Você agora está visualizando os dados da loja: "${lojaAtual.nomeLoja}"`);
+      atualizarTudo();
+      alternarAba('frenteCaixa');
+    }
+
+    function excluirLojaGeral(idLoja) {
+      const l = lojas.find(item => item.id === idLoja);
+      if (!l) return;
+      if (!confirm(`⚠️ ATENÇÃO SUPER ADMIN: Deseja apagar definitivamente a loja "${l.nomeLoja}" e todos os seus produtos, vendas e clientes?`)) return;
+
+      lojas = lojas.filter(item => item.id !== idLoja);
+      contasRegistradas = contasRegistradas.filter(c => c.lojaId !== idLoja);
+      
+      localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
+      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
+
+      localStorage.removeItem(`pdv_produtos_${idLoja}`);
+      localStorage.removeItem(`pdv_clientes_${idLoja}`);
+      localStorage.removeItem(`pdv_caixa_${idLoja}`);
+      localStorage.removeItem(`pdv_historico_caixas_${idLoja}`);
+      localStorage.removeItem(`pdv_vendas_${idLoja}`);
+
+      alert(`Loja "${l.nomeLoja}" removida com sucesso!`);
+      renderizarPainelAdminGeral();
     }
 
     function alternarAba(idAba) {
@@ -569,9 +679,10 @@
       if (idAba === 'controleCaixa') { atualizarUICaixa(); renderizarTabelaHistoricoSessoes(); }
       if (idAba === 'relatorios') { carregarOpcoesMesesRelatorio(); renderizarRelatorios(); }
       if (idAba === 'usuarios') renderizarTabelaUsuarios();
+      if (idAba === 'adminGeral') renderizarPainelAdminGeral();
     }
 
-    // GESTÃO DE UTILIZADORES DA MESMA LOJA
+    // UTILIZADORES
     function renderizarTabelaUsuarios() {
       const tbody = document.getElementById('tabelaAbaUsuarios');
       const usuariosLoja = contasRegistradas.filter(c => c.lojaId === lojaAtual.id);
@@ -581,11 +692,7 @@
         const badgePerfil = conta.perfil === 'admin' 
           ? `<span class="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded">👑 Administrador</span>`
           : `<span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">👤 Vendedor</span>`;
-        tbody.innerHTML += `
-          <tr class="border-b text-sm hover:bg-gray-50">
-            <td class="p-3 font-semibold text-gray-800">${conta.usuario}</td>
-            <td class="p-3">${badgePerfil}</td>
-          </tr>`;
+        tbody.innerHTML += `<tr class="border-b text-sm hover:bg-gray-50"><td class="p-3 font-semibold text-gray-800">${conta.usuario}</td><td class="p-3">${badgePerfil}</td></tr>`;
       });
     }
 
@@ -595,9 +702,7 @@
       const senha = document.getElementById('editUsuarioSenha').value;
       const perfil = document.getElementById('editUsuarioPerfil').value;
 
-      if (contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase())) {
-        return alert('Este utilizador já existe!');
-      }
+      if (contasRegistradas.some(c => c.usuario.toLowerCase() === usuario.toLowerCase())) return alert('Este utilizador já existe!');
 
       contasRegistradas.push({ usuario, senha, perfil, lojaId: lojaAtual.id });
       localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
@@ -606,7 +711,7 @@
       renderizarTabelaUsuarios();
     }
 
-    // CLIENTES E EXTRATOS
+    // CLIENTES
     function alternarCampoLimite(cb) {
       const input = document.getElementById('cliLimite');
       input.value = ''; input.disabled = cb.checked;
@@ -664,9 +769,7 @@
 
       const comprasFiadas = (cli.historicoTransacoes || []).filter(t => t.tipo === 'compra');
       let msg = `*EXTRATO DE DÉBITOS - ${lojaAtual.nomeLoja.toUpperCase()}*\n\nOlá, *${cli.nome}*!\n\n`;
-      comprasFiadas.forEach(t => {
-        msg += `• ${new Date(t.data).toLocaleDateString()} - R$ ${t.valor.toFixed(2)}\n`;
-      });
+      comprasFiadas.forEach(t => { msg += `• ${new Date(t.data).toLocaleDateString()} - R$ ${t.valor.toFixed(2)}\n`; });
       msg += `\n🔴 *SALDO DEVEDOR ATUAL:* R$ ${cli.saldoDevedor.toFixed(2)}\nAgradecemos a sua preferência!`;
       window.open(`https://api.whatsapp.com/send?phone=${numTel}&text=${encodeURIComponent(msg)}`, '_blank');
     }
@@ -675,17 +778,7 @@
       const cli = clientes.find(c => c.id === idCliente);
       if (!cli) return;
       const win = window.open('', '', 'width=600,height=700');
-      win.document.write(`
-        <html>
-          <head><title>Extrato - ${cli.nome}</title></head>
-          <body style="font-family:monospace; padding:20px;">
-            <h2 style="text-align:center;">${lojaAtual.nomeLoja.toUpperCase()}</h2>
-            <h3 style="text-align:center;">EXTRATO DE CLIENTE</h3>
-            <p><strong>Cliente:</strong> ${cli.nome}</p>
-            <p><strong>Dívida Total:</strong> R$ ${cli.saldoDevedor.toFixed(2)}</p>
-          </body>
-        </html>
-      `);
+      win.document.write(`<html><head><title>Extrato - ${cli.nome}</title></head><body style="font-family:monospace; padding:20px;"><h2 style="text-align:center;">${lojaAtual.nomeLoja.toUpperCase()}</h2><h3 style="text-align:center;">EXTRATO DE CLIENTE</h3><p><strong>Cliente:</strong> ${cli.nome}</p><p><strong>Dívida Total:</strong> R$ ${cli.saldoDevedor.toFixed(2)}</p></body></html>`);
       win.document.close(); win.print();
     }
 
@@ -693,7 +786,6 @@
       const lista = document.getElementById('listaClientes');
       lista.innerHTML = clientes.length === 0 ? '<p class="text-gray-500 text-sm">Nenhum cliente cadastrado.</p>' : '';
       clientes.forEach(cli => {
-        const disp = cli.limiteIlimitado ? "Ilimitado" : `R$ ${(cli.limite - cli.saldoDevedor).toFixed(2)}`;
         lista.innerHTML += `
           <div class="border p-4 rounded-lg bg-gray-50 space-y-2">
             <div class="flex justify-between">
@@ -708,7 +800,7 @@
       });
     }
 
-    // PRODUTOS E ESTOQUE
+    // ESTOQUE
     function calcularTotaisEstoque() {
       let custoTotal = 0, lucroFuturoTotal = 0;
       produtos.forEach(prod => {
@@ -866,9 +958,7 @@
     function carregarOpcoesClientesVenda() {
       const select = document.getElementById('selectClienteVenda');
       select.innerHTML = '<option value="">-- Nenhum cliente (Venda Avulsa) --</option>';
-      clientes.forEach(cli => {
-        select.innerHTML += `<option value="${cli.id}">${cli.nome}</option>`;
-      });
+      clientes.forEach(cli => { select.innerHTML += `<option value="${cli.id}">${cli.nome}</option>`; });
     }
 
     function renderizarTabelaAbaVendas() {
@@ -876,15 +966,7 @@
       document.getElementById('qtdTotalVendas').innerText = vendas.length;
       tbody.innerHTML = vendas.length === 0 ? '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhuma venda registrada.</td></tr>' : '';
       [...vendas].reverse().forEach(v => {
-        tbody.innerHTML += `
-          <tr class="border-b text-sm">
-            <td class="p-3">${new Date(v.data).toLocaleDateString()}</td>
-            <td class="p-3">${v.formaPagamento}</td>
-            <td class="p-3 font-bold">R$ ${v.totalVenda.toFixed(2)}</td>
-            <td class="p-3">R$ ${v.totalCusto.toFixed(2)}</td>
-            <td class="p-3 text-green-600 font-bold">R$ ${v.lucroObtido.toFixed(2)}</td>
-            <td class="p-3 text-center"><button onclick="imprimirReciboVenda(${v.id})" class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">🧾 Recibo</button></td>
-          </tr>`;
+        tbody.innerHTML += `<tr class="border-b text-sm"><td class="p-3">${new Date(v.data).toLocaleDateString()}</td><td class="p-3">${v.formaPagamento}</td><td class="p-3 font-bold">R$ ${v.totalVenda.toFixed(2)}</td><td class="p-3">R$ ${v.totalCusto.toFixed(2)}</td><td class="p-3 text-green-600 font-bold">R$ ${v.lucroObtido.toFixed(2)}</td><td class="p-3 text-center"><button onclick="imprimirReciboVenda(${v.id})" class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">🧾 Recibo</button></td></tr>`;
       });
     }
 
@@ -892,17 +974,7 @@
       const v = vendas.find(item => item.id === idVenda);
       if (!v) return;
       const win = window.open('', '', 'width=400,height=600');
-      win.document.write(`
-        <html>
-          <head><title>Recibo - ${lojaAtual.nomeLoja}</title></head>
-          <body style="font-family:monospace; padding:10px; text-align:center;">
-            <h3>${lojaAtual.nomeLoja.toUpperCase()}</h3>
-            <p>Comprovante de Venda - Nº ${v.id}</p>
-            <hr/>
-            <p style="text-align:right; font-weight:bold;">TOTAL: R$ ${v.totalVenda.toFixed(2)}</p>
-          </body>
-        </html>
-      `);
+      win.document.write(`<html><head><title>Recibo - ${lojaAtual.nomeLoja}</title></head><body style="font-family:monospace; padding:10px; text-align:center;"><h3>${lojaAtual.nomeLoja.toUpperCase()}</h3><p>Comprovante de Venda - Nº ${v.id}</p><hr/><p style="text-align:right; font-weight:bold;">TOTAL: R$ ${v.totalVenda.toFixed(2)}</p></body></html>`);
       win.document.close(); win.print();
     }
 
