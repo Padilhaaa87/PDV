@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Opções de Pagamento Simplificadas</title>
-  <!-- Tailwind CSS para estilização leve e responsiva -->
+  <title>PDV Web - Exclusão de Relatório de Caixa</title>
+  <!-- Tailwind CSS para estilização rápida e responsiva -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .aba-conteudo { display: none; }
@@ -108,7 +108,6 @@
             <div class="mt-6 border-t pt-4 space-y-3">
               <div>
                 <label class="block text-sm font-medium mb-1">Forma de Pagamento</label>
-                <!-- OPÇÕES SIMPLIFICADAS CONFORME SOLICITADO -->
                 <select id="formaPagamento" class="w-full p-2 border rounded" onchange="tratarTrocaPagamento()">
                   <option value="dinheiro">💵 Dinheiro</option>
                   <option value="cartao">💳 Cartão</option>
@@ -204,12 +203,16 @@
           </div>
         </div>
 
+        <!-- RELATÓRIO DE SESSÕES COM OPÇÃO DE EXCLUSÃO -->
         <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
           <div class="flex justify-between items-center border-b pb-3">
             <div>
               <h2 class="text-xl font-bold text-gray-700">📋 Relatório de Caixas e Histórico de Sessões</h2>
-              <p class="text-xs text-gray-500">Veja quem abriu o caixa, horários e o saldo final acumulado</p>
+              <p class="text-xs text-gray-500">Veja quem abriu o caixa, horários, saldo final e gerencie o histórico</p>
             </div>
+            <button onclick="limparTodoHistoricoCaixas()" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition">
+              🗑️ Limpar Todo o Histórico
+            </button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
@@ -221,6 +224,7 @@
                   <th class="p-3">Fundo Inicial</th>
                   <th class="p-3">Dinheiro Final</th>
                   <th class="p-3 text-center">Status</th>
+                  <th class="p-3 text-center">Ações</th>
                 </tr>
               </thead>
               <tbody id="tabelaHistoricoSessoesCaixa"></tbody>
@@ -1071,7 +1075,6 @@
       else { label.innerText = "(Opcional)"; label.className = "text-xs text-gray-400"; }
     }
 
-    // FINALIZAÇÃO DE VENDA COM OPÇÕES SIMPLIFICADAS
     function finalizarVenda() {
       if (carrinho.length === 0) return alert('Carrinho vazio!');
       if (!caixa.aberto) return alert('Caixa fechado!');
@@ -1084,7 +1087,6 @@
       const cli = clientes.find(c => c.id === parseInt(idCli));
       const dataIso = new Date().toISOString();
       
-      // ROTULOS SIMPLIFICADOS
       let rotuloForma = 'Dinheiro';
       if (formaSelec === 'pix') rotuloForma = 'PIX';
       if (formaSelec === 'cartao') rotuloForma = 'Cartão';
@@ -1407,11 +1409,44 @@
       renderizarTabelaHistoricoSessoes();
     }
 
+    // EXCLUIR UMA SESSÃO INDIVIDUAL DO HISTÓRICO DE CAIXAS
+    function excluirSessaoCaixa(idSessao) {
+      const sessao = historicoCaixas.find(s => s.id === idSessao);
+      if (!sessao) return;
+
+      if (sessao.status === 'Aberto' && caixa.aberto) {
+        return alert('⚠️ Não é possível excluir o registro do caixa que está atualmente ABERTO! Feche o caixa antes de remover o seu registro.');
+      }
+
+      if (!confirm(`Tem certeza de que deseja excluir o registro do caixa aberto por "${sessao.responsavel}"?`)) return;
+
+      historicoCaixas = historicoCaixas.filter(s => s.id !== idSessao);
+      localStorage.setItem('pdv_historico_caixas', JSON.stringify(historicoCaixas));
+
+      alert('Registro de caixa excluído com sucesso!');
+      renderizarTabelaHistoricoSessoes();
+    }
+
+    // LIMPAR TODO O HISTÓRICO DE SESSÕES DE CAIXA
+    function limparTodoHistoricoCaixas() {
+      if (caixa.aberto) {
+        return alert('⚠️ Não é possível limpar o histórico enquanto houver um caixa ABERTO!');
+      }
+
+      if (!confirm('⚠️ ATENÇÃO: Tem certeza de que deseja apagar TODO o histórico de sessões de caixa?')) return;
+
+      historicoCaixas = [];
+      localStorage.setItem('pdv_historico_caixas', JSON.stringify(historicoCaixas));
+
+      alert('Histórico de caixas limpo com sucesso!');
+      renderizarTabelaHistoricoSessoes();
+    }
+
     function renderizarTabelaHistoricoSessoes() {
       const tbody = document.getElementById('tabelaHistoricoSessoesCaixa');
       if (!tbody) return;
 
-      tbody.innerHTML = historicoCaixas.length === 0 ? '<tr><td colspan="6" class="p-4 text-center text-gray-500 text-sm">Nenhuma sessão de caixa registrada.</td></tr>' : '';
+      tbody.innerHTML = historicoCaixas.length === 0 ? '<tr><td colspan="7" class="p-4 text-center text-gray-500 text-sm">Nenhuma sessão de caixa registrada.</td></tr>' : '';
 
       [...historicoCaixas].reverse().forEach(sessao => {
         const dAbertura = new Date(sessao.dataAbertura);
@@ -1440,6 +1475,11 @@
             <td class="p-3">R$ ${sessao.inicial.toFixed(2)}</td>
             <td class="p-3 font-bold text-blue-600">R$ ${totalExibicao.toFixed(2)}</td>
             <td class="p-3 text-center">${badgeStatus}</td>
+            <td class="p-3 text-center">
+              <button onclick="excluirSessaoCaixa(${sessao.id})" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-2 py-1 rounded text-xs transition">
+                🗑️ Excluir
+              </button>
+            </td>
           </tr>`;
       });
     }
