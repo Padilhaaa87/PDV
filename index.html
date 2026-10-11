@@ -1799,5 +1799,66 @@
       iniciarSessao(sessaoAtiva);
     }
   </script>
+  <!-- MÓDULO DE SINCRONIZAÇÃO UNIVERSAL (PC & TELEMÓVEL) -->
+<script>
+  // 1. ENDEREÇO DA BASE DE DADOS NA NUVEM (API REST GRATUITA)
+  // Substitua o BIN_ID abaixo pelo ID retornado ao criar uma chave no jsonbin.io ou similar
+  const NUVEM_API_URL = "https://api.jsonbin.io/v3/b/SEU_BIN_ID_AQUI";
+  const CHAVE_API = "SUA_CHAVE_API_AQUI";
+
+  // 2. FUNÇÃO QUE ENVIA DADOS DO COMPUTADOR/TELEMÓVEL PARA A NUVEM
+  async function enviarDadosParaNuvem() {
+    const dadosCompletos = {
+      produtos: window.produtos || [],
+      clientes: window.clientes || [],
+      vendas: window.vendas || [],
+      caixa: window.caixa || {}
+    };
+
+    try {
+      await fetch(NUVEM_API_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': CHAVE_API
+        },
+        body: JSON.stringify(dadosCompletos)
+      });
+      console.log("☁️ Dados sincronizados na nuvem com sucesso!");
+    } catch (erro) {
+      console.error("Erro ao enviar para a nuvem:", erro);
+    }
+  }
+
+  // 3. FUNÇÃO QUE BUSCA OS DADOS DA NUVEM NO TELEMÓVEL/PC
+  async function buscarDadosDaNuvem() {
+    try {
+      const resposta = await fetch(NUVEM_API_URL + "/latest", {
+        headers: { 'X-Master-Key': CHAVE_API }
+      });
+      const resultado = await resposta.json();
+      const dados = resultado.record;
+
+      if (dados) {
+        window.produtos = dados.produtos || [];
+        window.clientes = dados.clientes || [];
+        window.vendas = dados.vendas || [];
+        window.caixa = dados.caixa || {};
+
+        // Atualiza a tela automaticamente se as funções existirem
+        if (typeof atualizarTudo === 'function') {
+          atualizarTudo();
+        }
+      }
+    } catch (erro) {
+      console.error("Erro ao ler da nuvem:", erro);
+    }
+  }
+
+  // 4. VERIFICAÇÃO AUTOMÁTICA A CADA 3 SEGUNDOS (SINCRONIZAÇÃO EM TEMPO REAL)
+  setInterval(() => {
+    buscarDadosDaNuvem();
+  }, 3000);
+</script>
 </body>
 </html>
