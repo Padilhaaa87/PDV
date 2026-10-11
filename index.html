@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Autenticação & Recuperação Multi-Canal</title>
+  <title>PDV Web - Autenticação Sincronizada</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -52,9 +52,9 @@
   <div id="telaAutenticacao" class="min-h-screen flex items-center justify-center bg-blue-50 p-4 transition-colors duration-300">
     <div class="bg-white p-6 md:p-8 rounded-xl shadow-xl border border-blue-100 w-full max-w-lg space-y-6 relative">
       
-      <!-- BOTÃO DE MODO ESCURO -->
+      <!-- BOTÃO DE MODO ESCURO NO LOGIN -->
       <div class="flex justify-between items-center border-b pb-3">
-        <h1 class="text-2xl font-bold text-blue-600">PDV Comercial</h1>
+        <h1 class="text-2xl font-bold text-blue-600">PDV Comercial Nuvem</h1>
         <button onclick="alternarModoEscuro()" id="btnModoEscuroLogin" class="bg-gray-100 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-full font-semibold shadow-sm transition flex items-center gap-1 border">
           🌙 Modo Escuro
         </button>
@@ -64,7 +64,7 @@
         <p class="text-gray-500 text-sm">Selecione o seu tipo de acesso para entrar no sistema</p>
       </div>
 
-      <!-- SELETOR DE PERFIL -->
+      <!-- SELETOR DE PERFIL DE LOGIN E CADASTRO -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-1 border-b pb-2 text-xs font-bold text-center">
         <button onclick="selecionarTipoAcesso('vendedor')" id="btnAcessoVendedor" class="py-2 px-1 rounded bg-blue-600 text-white shadow">🛒 Vendedor</button>
         <button onclick="selecionarTipoAcesso('adminLoja')" id="btnAcessoAdminLoja" class="py-2 px-1 rounded text-gray-600 hover:bg-gray-100">🏢 Adm Loja</button>
@@ -72,11 +72,12 @@
         <button onclick="selecionarTipoAcesso('cadastro')" id="btnAcessoCadastro" class="py-2 px-1 rounded text-emerald-700 hover:bg-emerald-50">➕ Nova Loja</button>
       </div>
 
+      <!-- PAINEL ORIENTATIVO DO ACESSO SELECIONADO -->
       <div id="boxOrientacaoAcesso" class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded text-xs font-semibold">
         🛒 <strong>Acesso Vendedor:</strong> Entre com seu utilizador de vendedor para operar o caixa e realizar vendas.
       </div>
 
-      <!-- FORMULÁRIO DE LOGIN -->
+      <!-- FORMULÁRIO UNIFICADO DE LOGIN DE UTILIZADORES -->
       <form id="formLogin" onsubmit="fazerLogin(event)" class="space-y-4">
         <input type="hidden" id="tipoAcessoSelecionado" value="vendedor">
         <div>
@@ -107,310 +108,264 @@
         </button>
       </form>
 
-      <!-- FORMULÁRIO DE CADASTRO -->
+      <!-- FORMULÁRIO DE CRIAÇÃO DE NOVA LOJA -->
       <form id="formCadastro" onsubmit="cadastrarLojaEUsuario(event)" class="space-y-4 hidden">
+        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 p-4 rounded-lg shadow-sm space-y-2">
+          <div class="flex justify-between items-center border-b border-emerald-200 pb-2">
+            <span class="text-xs font-bold uppercase text-emerald-800">🚀 Adquira o Sistema PDV Web</span>
+            <span class="bg-emerald-600 text-white text-xs font-extrabold px-2.5 py-1 rounded-full shadow">Apenas R$ 20,00</span>
+          </div>
+          <p class="text-xs text-gray-700">Adquira a sua licença de uso para criar a sua loja com acesso ilimitado.</p>
+        </div>
+
         <div>
-          <label class="block text-sm font-medium text-gray-700">Código de Licença <span class="text-red-500">*</span></label>
-          <input type="text" id="cadCodigoCompra" required placeholder="Ex: MEUPDV123" class="w-full p-3 border rounded font-mono uppercase bg-amber-50 border-amber-300 outline-none">
+          <label class="block text-sm font-medium text-gray-700">Código de Compra / Licença <span class="text-red-500">*</span></label>
+          <input type="text" id="cadCodigoCompra" required placeholder="Ex: MEUPDV123" class="w-full p-3 border rounded font-mono uppercase bg-amber-50 border-amber-300 outline-none focus:ring-2 focus:ring-amber-500">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">Nome da Loja <span class="text-red-500">*</span></label>
-          <input type="text" id="cadNomeLoja" required placeholder="Ex: Mercado Silva" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-sm font-medium text-gray-700">Nome da Sua Loja <span class="text-red-500">*</span></label>
+          <input type="text" id="cadNomeLoja" required placeholder="Ex: Mercado Silva, Boutique Elegância" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">E-mail de Contato <span class="text-red-500">*</span></label>
+          <label class="block text-sm font-medium text-gray-700">E-mail de Contato / Recuperação <span class="text-red-500">*</span></label>
           <input type="email" id="cadEmail" required placeholder="seuemail@exemplo.com" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Telefone / WhatsApp <span class="text-red-500">*</span></label>
-          <input type="tel" id="cadTelefone" required placeholder="(42) 98869-1426" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+          <input type="tel" id="cadTelefone" required placeholder="(00) 00000-0000" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">Administrador <span class="text-red-500">*</span></label>
-          <input type="text" id="cadUsuario" required placeholder="Nome do utilizador administrador" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-sm font-medium text-gray-700">Nome do Administrador da Loja <span class="text-red-500">*</span></label>
+          <input type="text" id="cadUsuario" required placeholder="Escolha um nome de utilizador para o dono" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">Palavra-passe <span class="text-red-500">*</span></label>
-          <input type="password" id="cadSenha" required placeholder="Crie uma palavra-passe" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha) <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <input type="password" id="cadSenha" required placeholder="Crie uma palavra-passe" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500 pr-10">
+            <button type="button" onclick="alternarVisibilidadeSenha('cadSenha', 'btnVerSenhaCad')" id="btnVerSenhaCad" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 text-sm font-semibold">
+              👁️
+            </button>
+          </div>
         </div>
         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded transition shadow">
-          Criar Loja
+          Validar Código e Criar Loja
         </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL DE SOLICITAÇÃO DE RECUPERAÇÃO DE SENHA (WHATSAPP & E-MAIL) -->
-  <div id="modalRecuperacaoSenha" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl relative">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="text-lg font-bold text-gray-800">🔒 Solicitar Redefinição de Senha</h3>
-        <button onclick="alternarModalRecuperacao(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
-      </div>
-      <p class="text-xs text-gray-600">
-        Informe o seu <strong>Utilizador</strong> ou <strong>E-mail</strong> para receber o código de recuperação via WhatsApp ou E-mail. A palavra-passe antiga será temporariamente bloqueada.
-      </p>
-      <form onsubmit="processarRecuperacaoMultiCanal(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-bold text-gray-700 mb-1">Utilizador ou E-mail Cadastrado</label>
-          <input type="text" id="identificadorRecuperacao" required placeholder="Digite o seu utilizador ou e-mail" class="w-full p-2.5 border rounded outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-gray-700 mb-1">Como deseja receber o código?</label>
-          <select id="canalEnvioCodigo" class="w-full p-2.5 border rounded text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="whatsapp">📱 Enviar via WhatsApp</option>
-            <option value="email">📧 Enviar via E-mail</option>
-            <option value="ambos">🚀 Enviar por Ambos (WhatsApp e E-mail)</option>
-          </select>
-        </div>
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="alternarModalRecuperacao(false)" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold text-xs rounded">Cancelar</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded shadow">Enviar Código de Confirmação</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL DE CONFIRMAÇÃO DO TOKEN -->
-  <div id="modalConfirmacaoToken" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl relative">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="text-lg font-bold text-emerald-700">✅ Confirmar Código e Redefinir Senha</h3>
-        <button onclick="alternarModalConfirmacaoToken(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
-      </div>
-      <p class="text-xs text-gray-600">
-        Insira o código de 6 dígitos que recebeu no seu WhatsApp ou E-mail para cadastrar a nova palavra-passe.
-      </p>
-      <form onsubmit="confirmarERedefinirSenha(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-bold text-gray-700 mb-1">Código de Confirmação (Token)</label>
-          <input type="text" id="tokenConfirmacao" required placeholder="Ex: 839210" class="w-full p-2.5 border rounded uppercase font-mono tracking-widest text-center text-sm outline-none focus:ring-2 focus:ring-emerald-500">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-gray-700 mb-1">Nova Palavra-passe (Senha)</label>
-          <input type="password" id="novaSenhaRedefinida" required placeholder="••••••••" class="w-full p-2.5 border rounded outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
-        </div>
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="alternarModalConfirmacaoToken(false)" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold text-xs rounded">Cancelar</button>
-          <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded shadow">Salvar Nova Senha</button>
-        </div>
       </form>
     </div>
   </div>
 
   <!-- APLICAÇÃO PRINCIPAL DA LOJA -->
   <div id="appPrincipal" class="oculto-autenticacao min-h-screen flex flex-col">
-    <header id="headerLoja" class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50">
+    <header id="headerLoja" class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50 transition-colors duration-300">
       <div class="max-w-7xl mx-auto flex justify-between items-center">
         <div>
-          <h1 id="labelNomeLojaTopo" class="text-xl md:text-2xl font-bold">PDV Web</h1>
+          <h1 id="labelNomeLojaTopo" class="text-xl md:text-2xl font-bold">PDV Web Nuvem</h1>
           <span id="labelUsuarioLogado" class="text-xs text-blue-200">Sessão: Nenhuma</span>
         </div>
         <div class="flex items-center gap-3">
-          <button onclick="alternarModoEscuro()" id="btnModoEscuroHeader" class="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full font-semibold">🌙 Modo Escuro</button>
-          <button onclick="fazerLogout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded font-semibold">Sair</button>
+          <button onclick="alternarModoEscuro()" id="btnModoEscuroHeader" class="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow transition flex items-center gap-1">
+            🌙 Modo Escuro
+          </button>
+          <div id="statusCaixaTopo" class="bg-black/20 px-3 py-1 rounded-full text-xs md:text-sm font-bold">Caixa: Fechado</div>
+          <button onclick="fazerLogout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded font-semibold shadow">Sair</button>
         </div>
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto p-6 flex-grow w-full">
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-bold text-gray-800">Bem-vindo ao PDV Web!</h2>
-        <p class="text-sm text-gray-600 mt-2">Sua sessão está ativa e sincronizada.</p>
+    <nav id="navLoja" class="bg-blue-800 text-white shadow-inner overflow-x-auto transition-colors duration-300">
+      <div class="max-w-7xl mx-auto flex border-b border-white/20 min-w-max">
+        <button onclick="alternarAba('frenteCaixa')" id="btn-frenteCaixa" class="py-3 px-5 hover:bg-black/10 font-semibold border-b-2 border-white text-sm md:text-base">Frente de Caixa</button>
+        <button onclick="alternarAba('vendas')" id="btn-vendas" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Vendas</button>
+        <button onclick="alternarAba('controleCaixa')" id="btn-controleCaixa" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Caixa</button>
+        <button onclick="alternarAba('produtos')" id="btn-produtos" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Produtos & Estoque</button>
+        <button onclick="alternarAba('clientes')" id="btn-clientes" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Clientes & Fiado</button>
+        <button onclick="alternarAba('usuarios')" id="btn-usuarios" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base admin-only">👥 Utilizadores & Tema</button>
       </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-6 flex-grow w-full">
+      
+      <!-- ABA 1: FRENTE DE CAIXA -->
+      <section id="frenteCaixa" class="aba-conteudo ativa">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="md:col-span-2 bg-white p-4 md:p-6 rounded-lg shadow-md">
+            <h2 class="text-lg md:text-xl font-bold mb-4 text-gray-700">Selecione os Produtos</h2>
+            <div id="gridProdutosVenda" class="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4"></div>
+          </div>
+
+          <div class="bg-white p-4 md:p-6 rounded-lg shadow-md flex flex-col justify-between">
+            <div>
+              <h2 class="text-lg md:text-xl font-bold mb-4 text-gray-700">Carrinho</h2>
+              <div id="itensCarrinho" class="space-y-2 max-h-60 overflow-y-auto border-b pb-4 mb-4">
+                <p class="text-gray-500 text-sm">Nenhum item selecionado.</p>
+              </div>
+              <div class="text-right text-xl font-bold text-gray-800">Total: R$ <span id="totalCarrinho">0,00</span></div>
+            </div>
+
+            <div class="mt-6 border-t pt-4 space-y-3">
+              <div>
+                <label class="block text-sm font-medium mb-1">Forma de Pagamento</label>
+                <select id="formaPagamento" class="w-full p-2 border rounded">
+                  <option value="dinheiro">💵 Dinheiro</option>
+                  <option value="cartao">💳 Cartão</option>
+                  <option value="pix">📱 PIX</option>
+                  <option value="fiado">📋 Fiado</option>
+                </select>
+              </div>
+              <button onclick="finalizarVenda()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded shadow">Finalizar Venda</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 4: PRODUTOS & ESTOQUE -->
+      <section id="produtos" class="aba-conteudo">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow-md space-y-6">
+            <h2 id="tituloFormProduto" class="text-xl font-bold text-gray-700">Cadastrar Produto</h2>
+            <form id="formProduto" onsubmit="salvarProduto(event)" class="space-y-3">
+              <input type="hidden" id="prodIdEdicao" value="">
+              <div><label class="block text-sm font-medium">Nome do Produto</label><input type="text" id="prodNome" required class="w-full p-2 border rounded"></div>
+              <div><label class="block text-sm font-medium">Preço Custo (R$)</label><input type="number" id="prodCusto" step="0.01" required class="w-full p-2 border rounded"></div>
+              <div><label class="block text-sm font-medium">Preço Venda (R$)</label><input type="number" id="prodVenda" step="0.01" required class="w-full p-2 border rounded"></div>
+              <div><label class="block text-sm font-medium">Estoque (Qtd)</label><input type="number" id="prodEstoque" required min="0" placeholder="0" class="w-full p-2 border rounded"></div>
+              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold shadow">Salvar Produto na Nuvem</button>
+            </form>
+          </div>
+
+          <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Produtos no Estoque (Sincronizado)</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs md:text-sm">
+                <thead>
+                  <tr class="bg-gray-100 border-b">
+                    <th class="p-2">Nome</th>
+                    <th class="p-2">Custo</th>
+                    <th class="p-2">Venda</th>
+                    <th class="p-2">Estoque</th>
+                  </tr>
+                </thead>
+                <tbody id="tabelaProdutos"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA UTILIZADORES -->
+      <section id="usuarios" class="aba-conteudo admin-only space-y-6">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h2 class="text-xl font-bold text-gray-700 mb-4">Utilizadores da Loja</h2>
+          <form onsubmit="salvarNovoUsuarioLoja(event)" class="space-y-3 max-w-md">
+            <div><label class="block text-sm font-medium">Utilizador</label><input type="text" id="editUsuarioNome" required class="w-full p-2 border rounded"></div>
+            <div><label class="block text-sm font-medium">E-mail</label><input type="email" id="editUsuarioEmail" required class="w-full p-2 border rounded"></div>
+            <div><label class="block text-sm font-medium">Telefone / WhatsApp</label><input type="tel" id="editUsuarioTelefone" required placeholder="(00) 00000-0000" class="w-full p-2 border rounded"></div>
+            <div><label class="block text-sm font-medium">Palavra-passe</label><input type="password" id="editUsuarioSenha" required class="w-full p-2 border rounded"></div>
+            <button type="submit" class="bg-blue-600 text-white font-bold px-4 py-2 rounded">Cadastrar Vendedor</button>
+          </form>
+        </div>
+      </section>
+
     </main>
   </div>
 
-  <script>
-    // DADOS ARMAZENADOS NO BROWSER / NUVEM
-    let contasRegistradas = JSON.parse(localStorage.getItem('pdv_contas')) || [
-      { usuario: 'master', senha: '123', email: 'master@pdvweb.com', telefone: '(42) 98869-1426', perfil: 'superadmin', lojaId: 'LOJA_MASTER', bloqueadoPorRecuperacao: false },
-      { usuario: 'admin', senha: '123', email: 'admin@loja.com', telefone: '(42) 98869-1426', perfil: 'admin', lojaId: 'LOJA_01', bloqueadoPorRecuperacao: false },
-      { usuario: 'vendedor', senha: '123', email: 'vendedor@loja.com', telefone: '(42) 98869-1426', perfil: 'vendedor', lojaId: 'LOJA_01', bloqueadoPorRecuperacao: false }
-    ];
+  <!-- BIBLIOTECAS DO FIREBASE EM NUVEM (SDK V9) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // MODO ESCURO
-    let modoEscuroAtivo = localStorage.getItem('pdv_modo_escuro') === 'true';
+    // 🔴 INSERIR AS SUAS CHAVES DO FIREBASE AQUI
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY_AQUI",
+      authDomain: "SEU_PROJECT_ID.firebaseapp.com",
+      projectId: "SEU_PROJECT_ID",
+      storageBucket: "SEU_PROJECT_ID.appspot.com",
+      messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+      appId: "SEU_APP_ID"
+    };
 
-    function aplicarModoEscuro() {
-      const body = document.getElementById('bodyApp');
-      if (modoEscuroAtivo) body.classList.add('dark');
-      else body.classList.remove('dark');
-    }
+    // INICIALIZAR O FIREBASE
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    function alternarModoEscuro() {
-      modoEscuroAtivo = !modoEscuroAtivo;
-      localStorage.setItem('pdv_modo_escuro', modoEscuroAtivo);
-      aplicarModoEscuro();
-    }
+    // DADOS GLOBAIS DA APLICAÇÃO
+    window.db = db;
+    window.produtos = [];
+    window.contasRegistradas = [];
 
-    function alternarVisibilidadeSenha(idInput, idBotao) {
-      const input = document.getElementById(idInput);
-      const btn = document.getElementById(idBotao);
-      if (input.type === "password") {
-        input.type = "text";
-        btn.innerText = "🙈";
-      } else {
-        input.type = "password";
-        btn.innerText = "👁️";
-      }
-    }
+    // ESCUTAR PRODUTOS EM TEMPO REAL NA NUVEM
+    window.carregarProdutosNuvem = function(lojaId) {
+      onSnapshot(collection(db, `lojas/${lojaId}/produtos`), (snapshot) => {
+        window.produtos = [];
+        snapshot.forEach((docSnap) => {
+          window.produtos.push({ idDoc: docSnap.id, ...docSnap.data() });
+        });
+        renderizarTabelaProdutos();
+        renderizarGridProdutos();
+      });
+    };
 
-    function alternarModalRecuperacao(exibir) {
-      document.getElementById('modalRecuperacaoSenha').classList.toggle('hidden', !exibir);
-      if (!exibir) document.getElementById('identificadorRecuperacao').value = '';
-    }
-
-    function alternarModalConfirmacaoToken(exibir) {
-      document.getElementById('modalConfirmacaoToken').classList.toggle('hidden', !exibir);
-      if (!exibir) {
-        document.getElementById('tokenConfirmacao').value = '';
-        document.getElementById('novaSenhaRedefinida').value = '';
-      }
-    }
-
-    // REMOVE CARACTERES ESPECIAIS E ADICIONA O CÓDIGO 55 DO BRASIL SE FALTAR
-    function limparNumeroWhatsApp(telefone) {
-      if (!telefone) return '';
-      let limpo = telefone.replace(/\D/g, '');
-      if (limpo.length === 10 || limpo.length === 11) {
-        limpo = '55' + limpo;
-      }
-      return limpo;
-    }
-
-    // PROCESSA A RECUPERAÇÃO VIA WHATSAPP E/OU E-MAIL
-    function processarRecuperacaoMultiCanal(e) {
+    // SALVAR PRODUTO NA NUVEM
+    window.salvarProduto = async function(e) {
       e.preventDefault();
-      const identificador = document.getElementById('identificadorRecuperacao').value.trim().toLowerCase();
-      const canal = document.getElementById('canalEnvioCodigo').value;
+      const nome = document.getElementById('prodNome').value.trim();
+      const custo = parseFloat(document.getElementById('prodCusto').value);
+      const venda = parseFloat(document.getElementById('prodVenda').value);
+      const estoque = parseInt(document.getElementById('prodEstoque').value) || 0;
 
-      // BUSCA POR USUÁRIO OU E-MAIL
-      const conta = contasRegistradas.find(c => 
-        (c.usuario && c.usuario.toLowerCase() === identificador) || 
-        (c.email && c.email.toLowerCase() === identificador)
-      );
+      if (!window.lojaAtual) return alert('Selecione uma loja válida.');
 
-      if (!conta) {
-        return alert('❌ Nenhum utilizador ou e-mail correspondente foi encontrado!');
-      }
+      await addDoc(collection(db, `lojas/${window.lojaAtual.id}/produtos`), {
+        nome, custo, venda, estoque, dataCriacao: new Date().toISOString()
+      });
 
-      // GERA TOKEN DE 6 DÍGITOS E BLOQUEIA A CONTA
-      const token = Math.floor(100000 + Math.random() * 900000).toString();
-      conta.bloqueadoPorRecuperacao = true;
-      conta.tokenRecuperacao = token;
-      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
+      document.getElementById('formProduto').reset();
+      alert('✅ Produto salvo e sincronizado na nuvem com sucesso!');
+    };
 
-      const mensagemWhatsApp = encodeURIComponent(`🔒 *PDV Web - Código de Recuperação*\n\nOlá, ${conta.usuario}!\n\nSeu código de confirmação para redefinir a palavra-passe é:\n👉 *${token}*\n\nA sua palavra-passe antiga foi temporariamente bloqueada por segurança.`);
-      const assuntoEmail = encodeURIComponent(`Código de Confirmação (${token}) - PDV Web`);
-      const corpoEmail = encodeURIComponent(`Olá, ${conta.usuario}!\n\nRecebemos uma solicitação de redefinição de palavra-passe para a sua conta.\n\nSeu código de confirmação é: ${token}\n\nAtenciosamente,\nEquipe PDV Web.`);
+    window.renderizarTabelaProdutos = function() {
+      const tbody = document.getElementById('tabelaProdutos');
+      tbody.innerHTML = '';
+      window.produtos.forEach(prod => {
+        tbody.innerHTML += `
+          <tr class="border-b text-sm">
+            <td class="p-2 font-medium">${prod.nome}</td>
+            <td class="p-2">R$ ${prod.custo.toFixed(2)}</td>
+            <td class="p-2">R$ ${prod.venda.toFixed(2)}</td>
+            <td class="p-2 font-bold">${prod.estoque} un.</td>
+          </tr>`;
+      });
+    };
 
-      let enviosRealizados = [];
+    window.renderizarGridProdutos = function() {
+      const container = document.getElementById('gridProdutosVenda');
+      container.innerHTML = '';
+      window.produtos.forEach(prod => {
+        container.innerHTML += `
+          <div class="border p-3 rounded-lg text-center cursor-pointer hover:border-blue-500 bg-gray-50">
+            <h4 class="font-bold text-gray-800 text-sm">${prod.nome}</h4>
+            <p class="text-blue-600 font-bold">R$ ${prod.venda.toFixed(2)}</p>
+            <span class="text-xs text-gray-500 block">Estoque: ${prod.estoque}</span>
+          </div>`;
+      });
+    };
 
-      // ENVIO VIA WHATSAPP
-      if (canal === 'whatsapp' || canal === 'ambos') {
-        const numWhats = limparNumeroWhatsApp(conta.telefone);
-        if (numWhats) {
-          window.open(`https://wa.me/${numWhats}?text=${mensagemWhatsApp}`, '_blank');
-          enviosRealizados.push(`WhatsApp (${conta.telefone})`);
-        } else {
-          alert('⚠️ O utilizador não possui um número de telefone/WhatsApp válido cadastrado!');
-        }
-      }
+    // AUXILIARES DE NAVEGAÇÃO E SESSÃO
+    window.alternarAba = function(idAba) {
+      document.querySelectorAll('.aba-conteudo').forEach(el => el.classList.remove('ativa'));
+      document.getElementById(idAba).classList.add('ativa');
+    };
 
-      // ENVIO VIA E-MAIL
-      if (canal === 'email' || canal === 'ambos') {
-        if (conta.email) {
-          window.location.href = `mailto:${conta.email}?subject=${assuntoEmail}&body=${corpoEmail}`;
-          enviosRealizados.push(`E-mail (${conta.email})`);
-        } else {
-          alert('⚠️ O utilizador não possui um e-mail válido cadastrado!');
-        }
-      }
-
-      alert(`🚀 Código de confirmação gerado: ${token}\n\nEnviado para: ${enviosRealizados.join(' e ')}`);
-
-      alternarModalRecuperacao(false);
-      alternarModalConfirmacaoToken(true);
-      document.getElementById('tokenConfirmacao').value = token;
-    }
-
-    // VALIDA O TOKEN E SALVA A NOVA PALAVRA-PASSE
-    function confirmarERedefinirSenha(e) {
-      e.preventDefault();
-      const token = document.getElementById('tokenConfirmacao').value.trim();
-      const novaSenha = document.getElementById('novaSenhaRedefinida').value;
-
-      const conta = contasRegistradas.find(c => c.tokenRecuperacao === token);
-
-      if (!conta) {
-        return alert('❌ Código de confirmação inválido ou expirado!');
-      }
-
-      conta.senha = novaSenha;
-      conta.bloqueadoPorRecuperacao = false;
-      conta.tokenRecuperacao = null;
-
-      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
-
-      alert('🎉 Palavra-passe redefinida com sucesso! Você já pode fazer login.');
-      alternarModalConfirmacaoToken(false);
-    }
-
-    function selecionarTipoAcesso(tipo) {
-      document.getElementById('tipoAcessoSelecionado').value = tipo;
-      const formLogin = document.getElementById('formLogin');
-      const formCadastro = document.getElementById('formCadastro');
-      
-      if (tipo === 'cadastro') {
-        formLogin.classList.add('hidden');
-        formCadastro.classList.remove('hidden');
-      } else {
-        formLogin.classList.remove('hidden');
-        formCadastro.classList.add('hidden');
-      }
-    }
-
-    function fazerLogin(e) {
+    window.fazerLogin = function(e) {
       e.preventDefault();
       const u = document.getElementById('loginUsuario').value.trim();
-      const s = document.getElementById('loginSenha').value;
-
-      const conta = contasRegistradas.find(c => c.usuario.toLowerCase() === u.toLowerCase());
-
-      if (!conta || conta.senha !== s) {
-        return alert('Utilizador ou palavra-passe incorretos!');
-      }
-
-      if (conta.bloqueadoPorRecuperacao) {
-        return alert('⛔ ACESSO BLOQUEADO!\nSua senha foi desativada por uma solicitação de recuperação. Use o código de confirmação recebido para criar uma nova senha.');
-      }
-
+      window.lojaAtual = { id: 'LOJA_PADRAO', nomeLoja: 'Minha Loja Nuvem' };
+      
       document.getElementById('telaAutenticacao').classList.add('hidden');
       document.getElementById('appPrincipal').classList.remove('oculto-autenticacao');
-      document.getElementById('labelUsuarioLogado').innerText = `Operador: ${conta.usuario}`;
-    }
-
-    function fazerLogout() {
-      document.getElementById('appPrincipal').classList.add('oculto-autenticacao');
-      document.getElementById('telaAutenticacao').classList.remove('hidden');
-    }
-
-    function cadastrarLojaEUsuario(e) {
-      e.preventDefault();
-      const usuario = document.getElementById('cadUsuario').value.trim();
-      const senha = document.getElementById('cadSenha').value;
-      const email = document.getElementById('cadEmail').value.trim();
-      const telefone = document.getElementById('cadTelefone').value.trim();
-
-      contasRegistradas.push({ usuario, senha, email, telefone, perfil: 'admin', lojaId: 'LOJA_' + Date.now(), bloqueadoPorRecuperacao: false });
-      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
-
-      alert(`Loja criada com sucesso! Faça login com o utilizador: ${usuario}`);
-      selecionarTipoAcesso('vendedor');
-    }
-
-    aplicarModoEscuro();
+      
+      window.carregarProdutosNuvem(window.lojaAtual.id);
+    };
   </script>
 </body>
 </html>
