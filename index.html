@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Autenticação</title>
+  <title>PDV Web - Autenticação & Nuvem Sincronizada</title>
   <!-- Tailwind CSS para estilização rápida e moderna -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -133,7 +133,6 @@
         <div>
           <label class="block text-sm font-medium text-gray-700">Código de Compra / Licença <span class="text-red-500">*</span></label>
           <input type="text" id="cadCodigoCompra" required placeholder="Ex: MEUPDV123" class="w-full p-3 border rounded font-mono uppercase bg-amber-50 border-amber-300 outline-none focus:ring-2 focus:ring-amber-500">
-          <span class="text-[11px] text-gray-500 mt-0.5 block">Informe o código recebido após a compra de R$ 20,00 (Ex para testes: <code>MEUPDV123</code>)</span>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Nome da Sua Loja <span class="text-red-500">*</span></label>
@@ -751,6 +750,84 @@
     </main>
   </div>
 
+  <!-- CONEXÃO E SINCRONIZAÇÃO EM TEMPO REAL VIA FIREBASE COM SUAS CHAVES OFICIAIS -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, collection, doc, setDoc, onSnapshot 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // 🟢 SUAS CHAVES OFICIAIS DO FIREBASE APLICADAS
+    const firebaseConfig = {
+      apiKey: "AIzaSyCIcIlAd4qp2miTXcgp8BtDwHwYifcy2e0",
+      authDomain: "pdv-web-da9f5.firebaseapp.com",
+      projectId: "pdv-web-da9f5",
+      storageBucket: "pdv-web-da9f5.firebasestorage.app",
+      messagingSenderId: "340895672156",
+      appId: "1:340895672156:web:80b90ad74bca5c31f18399"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.db = db;
+
+    // ESCUTA EM TEMPO REAL DAS CONTAS E LOJAS NA NUVEM
+    onSnapshot(collection(db, "pdv_contas"), (snapshot) => {
+      let novasContas = [];
+      snapshot.forEach(docSnap => novasContas.push(docSnap.data()));
+      if (novasContas.length > 0) {
+        window.contasRegistradas = novasContas;
+        localStorage.setItem('pdv_contas', JSON.stringify(window.contasRegistradas));
+      }
+    });
+
+    onSnapshot(collection(db, "pdv_lojas"), (snapshot) => {
+      let novasLojas = [];
+      snapshot.forEach(docSnap => novasLojas.push(docSnap.data()));
+      if (novasLojas.length > 0) {
+        window.lojas = novasLojas;
+        localStorage.setItem('pdv_lojas', JSON.stringify(window.lojas));
+      }
+    });
+
+    // FUNÇÃO GLOBAL DE SALVAMENTO DE DADOS DA LOJA NA NUVEM
+    window.salvarDadosLojaNuvem = async function() {
+      if (!window.lojaAtual) return;
+      const id = window.lojaAtual.id;
+
+      try {
+        await setDoc(doc(db, "pdv_lojas_dados", id), {
+          produtos: window.produtos || [],
+          clientes: window.clientes || [],
+          caixa: window.caixa || {},
+          historicoCaixas: window.historicoCaixas || [],
+          vendas: window.vendas || []
+        });
+      } catch (e) {
+        console.error("Erro ao salvar dados na nuvem:", e);
+      }
+    };
+
+    // ESCUTA EM TEMPO REAL DOS DADOS DA LOJA SELECIONADA
+    window.carregarDadosLojaNuvem = function(lojaId) {
+      const docRef = doc(db, "pdv_lojas_dados", lojaId || 'LOJA_MASTER_BASE');
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const dados = docSnap.data();
+          window.produtos = dados.produtos || [];
+          window.clientes = dados.clientes || [];
+          window.caixa = dados.caixa || { aberto: false, inicial: 0, entradas: 0, dinheiro: 0, pix: 0, cartao: 0, fiado: 0 };
+          window.historicoCaixas = dados.historicoCaixas || [];
+          window.vendas = dados.vendas || [];
+          
+          if (typeof window.atualizarTudo === 'function') {
+            window.atualizarTudo();
+          }
+        }
+      });
+    };
+  </script>
+
   <script>
     // ALTERNAR VISIBILIDADE DA PALAVRA-PASSE
     function alternarVisibilidadeSenha(idInput, idBotao) {
@@ -817,7 +894,7 @@
       contaEncontrada.bloqueadoPorRecuperacao = true;
       contaEncontrada.tokenRecuperacao = token;
 
-      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
+      salvarDadosLoja();
 
       const msgWa = encodeURIComponent(`🔒 *PDV Web - Código de Recuperação*\n\nOlá, ${contaEncontrada.usuario}!\n\nSeu código de confirmação para redefinir a palavra-passe é:\n👉 *${token}*\n\nA sua palavra-passe antiga foi temporariamente bloqueada por segurança.`);
       const assuntoEmail = encodeURIComponent(`Código de Confirmação de Redefinição - PDV Web (${token})`);
@@ -870,7 +947,7 @@
       conta.bloqueadoPorRecuperacao = false;
       conta.tokenRecuperacao = null;
 
-      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
+      salvarDadosLoja();
 
       alert(`🎉 Palavra-passe redefinida com sucesso!\nA sua conta foi desbloqueada. Você já pode fazer login com a sua nova senha.`);
       alternarModalConfirmacaoToken(false);
@@ -889,7 +966,6 @@
         corTema: 'purple',
         dataCriacao: new Date().toISOString()
       });
-      localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
     }
 
     // CONTA MASTER VINCULADA À LOJA BASE MASTER
@@ -958,7 +1034,7 @@
       const idx = lojas.findIndex(l => l.id === lojaAtual.id);
       if (idx !== -1) {
         lojas[idx].corTema = corKey;
-        localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
+        salvarDadosLoja();
       }
 
       aplicarTemaVisualLoja(corKey);
@@ -974,7 +1050,7 @@
       const idx = lojas.findIndex(l => l.id === lojaAtual.id);
       if (idx !== -1) {
         lojas[idx].nomeLoja = novoNome;
-        localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
+        salvarDadosLoja();
       }
 
       const nomeFormatadoLoja = formatarNomeLojaPDV(novoNome);
@@ -994,7 +1070,7 @@
       if (!novoNome || !novoNome.trim()) return;
 
       loja.nomeLoja = novoNome.trim();
-      localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
+      salvarDadosLoja();
 
       if (lojaAtual && lojaAtual.id === idLoja) {
         lojaAtual.nomeLoja = novoNome.trim();
@@ -1075,12 +1151,11 @@
       const idLoja = 'LOJA_' + Date.now();
       const novaLoja = { id: idLoja, nomeLoja: nomeLoja, codigoUsado: codigoCompraInput, corTema: 'blue', dataCriacao: new Date().toISOString() };
       lojas.push(novaLoja);
-      localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
 
       const novaConta = { usuario, senha, email, telefone, perfil: 'admin', lojaId: idLoja, bloqueadoPorRecuperacao: false };
       contasRegistradas.push(novaConta);
-      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
 
+      salvarDadosLoja();
       alert(`🎉 Loja "${nomeLoja}" criada com sucesso!`);
       iniciarSessao(novaConta);
     }
@@ -1116,21 +1191,16 @@
     function carregarDadosLoja(lojaId) {
       const idFinal = lojaId || 'LOJA_MASTER_BASE';
       lojaAtual = lojas.find(l => l.id === idFinal) || { id: idFinal, nomeLoja: 'Loja Base Master', corTema: 'purple' };
-      produtos = JSON.parse(localStorage.getItem(`pdv_produtos_${idFinal}`)) || [];
-      clientes = JSON.parse(localStorage.getItem(`pdv_clientes_${idFinal}`)) || [];
-      caixa = JSON.parse(localStorage.getItem(`pdv_caixa_${idFinal}`)) || { aberto: false, inicial: 0, entradas: 0, dinheiro: 0, pix: 0, cartao: 0, fiado: 0 };
-      historicoCaixas = JSON.parse(localStorage.getItem(`pdv_historico_caixas_${idFinal}`)) || [];
-      vendas = JSON.parse(localStorage.getItem(`pdv_vendas_${idFinal}`)) || [];
+      
+      if (typeof window.carregarDadosLojaNuvem === 'function') {
+        window.carregarDadosLojaNuvem(idFinal);
+      }
     }
 
     function salvarDadosLoja() {
-      if (!lojaAtual) return;
-      const id = lojaAtual.id;
-      localStorage.setItem(`pdv_produtos_${id}`, JSON.stringify(produtos));
-      localStorage.setItem(`pdv_clientes_${id}`, JSON.stringify(clientes));
-      localStorage.setItem(`pdv_caixa_${id}`, JSON.stringify(caixa));
-      localStorage.setItem(`pdv_historico_caixas_${id}`, JSON.stringify(historicoCaixas));
-      localStorage.setItem(`pdv_vendas_${id}`, JSON.stringify(vendas));
+      if (typeof window.salvarDadosLojaNuvem === 'function') {
+        window.salvarDadosLojaNuvem();
+      }
     }
 
     function formatarNomeLojaPDV(nome) {
@@ -1249,7 +1319,7 @@
     function removerUsuarioGlobal(nomeUsuario) {
       if (!confirm(`Deseja realmente apagar o utilizador "${nomeUsuario}"?`)) return;
       contasRegistradas = contasRegistradas.filter(c => c.usuario !== nomeUsuario);
-      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
+      salvarDadosLoja();
       renderizarPainelAdminGeral();
     }
 
@@ -1303,8 +1373,7 @@
       if (!l || !confirm(`Deseja apagar a loja "${l.nomeLoja}"?`)) return;
       lojas = lojas.filter(item => item.id !== idLoja);
       contasRegistradas = contasRegistradas.filter(c => c.lojaId !== idLoja);
-      localStorage.setItem('pdv_lojas', JSON.stringify(lojas));
-      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
+      salvarDadosLoja();
       renderizarPainelAdminGeral();
     }
 
@@ -1410,7 +1479,7 @@
         alert(`Vendedor / Utilizador "${usuario}" cadastrado com sucesso!`);
       }
 
-      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
+      salvarDadosLoja();
       cancelarEdicaoUsuario();
       renderizarTabelaUsuarios();
     }
@@ -1420,7 +1489,7 @@
       if (!confirm(`Deseja excluir o utilizador "${nomeUsuario}" desta loja?`)) return;
 
       contasRegistradas = contasRegistradas.filter(c => c.usuario !== nomeUsuario);
-      localStorage.setItem('pdv_contas', JSON.stringify(contasRegistradas));
+      salvarDadosLoja();
       renderizarTabelaUsuarios();
     }
 
