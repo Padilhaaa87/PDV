@@ -1,371 +1,515 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDV Web - Autenticação Sincronizada</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .aba-conteudo { display: none; }
-    .aba-conteudo.ativa { display: block; }
-    .oculto-autenticacao { display: none !important; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDV Web - Autenticação</title>
+  <!-- Tailwind CSS para estilização rápida e moderna -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .aba-conteudo { display: none; }
+    .aba-conteudo.ativa { display: block; }
+    .oculto-autenticacao { display: none !important; }
 
-    /* ESTILOS CUSTOMIZADOS PARA MODO ESCURO */
-    body.dark {
-      background-color: #0f172a !important;
-      color: #f8fafc !important;
-    }
+    /* ESTILOS CUSTOMIZADOS PARA MODO ESCURO (DARK MODE) */
+    body.dark {
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+    }
 
-    body.dark #telaAutenticacao {
-      background-color: #0f172a !important;
-    }
+    body.dark #telaAutenticacao {
+      background-color: #0f172a !important;
+    }
 
-    body.dark .bg-white {
-      background-color: #1e293b !important;
-      color: #f8fafc !important;
-    }
+    body.dark .bg-white {
+      background-color: #1e293b !important;
+      color: #f8fafc !important;
+    }
 
-    body.dark .bg-gray-50, body.dark .bg-gray-100, body.dark .bg-blue-50 {
-      background-color: #334155 !important;
-      color: #f8fafc !important;
-    }
+    body.dark .bg-gray-50, body.dark .bg-gray-100, body.dark .bg-blue-50 {
+      background-color: #334155 !important;
+      color: #f8fafc !important;
+    }
 
-    body.dark .text-gray-700, body.dark .text-gray-800, body.dark .text-gray-500 {
-      color: #cbd5e1 !important;
-    }
+    body.dark .text-gray-700, body.dark .text-gray-800, body.dark .text-gray-500 {
+      color: #cbd5e1 !important;
+    }
 
-    body.dark .border, body.dark .border-b {
-      border-color: #475569 !important;
-    }
+    body.dark .border, body.dark .border-b {
+      border-color: #475569 !important;
+    }
 
-    body.dark input, body.dark select {
-      background-color: #0f172a !important;
-      color: #ffffff !important;
-      border-color: #475569 !important;
-    }
-  </style>
+    body.dark input, body.dark select {
+      background-color: #0f172a !important;
+      color: #ffffff !important;
+      border-color: #475569 !important;
+    }
+  </style>
 </head>
 <body id="bodyApp" class="bg-gray-100 font-sans text-gray-800 transition-colors duration-300">
 
-  <!-- TELA DE AUTENTICAÇÃO -->
-  <div id="telaAutenticacao" class="min-h-screen flex items-center justify-center bg-blue-50 p-4 transition-colors duration-300">
-    <div class="bg-white p-6 md:p-8 rounded-xl shadow-xl border border-blue-100 w-full max-w-lg space-y-6 relative">
-      
-      <!-- BOTÃO DE MODO ESCURO NO LOGIN -->
-      <div class="flex justify-between items-center border-b pb-3">
-        <h1 class="text-2xl font-bold text-blue-600">PDV Comercial Nuvem</h1>
-        <button onclick="alternarModoEscuro()" id="btnModoEscuroLogin" class="bg-gray-100 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-full font-semibold shadow-sm transition flex items-center gap-1 border">
-          🌙 Modo Escuro
-        </button>
-      </div>
+  <!-- TELA DE AUTENTICAÇÃO COM FUNDO LEVE AZUL SUAVE -->
+  <div id="telaAutenticacao" class="min-h-screen flex items-center justify-center bg-blue-50 p-4 transition-colors duration-300">
+    <div class="bg-white p-6 md:p-8 rounded-xl shadow-xl border border-blue-100 w-full max-w-lg space-y-6 relative">
+      
+      <!-- BOTÃO DE MODO ESCURO NO LOGIN -->
+      <div class="flex justify-between items-center border-b pb-3">
+        <h1 class="text-2xl font-bold text-blue-600">PDV Comercial</h1>
+        <button onclick="alternarModoEscuro()" id="btnModoEscuroLogin" class="bg-gray-100 hover:bg-gray-200 text-xs px-3 py-1.5 rounded-full font-semibold shadow-sm transition flex items-center gap-1 border">
+          🌙 Modo Escuro
+        </button>
+      </div>
 
-      <div class="text-center">
-        <p class="text-gray-500 text-sm">Selecione o seu tipo de acesso para entrar no sistema</p>
-      </div>
+      <div class="text-center">
+        <p class="text-gray-500 text-sm">Selecione o seu tipo de acesso para entrar no sistema</p>
+      </div>
 
-      <!-- SELETOR DE PERFIL DE LOGIN E CADASTRO -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-1 border-b pb-2 text-xs font-bold text-center">
-        <button onclick="selecionarTipoAcesso('vendedor')" id="btnAcessoVendedor" class="py-2 px-1 rounded bg-blue-600 text-white shadow">🛒 Vendedor</button>
-        <button onclick="selecionarTipoAcesso('adminLoja')" id="btnAcessoAdminLoja" class="py-2 px-1 rounded text-gray-600 hover:bg-gray-100">🏢 Adm Loja</button>
-        <button onclick="selecionarTipoAcesso('adminMaster')" id="btnAcessoAdminMaster" class="py-2 px-1 rounded text-purple-700 hover:bg-purple-50">👑 Adm Master</button>
-        <button onclick="selecionarTipoAcesso('cadastro')" id="btnAcessoCadastro" class="py-2 px-1 rounded text-emerald-700 hover:bg-emerald-50">➕ Nova Loja</button>
-      </div>
+      <!-- SELETOR DE PERFIL DE LOGIN E CADASTRO -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-1 border-b pb-2 text-xs font-bold text-center">
+        <button onclick="selecionarTipoAcesso('vendedor')" id="btnAcessoVendedor" class="py-2 px-1 rounded bg-blue-600 text-white shadow">🛒 Vendedor</button>
+        <button onclick="selecionarTipoAcesso('adminLoja')" id="btnAcessoAdminLoja" class="py-2 px-1 rounded text-gray-600 hover:bg-gray-100">🏢 Adm Loja</button>
+        <button onclick="selecionarTipoAcesso('adminMaster')" id="btnAcessoAdminMaster" class="py-2 px-1 rounded text-purple-700 hover:bg-purple-50">👑 Adm Master</button>
+        <button onclick="selecionarTipoAcesso('cadastro')" id="btnAcessoCadastro" class="py-2 px-1 rounded text-emerald-700 hover:bg-emerald-50">➕ Nova Loja</button>
+      </div>
 
-      <!-- PAINEL ORIENTATIVO DO ACESSO SELECIONADO -->
-      <div id="boxOrientacaoAcesso" class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded text-xs font-semibold">
-        🛒 <strong>Acesso Vendedor:</strong> Entre com seu utilizador de vendedor para operar o caixa e realizar vendas.
-      </div>
+      <!-- PAINEL ORIENTATIVO DO ACESSO SELECIONADO -->
+      <div id="boxOrientacaoAcesso" class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded text-xs font-semibold">
+        🛒 <strong>Acesso Vendedor:</strong> Entre com seu utilizador de vendedor para operar o caixa e realizar vendas.
+      </div>
 
-      <!-- FORMULÁRIO UNIFICADO DE LOGIN DE UTILIZADORES -->
-      <form id="formLogin" onsubmit="fazerLogin(event)" class="space-y-4">
-        <input type="hidden" id="tipoAcessoSelecionado" value="vendedor">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Utilizador</label>
-          <input type="text" id="loginUsuario" required placeholder="Digite o seu utilizador" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label>
-          <div class="relative">
-            <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500 pr-10">
-            <button type="button" onclick="alternarVisibilidadeSenha('loginSenha', 'btnVerSenhaLogin')" id="btnVerSenhaLogin" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 text-sm font-semibold">
-              👁️
-            </button>
-          </div>
-        </div>
+      <!-- FORMULÁRIO UNIFICADO DE LOGIN DE UTILIZADORES -->
+      <form id="formLogin" onsubmit="fazerLogin(event)" class="space-y-4">
+        <input type="hidden" id="tipoAcessoSelecionado" value="vendedor">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Utilizador</label>
+          <input type="text" id="loginUsuario" required placeholder="Digite o seu utilizador" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha)</label>
+          <div class="relative">
+            <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500 pr-10">
+            <button type="button" onclick="alternarVisibilidadeSenha('loginSenha', 'btnVerSenhaLogin')" id="btnVerSenhaLogin" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 text-sm font-semibold">
+              👁️
+            </button>
+          </div>
+        </div>
 
-        <div class="flex justify-between items-center text-xs">
-          <button type="button" onclick="alternarModalConfirmacaoToken(true)" class="text-amber-700 font-semibold hover:underline">
-            🔑 Tenho um código de confirmação
-          </button>
-          <button type="button" onclick="alternarModalRecuperacao(true)" class="text-blue-600 hover:underline font-semibold">
-            Esqueci minha palavra-passe (senha)
-          </button>
-        </div>
+        <!-- LINK PARA RECUPERAÇÃO DE SENHA VIA E-MAIL -->
+        <div class="flex justify-between items-center text-xs">
+          <button type="button" onclick="alternarModalConfirmacaoToken(true)" class="text-amber-700 font-semibold hover:underline">
+            🔑 Tenho um código de confirmação
+          </button>
+          <button type="button" onclick="alternarModalRecuperacao(true)" class="text-blue-600 hover:underline font-semibold">
+            Esqueci minha palavra-passe (senha)
+          </button>
+        </div>
 
-        <button type="submit" id="btnSubmitLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">
-          Acessar Loja como Vendedor
-        </button>
-      </form>
+        <button type="submit" id="btnSubmitLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">
+          Acessar Loja como Vendedor
+        </button>
+      </form>
 
-      <!-- FORMULÁRIO DE CRIAÇÃO DE NOVA LOJA -->
-      <form id="formCadastro" onsubmit="cadastrarLojaEUsuario(event)" class="space-y-4 hidden">
-        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 p-4 rounded-lg shadow-sm space-y-2">
-          <div class="flex justify-between items-center border-b border-emerald-200 pb-2">
-            <span class="text-xs font-bold uppercase text-emerald-800">🚀 Adquira o Sistema PDV Web</span>
-            <span class="bg-emerald-600 text-white text-xs font-extrabold px-2.5 py-1 rounded-full shadow">Apenas R$ 20,00</span>
-          </div>
-          <p class="text-xs text-gray-700">Adquira a sua licença de uso para criar a sua loja com acesso ilimitado.</p>
-        </div>
+      <!-- FORMULÁRIO DE CRIAÇÃO DE NOVA LOJA -->
+      <form id="formCadastro" onsubmit="cadastrarLojaEUsuario(event)" class="space-y-4 hidden">
+        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 p-4 rounded-lg shadow-sm space-y-2">
+          <div class="flex justify-between items-center border-b border-emerald-200 pb-2">
+            <span class="text-xs font-bold uppercase text-emerald-800">🚀 Adquira o Sistema PDV Web</span>
+            <span class="bg-emerald-600 text-white text-xs font-extrabold px-2.5 py-1 rounded-full shadow">Apenas R$ 20,00</span>
+          </div>
+          <p class="text-xs text-gray-700">Adquira a sua licença de uso para criar a sua loja com acesso ilimitado.</p>
+          <div class="pt-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+              <span class="text-[11px] text-gray-500 block font-semibold">Compre pelo Telefone / WhatsApp:</span>
+              <a href="https://wa.me/5542988691426?text=Ol%C3%A1!%20Gostaria%20de%20comprar%20o%20sistema%20PDV%20Web%20por%20R%24%2020%2C00%20e%20obter%20meu%20C%C3%B3digo%20de%20Compra." target="_blank" class="text-sm font-bold text-emerald-700 hover:text-emerald-900 underline flex items-center gap-1">
+                📱 (42) 98869-1426
+              </a>
+            </div>
+            <a href="https://wa.me/5542988691426?text=Ol%C3%A1!%20Gostaria%20de%20comprar%20o%20sistema%20PDV%20Web%20por%20R%24%2020%2C00%20e%20obter%20meu%20C%C3%B3digo%20de%20Compra." target="_blank" class="w-full sm:w-auto text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded shadow transition">
+              💬 Comprar via WhatsApp
+            </a>
+          </div>
+        </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Código de Compra / Licença <span class="text-red-500">*</span></label>
-          <input type="text" id="cadCodigoCompra" required placeholder="Ex: MEUPDV123" class="w-full p-3 border rounded font-mono uppercase bg-amber-50 border-amber-300 outline-none focus:ring-2 focus:ring-amber-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Nome da Sua Loja <span class="text-red-500">*</span></label>
-          <input type="text" id="cadNomeLoja" required placeholder="Ex: Mercado Silva, Boutique Elegância" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">E-mail de Contato / Recuperação <span class="text-red-500">*</span></label>
-          <input type="email" id="cadEmail" required placeholder="seuemail@exemplo.com" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Telefone / WhatsApp <span class="text-red-500">*</span></label>
-          <input type="tel" id="cadTelefone" required placeholder="(00) 00000-0000" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Nome do Administrador da Loja <span class="text-red-500">*</span></label>
-          <input type="text" id="cadUsuario" required placeholder="Escolha um nome de utilizador para o dono" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha) <span class="text-red-500">*</span></label>
-          <div class="relative">
-            <input type="password" id="cadSenha" required placeholder="Crie uma palavra-passe" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500 pr-10">
-            <button type="button" onclick="alternarVisibilidadeSenha('cadSenha', 'btnVerSenhaCad')" id="btnVerSenhaCad" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 text-sm font-semibold">
-              👁️
-            </button>
-          </div>
-        </div>
-        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded transition shadow">
-          Validar Código e Criar Loja
-        </button>
-      </form>
-    </div>
-  </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Código de Compra / Licença <span class="text-red-500">*</span></label>
+          <input type="text" id="cadCodigoCompra" required placeholder="Ex: MEUPDV123" class="w-full p-3 border rounded font-mono uppercase bg-amber-50 border-amber-300 outline-none focus:ring-2 focus:ring-amber-500">
+          <span class="text-[11px] text-gray-500 mt-0.5 block">Informe o código recebido após a compra de R$ 20,00 (Ex para testes: <code>MEUPDV123</code>)</span>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Nome da Sua Loja <span class="text-red-500">*</span></label>
+          <input type="text" id="cadNomeLoja" required placeholder="Ex: Mercado Silva, Boutique Elegância" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">E-mail de Contato / Recuperação <span class="text-red-500">*</span></label>
+          <input type="email" id="cadEmail" required placeholder="seuemail@exemplo.com" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Telefone / WhatsApp <span class="text-red-500">*</span></label>
+          <input type="tel" id="cadTelefone" required placeholder="(00) 00000-0000" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Nome do Administrador da Loja <span class="text-red-500">*</span></label>
+          <input type="text" id="cadUsuario" required placeholder="Escolha um nome de utilizador para o dono" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Palavra-passe (Senha) <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <input type="password" id="cadSenha" required placeholder="Crie uma palavra-passe" class="w-full p-3 border rounded outline-none focus:ring-2 focus:ring-blue-500 pr-10">
+            <button type="button" onclick="alternarVisibilidadeSenha('cadSenha', 'btnVerSenhaCad')" id="btnVerSenhaCad" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 text-sm font-semibold">
+              👁️
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded transition shadow">
+          Validar Código e Criar Loja
+        </button>
+      </form>
+    </div>
+  </div>
 
-  <!-- APLICAÇÃO PRINCIPAL DA LOJA -->
-  <div id="appPrincipal" class="oculto-autenticacao min-h-screen flex flex-col">
-    <header id="headerLoja" class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50 transition-colors duration-300">
-      <div class="max-w-7xl mx-auto flex justify-between items-center">
-        <div>
-          <h1 id="labelNomeLojaTopo" class="text-xl md:text-2xl font-bold">PDV Web Nuvem</h1>
-          <span id="labelUsuarioLogado" class="text-xs text-blue-200">Sessão: Nenhuma</span>
-        </div>
-        <div class="flex items-center gap-3">
-          <button onclick="alternarModoEscuro()" id="btnModoEscuroHeader" class="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow transition flex items-center gap-1">
-            🌙 Modo Escuro
-          </button>
-          <div id="statusCaixaTopo" class="bg-black/20 px-3 py-1 rounded-full text-xs md:text-sm font-bold">Caixa: Fechado</div>
-          <button onclick="fazerLogout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded font-semibold shadow">Sair</button>
-        </div>
-      </div>
-    </header>
+  <!-- MODAL DE SOLICITAÇÃO DE RECUPERAÇÃO DE SENHA -->
+  <div id="modalRecuperacaoSenha" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl relative">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="text-lg font-bold text-gray-800">🔒 Solicitar Redefinição de Senha</h3>
+        <button onclick="alternarModalRecuperacao(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+      </div>
+      <p class="text-xs text-gray-600">
+        Ao solicitar a redefinição, a sua palavra-passe antiga será <strong>bloqueada imediatamente</strong>. O acesso só será liberado após a confirmação com o código enviado para o seu e-mail.
+      </p>
+      <form onsubmit="processarRecuperacaoSenha(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">E-mail Cadastrado</label>
+          <input type="email" id="emailRecuperacao" required placeholder="digite.seu.email@exemplo.com" class="w-full p-2.5 border rounded outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="alternarModalRecuperacao(false)" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold text-xs rounded">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded shadow">Enviar Instruções e Bloquear Senha Antiga</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-    <nav id="navLoja" class="bg-blue-800 text-white shadow-inner overflow-x-auto transition-colors duration-300">
-      <div class="max-w-7xl mx-auto flex border-b border-white/20 min-w-max">
-        <button onclick="alternarAba('frenteCaixa')" id="btn-frenteCaixa" class="py-3 px-5 hover:bg-black/10 font-semibold border-b-2 border-white text-sm md:text-base">Frente de Caixa</button>
-        <button onclick="alternarAba('vendas')" id="btn-vendas" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Vendas</button>
-        <button onclick="alternarAba('controleCaixa')" id="btn-controleCaixa" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Caixa</button>
-        <button onclick="alternarAba('produtos')" id="btn-produtos" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Produtos & Estoque</button>
-        <button onclick="alternarAba('clientes')" id="btn-clientes" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Clientes & Fiado</button>
-        <button onclick="alternarAba('usuarios')" id="btn-usuarios" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base admin-only">👥 Utilizadores & Tema</button>
-      </div>
-    </nav>
+  <!-- MODAL DE CONFIRMAÇÃO DO TOKEN E REDEFINIÇÃO DE SENHA -->
+  <div id="modalConfirmacaoToken" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4 shadow-2xl relative">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="text-lg font-bold text-emerald-700">✅ Confirmar E-mail e Redefinir Senha</h3>
+        <button onclick="alternarModalConfirmacaoToken(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+      </div>
+      <p class="text-xs text-gray-600">
+        Insira o código de confirmação enviado para o seu e-mail e defina a sua nova palavra-passe para desbloquear a sua conta.
+      </p>
+      <form onsubmit="confirmarERedefinirSenha(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Código de Confirmação (Token)</label>
+          <input type="text" id="tokenConfirmacao" required placeholder="Ex: 839210" class="w-full p-2.5 border rounded uppercase font-mono tracking-widest text-center text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Nova Palavra-passe (Senha)</label>
+          <input type="password" id="novaSenhaRedefinida" required placeholder="••••••••" class="w-full p-2.5 border rounded outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="alternarModalConfirmacaoToken(false)" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold text-xs rounded">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded shadow">Liberar Conta e Salvar Nova Senha</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-    <main class="max-w-7xl mx-auto p-4 md:p-6 flex-grow w-full">
-      
-      <!-- ABA 1: FRENTE DE CAIXA -->
-      <section id="frenteCaixa" class="aba-conteudo ativa">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="md:col-span-2 bg-white p-4 md:p-6 rounded-lg shadow-md">
-            <h2 class="text-lg md:text-xl font-bold mb-4 text-gray-700">Selecione os Produtos</h2>
-            <div id="gridProdutosVenda" class="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4"></div>
-          </div>
+  <!-- APLICAÇÃO PRINCIPAL DA LOJA -->
+  <div id="appPrincipal" class="oculto-autenticacao min-h-screen flex flex-col">
+    <!-- HEADER DINÂMICO COM O NOME DA LOJA -->
+    <header id="headerLoja" class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-50 transition-colors duration-300">
+      <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div>
+          <h1 id="labelNomeLojaTopo" class="text-xl md:text-2xl font-bold">PDV Web</h1>
+          <span id="labelUsuarioLogado" class="text-xs text-blue-200">Sessão: Nenhuma</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="alternarModoEscuro()" id="btnModoEscuroHeader" class="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow transition flex items-center gap-1">
+            🌙 Modo Escuro
+          </button>
+          <div id="statusCaixaTopo" class="bg-black/20 px-3 py-1 rounded-full text-xs md:text-sm font-bold">Caixa: Fechado</div>
+          <button onclick="fazerLogout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded font-semibold shadow">Sair</button>
+        </div>
+      </div>
+    </header>
 
-          <div class="bg-white p-4 md:p-6 rounded-lg shadow-md flex flex-col justify-between">
-            <div>
-              <h2 class="text-lg md:text-xl font-bold mb-4 text-gray-700">Carrinho</h2>
-              <div id="itensCarrinho" class="space-y-2 max-h-60 overflow-y-auto border-b pb-4 mb-4">
-                <p class="text-gray-500 text-sm">Nenhum item selecionado.</p>
-              </div>
-              <div class="text-right text-xl font-bold text-gray-800">Total: R$ <span id="totalCarrinho">0,00</span></div>
-            </div>
+    <!-- NAVEGAÇÃO DINÂMICA COM COR DO TEMA -->
+    <nav id="navLoja" class="bg-blue-800 text-white shadow-inner overflow-x-auto transition-colors duration-300">
+      <div class="max-w-7xl mx-auto flex border-b border-white/20 min-w-max">
+        <button onclick="alternarAba('frenteCaixa')" id="btn-frenteCaixa" class="py-3 px-5 hover:bg-black/10 font-semibold border-b-2 border-white text-sm md:text-base">Frente de Caixa</button>
+        <button onclick="alternarAba('vendas')" id="btn-vendas" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Vendas</button>
+        <button onclick="alternarAba('controleCaixa')" id="btn-controleCaixa" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Caixa</button>
+        <button onclick="alternarAba('produtos')" id="btn-produtos" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Produtos & Estoque</button>
+        <button onclick="alternarAba('clientes')" id="btn-clientes" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base">Clientes & Fiado</button>
+        <button onclick="alternarAba('relatorios')" id="btn-relatorios" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base admin-only">Relatórios & Lucros</button>
+        <button onclick="alternarAba('usuarios')" id="btn-usuarios" class="py-3 px-5 hover:bg-black/10 font-semibold text-sm md:text-base admin-only">👥 Utilizadores & Tema</button>
+        <button onclick="alternarAba('adminGeral')" id="btn-adminGeral" class="py-3 px-5 bg-purple-900 hover:bg-purple-800 font-bold text-amber-300 text-sm md:text-base admin-geral-only hidden">👑 PAINEL ADM GERAL</button>
+      </div>
+    </nav>
 
-            <div class="mt-6 border-t pt-4 space-y-3">
-              <div>
-                <label class="block text-sm font-medium mb-1">Forma de Pagamento</label>
-                <select id="formaPagamento" class="w-full p-2 border rounded">
-                  <option value="dinheiro">💵 Dinheiro</option>
-                  <option value="cartao">💳 Cartão</option>
-                  <option value="pix">📱 PIX</option>
-                  <option value="fiado">📋 Fiado</option>
-                </select>
-              </div>
-              <button onclick="finalizarVenda()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded shadow">Finalizar Venda</button>
-            </div>
-          </div>
-        </div>
-      </section>
+    <main class="max-w-7xl mx-auto p-4 md:p-6 flex-grow w-full">
 
-      <!-- ABA 4: PRODUTOS & ESTOQUE -->
-      <section id="produtos" class="aba-conteudo">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="bg-white p-6 rounded-lg shadow-md space-y-6">
-            <h2 id="tituloFormProduto" class="text-xl font-bold text-gray-700">Cadastrar Produto</h2>
-            <form id="formProduto" onsubmit="salvarProduto(event)" class="space-y-3">
-              <input type="hidden" id="prodIdEdicao" value="">
-              <div><label class="block text-sm font-medium">Nome do Produto</label><input type="text" id="prodNome" required class="w-full p-2 border rounded"></div>
-              <div><label class="block text-sm font-medium">Preço Custo (R$)</label><input type="number" id="prodCusto" step="0.01" required class="w-full p-2 border rounded"></div>
-              <div><label class="block text-sm font-medium">Preço Venda (R$)</label><input type="number" id="prodVenda" step="0.01" required class="w-full p-2 border rounded"></div>
-              <div><label class="block text-sm font-medium">Estoque (Qtd)</label><input type="number" id="prodEstoque" required min="0" placeholder="0" class="w-full p-2 border rounded"></div>
-              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold shadow">Salvar Produto na Nuvem</button>
-            </form>
-          </div>
+      <!-- ABA EXCLUSIVA DO ADM GERAL DO SISTEMA (SUPER ADMIN) -->
+      <section id="adminGeral" class="aba-conteudo space-y-6">
+        <div class="bg-purple-900 text-white p-6 rounded-lg shadow-md flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-bold text-amber-300">👑 Painel do Administrador Geral</h2>
+            <p class="text-sm text-purple-200 mt-1">Gerencie todas as lojas ativas, crie novos códigos de compra e controle todos os utilizadores.</p>
+          </div>
+          <div class="bg-purple-800 px-4 py-2 rounded-lg border border-purple-600 text-center">
+            <span class="text-xs font-bold text-purple-200 block uppercase">Total de Lojas</span>
+            <span id="qtdLojasGeral" class="text-2xl font-bold text-amber-300">0</span>
+          </div>
+        </div>
 
-          <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Produtos no Estoque (Sincronizado)</h2>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs md:text-sm">
-                <thead>
-                  <tr class="bg-gray-100 border-b">
-                    <th class="p-2">Nome</th>
-                    <th class="p-2">Custo</th>
-                    <th class="p-2">Venda</th>
-                    <th class="p-2">Estoque</th>
-                  </tr>
-                </thead>
-                <tbody id="tabelaProdutos"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-4 border-l-4 border-amber-500">
+          <h3 class="text-lg font-bold text-gray-700">🔑 Gerenciador de Códigos de Compra / Licenças</h3>
+          <p class="text-xs text-gray-500">Crie novos códigos de acesso para fornecer aos seus clientes após a compra de R$ 20,00.</p>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input type="text" id="novoCodigoCompra" placeholder="Digite um novo código (ex: MEUPDV2026)" class="p-2 border rounded font-mono uppercase w-full">
+            <button onclick="adicionarCodigoCompra()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 rounded text-sm shadow transition whitespace-nowrap">
+              ➕ Cadastrar Código
+            </button>
+          </div>
+          <div class="pt-2">
+            <span class="text-xs font-bold text-gray-600 block mb-1">Códigos de Compra Ativos:</span>
+            <div id="listaCodigosCompraAtivos" class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
 
-      <!-- ABA UTILIZADORES -->
-      <section id="usuarios" class="aba-conteudo admin-only space-y-6">
-        <div class="bg-white p-6 rounded-lg shadow-md">
-          <h2 class="text-xl font-bold text-gray-700 mb-4">Utilizadores da Loja</h2>
-          <form onsubmit="salvarNovoUsuarioLoja(event)" class="space-y-3 max-w-md">
-            <div><label class="block text-sm font-medium">Utilizador</label><input type="text" id="editUsuarioNome" required class="w-full p-2 border rounded"></div>
-            <div><label class="block text-sm font-medium">E-mail</label><input type="email" id="editUsuarioEmail" required class="w-full p-2 border rounded"></div>
-            <div><label class="block text-sm font-medium">Telefone / WhatsApp</label><input type="tel" id="editUsuarioTelefone" required placeholder="(00) 00000-0000" class="w-full p-2 border rounded"></div>
-            <div><label class="block text-sm font-medium">Palavra-passe</label><input type="password" id="editUsuarioSenha" required class="w-full p-2 border rounded"></div>
-            <button type="submit" class="bg-blue-600 text-white font-bold px-4 py-2 rounded">Cadastrar Vendedor</button>
-          </form>
-        </div>
-      </section>
+        <!-- LISTA DE LOJAS -->
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
+          <h3 class="text-lg font-bold text-gray-700">🏢 Lista de Lojas Cadastradas</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-gray-100 border-b">
+                  <th class="p-3">Nome da Loja</th>
+                  <th class="p-3">ID da Loja</th>
+                  <th class="p-3">Data de Criação</th>
+                  <th class="p-3 text-center">Ações de Gestão</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaLojasAdminGeral"></tbody>
+            </table>
+          </div>
+        </div>
 
-    </main>
-  </div>
+        <!-- CONTROLO GLOBAL DE UTILIZADORES E VENDEDORES -->
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-4 border-l-4 border-blue-600">
+          <div class="flex justify-between items-center border-b pb-3">
+            <div>
+              <h3 class="text-lg font-bold text-gray-700">👥 Controlo Global de Utilizadores e Vendedores</h3>
+              <p class="text-xs text-gray-500">Visualização centralizada de todos os Vendedores e Administradores de todas as lojas.</p>
+            </div>
+            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
+              Total: <span id="qtdGlobalUsuarios">0</span> utilizadores
+            </span>
+          </div>
 
-  <!-- BIBLIOTECAS DO FIREBASE EM NUVEM (SDK V9) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-gray-100 border-b">
+                  <th class="p-3">Utilizador</th>
+                  <th class="p-3">E-mail</th>
+                  <th class="p-3">Telefone</th>
+                  <th class="p-3">Perfil de Acesso</th>
+                  <th class="p-3">Loja Associada</th>
+                  <th class="p-3 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaGlobalUsuariosAdminGeral"></tbody>
+            </table>
+          </div>
+        </div>
 
-    // 🔴 INSERIR AS SUAS CHAVES DO FIREBASE AQUI
-    const firebaseConfig = {
-      apiKey: "SUA_API_KEY_AQUI",
-      authDomain: "SEU_PROJECT_ID.firebaseapp.com",
-      projectId: "SEU_PROJECT_ID",
-      storageBucket: "SEU_PROJECT_ID.appspot.com",
-      messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-      appId: "SEU_APP_ID"
-    };
+      </section>
 
-    // INICIALIZAR O FIREBASE
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+      <!-- ABA 1: FRENTE DE CAIXA -->
+      <section id="frenteCaixa" class="aba-conteudo ativa">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="md:col-span-2 bg-white p-4 md:p-6 rounded-lg shadow-md">
+            <h2 class="text-lg md:text-xl font-bold mb-4 text-gray-700">Selecione os Produtos</h2>
+            <div id="gridProdutosVenda" class="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4"></div>
+          </div>
 
-    // DADOS GLOBAIS DA APLICAÇÃO
-    window.db = db;
-    window.produtos = [];
-    window.contasRegistradas = [];
+          <div class="bg-white p-4 md:p-6 rounded-lg shadow-md flex flex-col justify-between">
+            <div>
+              <h2 class="text-lg md:text-xl font-bold mb-4 text-gray-700">Carrinho</h2>
+              <div id="itensCarrinho" class="space-y-2 max-h-60 overflow-y-auto border-b pb-4 mb-4">
+                <p class="text-gray-500 text-sm">Nenhum item selecionado.</p>
+              </div>
+              <div class="text-right text-xl font-bold text-gray-800">Total: R$ <span id="totalCarrinho">0,00</span></div>
+            </div>
 
-    // ESCUTAR PRODUTOS EM TEMPO REAL NA NUVEM
-    window.carregarProdutosNuvem = function(lojaId) {
-      onSnapshot(collection(db, `lojas/${lojaId}/produtos`), (snapshot) => {
-        window.produtos = [];
-        snapshot.forEach((docSnap) => {
-          window.produtos.push({ idDoc: docSnap.id, ...docSnap.data() });
-        });
-        renderizarTabelaProdutos();
-        renderizarGridProdutos();
-      });
-    };
+            <div class="mt-6 border-t pt-4 space-y-3">
+              <div>
+                <label class="block text-sm font-medium mb-1">Forma de Pagamento</label>
+                <select id="formaPagamento" class="w-full p-2 border rounded" onchange="tratarTrocaPagamento()">
+                  <option value="dinheiro">💵 Dinheiro</option>
+                  <option value="cartao">💳 Cartão</option>
+                  <option value="pix">📱 PIX</option>
+                  <option value="fiado">📋 Fiado</option>
+                </select>
+              </div>
 
-    // SALVAR PRODUTO NA NUVEM
-    window.salvarProduto = async function(e) {
-      e.preventDefault();
-      const nome = document.getElementById('prodNome').value.trim();
-      const custo = parseFloat(document.getElementById('prodCusto').value);
-      const venda = parseFloat(document.getElementById('prodVenda').value);
-      const estoque = parseInt(document.getElementById('prodEstoque').value) || 0;
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="block text-sm font-medium">
+                    Cliente <span id="labelClienteOpcional" class="text-xs text-gray-400">(Opcional)</span>
+                  </label>
+                  <button onclick="cadastrarClienteRapido()" class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold px-2 py-0.5 rounded transition">
+                    ➕ Novo Cliente
+                  </button>
+                </div>
+                <select id="selectClienteVenda" class="w-full p-2 border rounded">
+                  <option value="">-- Nenhum cliente (Venda Avulsa) --</option>
+                </select>
+              </div>
 
-      if (!window.lojaAtual) return alert('Selecione uma loja válida.');
+              <button onclick="finalizarVenda()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded shadow">Finalizar Venda</button>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      await addDoc(collection(db, `lojas/${window.lojaAtual.id}/produtos`), {
-        nome, custo, venda, estoque, dataCriacao: new Date().toISOString()
-      });
+      <!-- ABA 2: REGISTRO DE VENDAS -->
+      <section id="vendas" class="aba-conteudo">
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-4">
+            <div>
+              <h2 class="text-xl font-bold text-gray-700">Registro Geral de Vendas</h2>
+              <p class="text-xs text-gray-500">Consulte vendas, emita recibos ou estorne transações</p>
+            </div>
+            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
+              Total Registrado: <span id="qtdTotalVendas">0</span> vendas
+            </span>
+          </div>
 
-      document.getElementById('formProduto').reset();
-      alert('✅ Produto salvo e sincronizado na nuvem com sucesso!');
-    };
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-100 border-b text-sm">
+                  <th class="p-3">Data / Hora</th>
+                  <th class="p-3">Forma de Pagamento</th>
+                  <th class="p-3">Valor Total</th>
+                  <th class="p-3">Custo Total</th>
+                  <th class="p-3">Lucro Obtido</th>
+                  <th class="p-3 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaAbaVendas"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
 
-    window.renderizarTabelaProdutos = function() {
-      const tbody = document.getElementById('tabelaProdutos');
-      tbody.innerHTML = '';
-      window.produtos.forEach(prod => {
-        tbody.innerHTML += `
-          <tr class="border-b text-sm">
-            <td class="p-2 font-medium">${prod.nome}</td>
-            <td class="p-2">R$ ${prod.custo.toFixed(2)}</td>
-            <td class="p-2">R$ ${prod.venda.toFixed(2)}</td>
-            <td class="p-2 font-bold">${prod.estoque} un.</td>
-          </tr>`;
-      });
-    };
+      <!-- ABA 3: CONTROLE DE CAIXA -->
+      <section id="controleCaixa" class="aba-conteudo space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Ações de Caixa</h2>
+            <div id="formAberturaCaixa" class="mb-6">
+              <p class="text-sm text-gray-600 mb-2">Valor inicial (troco):</p>
+              <div class="flex gap-2">
+                <input type="number" id="valorInicialCaixa" step="0.01" placeholder="100.00" class="p-2 border rounded w-full">
+                <button onclick="abrirCaixa()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold">Abrir</button>
+              </div>
+            </div>
+            <div id="formOperacoesCaixa" class="hidden space-y-4">
+              <button onclick="fecharCaixa()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold">Fechar Caixa</button>
+            </div>
+          </div>
 
-    window.renderizarGridProdutos = function() {
-      const container = document.getElementById('gridProdutosVenda');
-      container.innerHTML = '';
-      window.produtos.forEach(prod => {
-        container.innerHTML += `
-          <div class="border p-3 rounded-lg text-center cursor-pointer hover:border-blue-500 bg-gray-50">
-            <h4 class="font-bold text-gray-800 text-sm">${prod.nome}</h4>
-            <p class="text-blue-600 font-bold">R$ ${prod.venda.toFixed(2)}</p>
-            <span class="text-xs text-gray-500 block">Estoque: ${prod.estoque}</span>
-          </div>`;
-      });
-    };
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 text-gray-700">Resumo do Caixa Atual</h2>
+            <div class="space-y-3">
+              <div class="flex justify-between py-2 border-b"><span>Fundo Inicial (Troco):</span><span class="font-bold">R$ <span id="resumoInicial">0,00</span></span></div>
+              
+              <div class="bg-gray-50 p-3 rounded-lg border space-y-2 text-sm">
+                <span class="font-bold text-xs uppercase text-gray-500 block mb-1">Entradas por Categoria</span>
+                <div class="flex justify-between text-green-700"><span>💵 Dinheiro:</span><span class="font-bold">R$ <span id="caixaDinheiro">0,00</span></span></div>
+                <div class="flex justify-between text-blue-700"><span>📱 PIX:</span><span class="font-bold">R$ <span id="caixaPix">0,00</span></span></div>
+                <div class="flex justify-between text-purple-700"><span>💳 Cartão:</span><span class="font-bold">R$ <span id="caixaCartao">0,00</span></span></div>
+                <div class="flex justify-between text-amber-700 border-t pt-1"><span>📋 Fiado (Emitido):</span><span class="font-bold">R$ <span id="caixaFiado">0,00</span></span></div>
+              </div>
 
-    // AUXILIARES DE NAVEGAÇÃO E SESSÃO
-    window.alternarAba = function(idAba) {
-      document.querySelectorAll('.aba-conteudo').forEach(el => el.classList.remove('ativa'));
-      document.getElementById(idAba).classList.add('ativa');
-    };
+              <div class="flex justify-between py-2 border-b text-green-600"><span>Total Entradas (Din/PIX/Cartão):</span><span class="font-bold">R$ <span id="resumoEntradas">0,00</span></span></div>
+              <div class="flex justify-between py-2 text-xl font-bold border-t pt-3"><span>Dinheiro Final em Caixa:</span><span class="text-blue-600">R$ <span id="resumoTotal">0,00</span></span></div>
+            </div>
+          </div>
+        </div>
 
-    window.fazerLogin = function(e) {
-      e.preventDefault();
-      const u = document.getElementById('loginUsuario').value.trim();
-      window.lojaAtual = { id: 'LOJA_PADRAO', nomeLoja: 'Minha Loja Nuvem' };
-      
-      document.getElementById('telaAutenticacao').classList.add('hidden');
-      document.getElementById('appPrincipal').classList.remove('oculto-autenticacao');
-      
-      window.carregarProdutosNuvem(window.lojaAtual.id);
-    };
-  </script>
-</body>
-</html>
+        <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
+          <div class="flex justify-between items-center border-b pb-3">
+            <div>
+              <h2 class="text-xl font-bold text-gray-700">📋 Relatório de Caixas e Histórico de Sessões</h2>
+              <p class="text-xs text-gray-500">Valores descriminados por Dinheiro, PIX, Cartão, Fiado e Custos por sessão</p>
+            </div>
+            <button onclick="limparTodoHistoricoCaixas()" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 py-2 rounded shadow transition">
+              🗑️ Limpar Todo o Histórico
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs md:text-sm">
+              <thead>
+                <tr class="bg-gray-100 border-b">
+                  <th class="p-2">Responsável</th>
+                  <th class="p-2">Abertura / Fecho</th>
+                  <th class="p-2 text-green-700">💵 Dinheiro</th>
+                  <th class="p-2 text-blue-700">📱 PIX</th>
+                  <th class="p-2 text-purple-700">💳 Cartão</th>
+                  <th class="p-2 text-amber-700">📋 Fiado</th>
+                  <th class="p-2 text-red-600">Custo Total</th>
+                  <th class="p-2 font-bold">Total Final</th>
+                  <th class="p-2 text-center">Status</th>
+                  <th class="p-2 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaHistoricoSessoesCaixa"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 4: PRODUTOS & ESTOQUE -->
+      <section id="produtos" class="aba-conteudo">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow-md space-y-6">
+            <div>
+              <h2 id="tituloFormProduto" class="text-xl font-bold mb-4 text-gray-700">Cadastrar Produto</h2>
+              <form id="formProduto" onsubmit="salvarProduto(event)" class="space-y-3">
+                <input type="hidden" id="prodIdEdicao" value="">
+                <div><label class="block text-sm font-medium">Nome do Produto</label><input type="text" id="prodNome" required class="w-full p-2 border rounded"></div>
+                <div><label class="block text-sm font-medium">Preço Custo (R$)</label><input type="number" id="prodCusto" step="0.01" required oninput="calcularMargemLucro()" class="w-full p-2 border rounded"></div>
+                <div><label class="block text-sm font-medium">Preço Venda (R$)</label><input type="number" id="prodVenda" step="0.01" required oninput="calcularMargemLucro()" class="w-full p-2 border rounded"></div>
+                <div><label class="block text-sm font-medium">Estoque (Qtd)</label><input type="number" id="prodEstoque" required min="0" placeholder="0" class="w-full p-2 border rounded"></div>
+                <div class="bg-gray-50 p-3 rounded text-sm">Margem de Lucro: <span id="prodLucroPercentual" class="font-bold text-green-600">0.00%</span></div>
+                
+                <div class="flex gap-2">
+                  <button type="submit" id="btnSalvarProduto" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold shadow">Salvar Produto</button>
+                  <button type="button" id="btnCancelarEdicao" onclick="cancelarEdicaoProduto()" class="hidden w-1/3 bg-gray-400 hover:bg-gray-500 text-white py-2 rounded font-semibold shadow">Cancelar</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="border-t pt-4">
+              <h3 class="text-md font-bold text-gray-700 mb-1">Importar Produtos por Planilha</h3>
+              <p class="text-xs text-gray-500 mb-3">Envie um arquivo <strong>.CSV</strong> com as colunas: <code>Nome;Custo;Venda;Estoque</code></p>
+              
+              <input type="file" id="inputArquivoCSV" accept=".csv" class="w-full text-xs text-gray-500 file:mr-2 file:py-2 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-3">
+              <button onclick="importarPlanilhaCSV()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded text-sm shadow transition">
+                📥 Carregar Planilha CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="md:col-span-2 space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-indigo-600">
+                <span class="text-xs font-bold text-gray-500 uppercase block">Custo Total em Estoque (Geral)</span>
+                <span class="text-xs text-gray-400 block mb-1">Soma de todos os pr
